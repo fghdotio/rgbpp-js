@@ -9,6 +9,7 @@ import { Network } from "../types/network.js";
 import { ScriptInfo } from "../types/rgbpp/rgbpp.js";
 import { RgbppXudtLikeIssuance } from "../types/rgbpp/xudt-like.js";
 import { RgbppApiSpvProof } from "../types/spv.js";
+import { calculateCommitment } from "../utils/rgbpp.js";
 import { XudtLike } from "../xdut-like/index.js";
 
 export class Rgbpp {
@@ -33,6 +34,10 @@ export class Rgbpp {
 
     this.xudtLike = new XudtLike(this.scripts, this.cellDeps);
     this.utxoLikeWallet = utxoLikeWallet;
+  }
+
+  calculateCommitment(tx: ccc.Transaction) {
+    return calculateCommitment(tx);
   }
 
   xudtLikeIssuancePartialTx(

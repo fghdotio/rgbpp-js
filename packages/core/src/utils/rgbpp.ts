@@ -1,9 +1,19 @@
 import { bytesFrom, ccc, Hex, hexFrom } from "@ckb-ccc/core";
+import { sha256 } from "js-sha256";
 
 import { blockchain } from "@ckb-lumos/base";
-import { blake2b, PERSONAL } from "@nervosnetwork/ckb-sdk-utils";
+import {
+  blake2b,
+  hexToBytes,
+  PERSONAL,
+  serializeOutPoint,
+  serializeOutput,
+} from "@nervosnetwork/ckb-sdk-utils";
 
-import { DEFAULT_CONFIRMATIONS } from "../constants/index.js";
+import {
+  DEFAULT_CONFIRMATIONS,
+  RGBPP_MAX_CELL_NUM,
+} from "../constants/index.js";
 import {
   BTCTimeLock,
   RGBPPUnlock,
@@ -15,6 +25,7 @@ import {
   reverseHexByteOrder,
   trimHexPrefix,
   u32ToHex,
+  u32ToLe,
   u64ToLe,
   u8ToHex,
   utf8ToHex,
@@ -98,4 +109,52 @@ export const buildRgbppUnlock = (
       btcTxProof: prependHexPrefix(btcLikeTxProof),
     }),
   );
+};
+
+// The maximum length of inputs and outputs is 255, and the field type representing the length in the RGB++ protocol is Uint8
+// refer to https://github.com/ckb-cell/rgbpp/blob/0c090b039e8d026aad4336395b908af283a70ebf/contracts/rgbpp-lock/src/main.rs#L173-L211
+export const calculateCommitment = (ckbPartialTx: ccc.Transaction): ccc.Hex => {
+  const hash = sha256.create();
+  hash.update(hexToBytes(utf8ToHex("RGB++")));
+  const version = [0, 0];
+  hash.update(version);
+
+  const { inputs, outputs, outputsData } = ckbPartialTx;
+
+  if (
+    inputs.length > RGBPP_MAX_CELL_NUM ||
+    outputs.length > RGBPP_MAX_CELL_NUM
+  ) {
+    throw new Error(
+      "The inputs or outputs length of RGB++ CKB virtual tx cannot be greater than 255",
+    );
+  }
+  hash.update([inputs.length, outputs.length]);
+
+  for (const input of inputs) {
+    const outPoint = {
+      ...input.previousOutput,
+      index: prependHexPrefix(`${input.previousOutput.index.toString(16)}`),
+    };
+    hash.update(hexToBytes(serializeOutPoint(outPoint)));
+  }
+  for (let index = 0; index < outputs.length; index++) {
+    const output = outputs[index];
+    const outputData = outputsData[index];
+    hash.update(
+      hexToBytes(
+        serializeOutput({
+          capacity: prependHexPrefix(`${output.capacity.toString(16)}`),
+          lock: output.lock,
+          type: output.type,
+        }),
+      ),
+    );
+
+    const outputDataLen = u32ToLe(trimHexPrefix(outputData).length / 2);
+    hash.update(hexToBytes(prependHexPrefix(outputDataLen)));
+    hash.update(hexToBytes(outputData));
+  }
+  // double sha256
+  return prependHexPrefix(sha256(hash.array()));
 };

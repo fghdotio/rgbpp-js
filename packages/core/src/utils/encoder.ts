@@ -59,3 +59,16 @@ export const u64ToLe = (u64: bigint): string => {
 
   return buffer.toString("hex");
 };
+
+export const u32ToLe = (u32: number): string => {
+  if (u32 < 0 || u32 > 0xffffffff || !Number.isInteger(u32)) {
+    throw new Error("Input must be an unsigned 32-bit integer");
+  }
+
+  const buffer = Buffer.alloc(4);
+  for (let i = 0; i < 4; i++) {
+    buffer[i] = (u32 >> (i * 8)) & 0xff;
+  }
+
+  return buffer.toString("hex");
+};
