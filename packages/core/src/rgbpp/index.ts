@@ -41,8 +41,11 @@ export class Rgbpp {
     return this.xudtLike.issuancePartialTx(params);
   }
 
-  getSpvProof(txId: string): Promise<RgbppApiSpvProof | null> {
-    return this.utxoLikeWallet.getSpvProof(txId);
+  getSpvProof(
+    txId: string,
+    confirmations: number,
+  ): Promise<RgbppApiSpvProof | null> {
+    return this.utxoLikeWallet.getRgbppSpvProof(txId, confirmations);
   }
 }
 

@@ -7,12 +7,15 @@ import {
 
 export interface IUtxoLikeDataSource {
   getTransaction(txId: string): Promise<UtxoLikeApiTransaction>;
-  getUtxos(address: string): Promise<UtxoLikeApiUtxo>;
+  getUtxos(address: string): Promise<UtxoLikeApiUtxo[]>;
   getRecommendedFee(): Promise<UtxoLikeApiRecommendedFeeRates>;
 }
 
 export interface IRgbppSpvProof {
-  getSpvProof(txId: string): Promise<RgbppApiSpvProof | null>;
+  getRgbppSpvProof(
+    txId: string,
+    confirmations: number,
+  ): Promise<RgbppApiSpvProof | null>;
 }
 
 export interface IUtxoLikeTxBuilder {
@@ -20,4 +23,4 @@ export interface IUtxoLikeTxBuilder {
   sendTransaction(signedTx: any): Promise<string>;
 }
 
-export interface IUtxoLikeWallet extends IRgbppSpvProof {}
+export interface IUtxoLikeWallet extends IRgbppSpvProof, IUtxoLikeDataSource {}
