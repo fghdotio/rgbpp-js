@@ -1,6 +1,10 @@
 import { ccc } from "@ckb-ccc/core";
 
-import { reverseHexByteOrder, trimHexPrefix } from "./encoder.js";
+import {
+  prependHexPrefix,
+  reverseHexByteOrder,
+  trimHexPrefix,
+} from "./encoder.js";
 
 export const isSameScriptTemplate = (
   lock1: ccc.Script,
@@ -26,5 +30,9 @@ export const updateScriptArgsWithTxId = (
   if (argsLength < (32 + 2) * 2) {
     throw new Error("Lock args length is invalid");
   }
-  return `0x${trimHexPrefix(args).substring(0, argsLength - 32 * 2)}${trimHexPrefix(reverseHexByteOrder(txId))}`;
+  return prependHexPrefix(
+    `${trimHexPrefix(args).substring(0, argsLength - 32 * 2)}${trimHexPrefix(
+      reverseHexByteOrder(txId),
+    )}`,
+  );
 };

@@ -9,7 +9,7 @@ import {
   RGBPPUnlock,
   Uint16,
 } from "../schemas/generated/rgbpp.js";
-import { RgbppXudtLikeToken, UtxoSeal } from "../types/rgbpp.js";
+import { RgbppXudtLikeToken, UtxoSeal } from "../types/rgbpp/rgbpp.js";
 import {
   prependHexPrefix,
   reverseHexByteOrder,

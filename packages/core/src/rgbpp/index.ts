@@ -1,11 +1,14 @@
 import { ccc } from "@ckb-ccc/core";
 
+import { IUtxoLikeWallet } from "../interfaces/index.js";
 import {
   cellDeps as defaultCellDeps,
   scripts as defaultScripts,
 } from "../scripts/index.js";
 import { Network } from "../types/network.js";
-import { RgbppXudtLikeIssuance, ScriptInfo } from "../types/rgbpp.js";
+import { ScriptInfo } from "../types/rgbpp/rgbpp.js";
+import { RgbppXudtLikeIssuance } from "../types/rgbpp/xudt-like.js";
+import { RgbppApiSpvProof } from "../types/spv.js";
 import { XudtLike } from "../xdut-like/index.js";
 
 export class Rgbpp {
@@ -13,7 +16,13 @@ export class Rgbpp {
   private cellDeps: Record<string, ccc.CellDep>;
   private xudtLike: XudtLike;
 
-  constructor(network: Network, scriptInfos?: ScriptInfo[]) {
+  private utxoLikeWallet: IUtxoLikeWallet;
+
+  constructor(
+    network: Network,
+    utxoLikeWallet: IUtxoLikeWallet,
+    scriptInfos?: ScriptInfo[],
+  ) {
     this.scripts = Object.assign({}, defaultScripts[network]);
     this.cellDeps = Object.assign({}, defaultCellDeps[network]);
     // override default scripts and cellDeps
@@ -23,12 +32,17 @@ export class Rgbpp {
     });
 
     this.xudtLike = new XudtLike(this.scripts, this.cellDeps);
+    this.utxoLikeWallet = utxoLikeWallet;
   }
 
   xudtLikeIssuancePartialTx(
     params: RgbppXudtLikeIssuance,
   ): Promise<ccc.Transaction> {
     return this.xudtLike.issuancePartialTx(params);
+  }
+
+  getSpvProof(txId: string): Promise<RgbppApiSpvProof | null> {
+    return this.utxoLikeWallet.getSpvProof(txId);
   }
 }
 

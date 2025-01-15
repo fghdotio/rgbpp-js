@@ -7,7 +7,9 @@ import {
   XUDT_LIKE_ISSUANCE_OUTPUT_INDEX,
 } from "../constants/index.js";
 import { deadLock, ScriptName } from "../scripts/index.js";
-import { RgbppXudtLikeIssuance, SpvProof, UtxoSeal } from "../types/rgbpp.js";
+import { UtxoSeal } from "../types/rgbpp/rgbpp.js";
+import { RgbppXudtLikeIssuance } from "../types/rgbpp/xudt-like.js";
+import { SpvProof } from "../types/spv.js";
 import { prependHexPrefix, u128ToLe } from "../utils/encoder.js";
 import {
   buildBtcTimeLockArgs,
