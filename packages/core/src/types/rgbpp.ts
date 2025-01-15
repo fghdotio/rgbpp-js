@@ -26,7 +26,6 @@ export interface RgbppXudtLikeIssuance {
   utxoSeal: UtxoSeal;
   rgbppLiveCell: ccc.Cell;
   customScriptInfo?: ScriptInfo;
-  txHashPlaceholder?: string;
 }
 
 export interface RgbppApiSpvProof {
@@ -35,4 +34,9 @@ export interface RgbppApiSpvProof {
     tx_hash: string;
     index: string;
   };
+}
+
+export interface SpvProof {
+  proof: ccc.Hex;
+  spvClientOutpoint: ccc.OutPoint;
 }

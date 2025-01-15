@@ -1,25 +1,27 @@
 import { ccc, Hex } from "@ckb-ccc/core";
 
+import { serializeWitnessArgs } from "@nervosnetwork/ckb-sdk-utils";
 import {
   RGBPP_CKB_WITNESS_PLACEHOLDER,
   TX_HASH_PLACEHOLDER,
   XUDT_LIKE_ISSUANCE_OUTPUT_INDEX,
 } from "../constants/index.js";
 import { deadLock, ScriptName } from "../scripts/index.js";
-import {
-  RgbppApiSpvProof,
-  RgbppXudtLikeIssuance,
-  UtxoSeal,
-} from "../types/rgbpp.js";
-import { u128ToLe } from "../utils/hex.js";
+import { RgbppXudtLikeIssuance, SpvProof, UtxoSeal } from "../types/rgbpp.js";
+import { prependHexPrefix, u128ToLe } from "../utils/encoder.js";
 import {
   buildBtcTimeLockArgs,
   buildRgbppLockArgs,
+  buildRgbppUnlock,
   buildUniqueTypeArgs,
   calculateRgbppXudtLikeTokenCellCapacity,
   calculateRgbppXudtLikeTokenInfoCellCapacity,
   encodeRgbppXudtLikeToken,
 } from "../utils/rgbpp.js";
+import {
+  isUsingOneOfScripts,
+  updateScriptArgsWithTxId,
+} from "../utils/script.js";
 
 export class XudtLike {
   constructor(
@@ -53,7 +55,7 @@ export class XudtLike {
         lock: {
           ...this.scripts[ScriptName.RgbppLock],
           args: buildRgbppLockArgs({
-            txHash: params.txHashPlaceholder ?? TX_HASH_PLACEHOLDER,
+            txHash: TX_HASH_PLACEHOLDER,
             index: XUDT_LIKE_ISSUANCE_OUTPUT_INDEX,
           }),
         },
@@ -102,24 +104,85 @@ export class XudtLike {
 
   // transferPartialTx: RgbppPartialTx;
 
-  // TODO
   injectTxId(partialTx: ccc.Transaction, txId: string): ccc.Transaction {
-    return partialTx;
+    const outputs = partialTx.outputs.map((output) => {
+      if (
+        isUsingOneOfScripts(output.lock, [
+          this.scripts[ScriptName.RgbppLock],
+          this.scripts[ScriptName.BtcTimeLock],
+        ])
+      ) {
+        return ccc.CellOutput.from({
+          ...output,
+          lock: {
+            ...output.lock,
+            args: updateScriptArgsWithTxId(
+              output.lock.args,
+              prependHexPrefix(txId),
+            ),
+          },
+        });
+      }
+      return output;
+    });
+
+    return ccc.Transaction.from({
+      ...partialTx,
+      outputs,
+    });
   }
 
-  // TODO
   injectWitnesses(
     partialTx: ccc.Transaction,
-    spvClient: RgbppApiSpvProof,
+    btcLikeTxBytes: Hex,
+    spvClient: SpvProof,
   ): ccc.Transaction {
-    return partialTx;
+    const tx = partialTx.clone();
+
+    const rgbppUnlock = buildRgbppUnlock(
+      btcLikeTxBytes,
+      spvClient.proof,
+      tx.inputs.length,
+      tx.outputs.length,
+    );
+
+    // const rgbppWitnessArgs = ccc.WitnessArgs.from({
+    //   lock: rgbppUnlock,
+    // });
+    const rgbppWitness = prependHexPrefix(
+      serializeWitnessArgs({
+        lock: rgbppUnlock,
+        inputType: "",
+        outputType: "",
+      }),
+    );
+    tx.witnesses = tx.witnesses.map((witness) =>
+      witness.startsWith(RGBPP_CKB_WITNESS_PLACEHOLDER)
+        ? rgbppWitness
+        : witness,
+    );
+
+    return tx;
   }
 
   assembleFinalCkbTx(
     partialTx: ccc.Transaction,
-    txId: string,
-    spvProof: RgbppApiSpvProof,
+    btcLikeTxId: string,
+    btcLikeTxBytes: Hex,
+    spvProof: SpvProof,
   ): ccc.Transaction {
-    return this.injectWitnesses(this.injectTxId(partialTx, txId), spvProof);
+    const tx = this.injectWitnesses(
+      this.injectTxId(partialTx, btcLikeTxId),
+      btcLikeTxBytes,
+      spvProof,
+    );
+
+    tx.addCellDeps(
+      ccc.CellDep.from({
+        outPoint: spvProof.spvClientOutpoint,
+        depType: "code",
+      }),
+    );
+    return tx;
   }
 }

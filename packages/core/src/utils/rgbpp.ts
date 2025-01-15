@@ -4,7 +4,11 @@ import { blockchain } from "@ckb-lumos/base";
 import { blake2b, PERSONAL } from "@nervosnetwork/ckb-sdk-utils";
 
 import { DEFAULT_CONFIRMATIONS } from "../constants/index.js";
-import { BTCTimeLock } from "../schemas/generated/rgbpp.js";
+import {
+  BTCTimeLock,
+  RGBPPUnlock,
+  Uint16,
+} from "../schemas/generated/rgbpp.js";
 import { RgbppXudtLikeToken, UtxoSeal } from "../types/rgbpp.js";
 import {
   prependHexPrefix,
@@ -14,7 +18,7 @@ import {
   u64ToLe,
   u8ToHex,
   utf8ToHex,
-} from "./hex.js";
+} from "./encoder.js";
 
 export const encodeRgbppXudtLikeToken = (token: RgbppXudtLikeToken): string => {
   const decimal = u8ToHex(token.decimal);
@@ -75,4 +79,23 @@ export const buildUniqueTypeArgs = (
   s.update(input);
   s.update(bytesFrom(prependHexPrefix(u64ToLe(BigInt(firstOutputIndex)))));
   return prependHexPrefix(`${s.digest("hex").slice(0, 40)}`);
+};
+
+export const buildRgbppUnlock = (
+  btcLikeTxBytes: Hex,
+  btcLikeTxProof: Hex,
+  inputLen: number,
+  outputLen: number,
+) => {
+  return hexFrom(
+    RGBPPUnlock.pack({
+      version: Uint16.pack([0, 0]),
+      extraData: {
+        inputLen: u8ToHex(inputLen),
+        outputLen: u8ToHex(outputLen),
+      },
+      btcTx: prependHexPrefix(btcLikeTxBytes),
+      btcTxProof: prependHexPrefix(btcLikeTxProof),
+    }),
+  );
 };
