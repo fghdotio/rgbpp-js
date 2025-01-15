@@ -28,3 +28,11 @@ export interface RgbppXudtLikeIssuance {
   customScriptInfo?: ScriptInfo;
   txHashPlaceholder?: string;
 }
+
+export interface RgbppApiSpvProof {
+  proof: string;
+  spv_client: {
+    tx_hash: string;
+    index: string;
+  };
+}

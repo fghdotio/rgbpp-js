@@ -6,7 +6,11 @@ import {
   XUDT_LIKE_ISSUANCE_OUTPUT_INDEX,
 } from "../constants/index.js";
 import { deadLock, ScriptName } from "../scripts/index.js";
-import { RgbppXudtLikeIssuance, UtxoSeal } from "../types/rgbpp.js";
+import {
+  RgbppApiSpvProof,
+  RgbppXudtLikeIssuance,
+  UtxoSeal,
+} from "../types/rgbpp.js";
 import { u128ToLe } from "../utils/hex.js";
 import {
   buildBtcTimeLockArgs,
@@ -97,4 +101,25 @@ export class XudtLike {
   }
 
   // transferPartialTx: RgbppPartialTx;
+
+  // TODO
+  injectTxId(partialTx: ccc.Transaction, txId: string): ccc.Transaction {
+    return partialTx;
+  }
+
+  // TODO
+  injectWitnesses(
+    partialTx: ccc.Transaction,
+    spvClient: RgbppApiSpvProof,
+  ): ccc.Transaction {
+    return partialTx;
+  }
+
+  assembleFinalCkbTx(
+    partialTx: ccc.Transaction,
+    txId: string,
+    spvProof: RgbppApiSpvProof,
+  ): ccc.Transaction {
+    return this.injectWitnesses(this.injectTxId(partialTx, txId), spvProof);
+  }
 }
