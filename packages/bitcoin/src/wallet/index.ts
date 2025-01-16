@@ -1,8 +1,11 @@
 import {
   IUtxoLikeWallet,
+  Network,
   TxInput,
+  TxOutput,
   Utxo,
   UtxoLikeApiRecommendedFeeRates,
+  UtxoLikeApiSentTransaction,
   UtxoLikeApiTransaction,
   UtxoLikeApiUtxo,
   UtxoLikeApiUtxoParams,
@@ -10,15 +13,25 @@ import {
   utxoToInput,
 } from "@rgbpp-js/core";
 import { RgbppApiSpvProof } from "@rgbpp-js/core/dist/types/spv.js";
+import { Psbt } from "bitcoinjs-lib";
 import { BtcAssetsApiBase } from "../service/base.js";
-import { getAddressType, isOpReturnScriptPubkey } from "../utils.js";
+import { getAddressType, isOpReturnScriptPubkey, toNetwork } from "../utils.js";
+import { BtcAccount, signPsbt, transactionToHex } from "./account.js";
 
 export class BtcWallet extends BtcAssetsApiBase implements IUtxoLikeWallet {
-  static fromToken(url: string, token: string, origin?: string) {
-    return new BtcWallet({ url, token, origin });
+  private account: BtcAccount;
+
+  constructor(
+    account: BtcAccount,
+    url: string,
+    token: string,
+    origin?: string,
+  ) {
+    super({ url, token, origin });
+    this.account = account;
   }
 
-  async getUtxoLikeTxInput(utxoSeal: UtxoSeal): Promise<TxInput | null> {
+  async getTxInput(utxoSeal: UtxoSeal): Promise<TxInput | null> {
     const utxoLikeTx = await this.getTransaction(utxoSeal.txId);
     if (!utxoLikeTx) {
       return null;
@@ -45,6 +58,30 @@ export class BtcWallet extends BtcAssetsApiBase implements IUtxoLikeWallet {
       address: vout.scriptpubkey_address,
       addressType: getAddressType(vout.scriptpubkey_address),
     } as Utxo);
+  }
+
+  buildAndSignTx(
+    inputs: TxInput[],
+    outputs: TxOutput[],
+    network: Network,
+  ): { txHex: string; rawTxHex: string } {
+    const psbt = new Psbt({ network: toNetwork(network) });
+    inputs.forEach((input) => {
+      psbt.data.addInput(input.data);
+    });
+    outputs.forEach((output) => {
+      psbt.addOutput(output);
+    });
+
+    signPsbt(psbt, this.account);
+    psbt.finalizeAllInputs();
+    const tx = psbt.extractTransaction(true);
+
+    return {
+      txHex: tx.toHex(),
+      // Exclude witness from the BTC_TX for unlocking RGBPP assets
+      rawTxHex: transactionToHex(tx, false),
+    };
   }
 
   getTransaction(txId: string) {
@@ -75,5 +112,17 @@ export class BtcWallet extends BtcAssetsApiBase implements IUtxoLikeWallet {
     return this.request<UtxoLikeApiRecommendedFeeRates>(
       `/bitcoin/v1/fees/recommended`,
     );
+  }
+
+  async sendTransaction(txHex: string): Promise<string> {
+    const { txId } = await this.post<UtxoLikeApiSentTransaction>(
+      "/bitcoin/v1/transaction",
+      {
+        body: JSON.stringify({
+          txhex: txHex,
+        }),
+      },
+    );
+    return txId;
   }
 }

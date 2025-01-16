@@ -11,6 +11,7 @@ import { RgbppXudtLikeIssuance } from "../types/rgbpp/xudt-like.js";
 import { RgbppApiSpvProof } from "../types/spv.js";
 import {
   InitOutput,
+  TxInput,
   TxOutput,
   UtxoLikeTransactionParams,
 } from "../types/utxo-like.js";
@@ -20,6 +21,7 @@ import { convertToOutput } from "../utils/utxo-like.js";
 import { XudtLike } from "../xdut-like/index.js";
 
 export class Rgbpp {
+  private network: Network;
   private scripts: Record<string, ccc.Script>;
   private cellDeps: Record<string, ccc.CellDep>;
   private xudtLike: XudtLike;
@@ -41,6 +43,8 @@ export class Rgbpp {
 
     this.xudtLike = new XudtLike(this.scripts, this.cellDeps);
     this.utxoLikeWallet = utxoLikeWallet;
+
+    this.network = network;
   }
 
   calculateCommitment(tx: ccc.Transaction) {
@@ -132,8 +136,10 @@ export class Rgbpp {
     );
   }
 
-  async buildUtxoLikeInputsOutputs(params: UtxoLikeTransactionParams) {
-    const input = await this.utxoLikeWallet.getUtxoLikeTxInput(params.utxoSeal);
+  async buildUtxoLikeInputsOutputs(
+    params: UtxoLikeTransactionParams,
+  ): Promise<{ inputs: TxInput[]; outputs: TxOutput[] }> {
+    const input = await this.utxoLikeWallet.getTxInput(params.utxoSeal);
     if (!input) {
       throw new Error("Input not found");
     }
@@ -150,6 +156,14 @@ export class Rgbpp {
       inputs: [input],
       outputs: outputs,
     };
+  }
+
+  buildAndSignUtxoLikeTx(
+    inputs: TxInput[],
+    outputs: TxOutput[],
+    network: Network,
+  ): { txHex: string; rawTxHex: string } {
+    return this.utxoLikeWallet.buildAndSignTx(inputs, outputs, network);
   }
 }
 

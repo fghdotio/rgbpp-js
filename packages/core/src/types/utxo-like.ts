@@ -148,3 +148,7 @@ export interface UtxoLikeTransactionParams {
   to: string;
   commitment: string;
 }
+
+export interface UtxoLikeApiSentTransaction {
+  txId: string;
+}

@@ -29,6 +29,9 @@ importers:
 
   packages/bitcoin:
     dependencies:
+      '@bitcoinerlab/secp256k1':
+        specifier: ^1.2.0
+        version: 1.2.0
       '@rgbpp-js/core':
         specifier: workspace:*
         version: link:../core
@@ -346,6 +349,9 @@ packages:
 
   '@bcoe/v8-coverage@0.2.3':
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
+
+  '@bitcoinerlab/secp256k1@1.2.0':
+    resolution: {integrity: sha512-jeujZSzb3JOZfmJYI0ph1PVpCRV5oaexCgy+RvCXV8XlY+XFB/2n3WOcvBsKLsOw78KYgnQrQWb2HrKE4be88Q==}
 
   '@ckb-ccc/core@1.5.0':
     resolution: {integrity: sha512-4ccRWgXjapumfIw6iBMfbcaSA6AesMGCf8dAD1XshP1utcFkBNGZx0ANAillF4/tAIj2ZqOT6P56iP5R2ZpCog==}
@@ -2508,6 +2514,10 @@ snapshots:
       '@babel/helper-validator-identifier': 7.25.9
 
   '@bcoe/v8-coverage@0.2.3': {}
+
+  '@bitcoinerlab/secp256k1@1.2.0':
+    dependencies:
+      '@noble/curves': 1.8.0
 
   '@ckb-ccc/core@1.5.0(typescript@5.7.3)':
     dependencies:

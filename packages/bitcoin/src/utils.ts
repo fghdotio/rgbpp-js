@@ -1,6 +1,6 @@
 import bitcoin from "bitcoinjs-lib";
 
-import { AddressType } from "@rgbpp-js/core";
+import { AddressType, Network } from "@rgbpp-js/core";
 
 /**
  * Check if target string is a valid domain.
@@ -65,7 +65,7 @@ export function getAddressType(address: string): AddressType {
   return decodeAddress(address).addressType;
 }
 
-enum NetworkType {
+export enum NetworkType {
   MAINNET,
   TESTNET,
   REGTEST, // deprecated
@@ -169,5 +169,13 @@ function getAddressTypeDust(addressType: AddressType) {
     return 330;
   } else {
     return 546;
+  }
+}
+
+export function toNetwork(network: Network): bitcoin.Network {
+  if (network === Network.BitcoinMainnet) {
+    return bitcoin.networks.bitcoin;
+  } else {
+    return bitcoin.networks.testnet;
   }
 }
