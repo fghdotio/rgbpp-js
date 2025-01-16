@@ -1,5 +1,5 @@
-import bitcoin from "bitcoinjs-lib";
-import { cloneDeep } from "lodash";
+import * as bitcoin from "bitcoinjs-lib";
+import lodash from "lodash";
 
 import {
   AddressType,
@@ -9,6 +9,8 @@ import {
   Utxo,
 } from "../types/utxo-like.js";
 import { trimHexPrefix } from "./encoder.js";
+
+const { cloneDeep } = lodash;
 
 /**
  * Convert data to OP_RETURN script pubkey.

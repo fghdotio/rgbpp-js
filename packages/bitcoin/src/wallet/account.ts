@@ -1,5 +1,5 @@
 import ecc from "@bitcoinerlab/secp256k1";
-import bitcoin from "bitcoinjs-lib";
+import * as bitcoin from "bitcoinjs-lib";
 import { ECPairFactory } from "ecpair";
 
 bitcoin.initEccLib(ecc);
@@ -29,7 +29,7 @@ export function createBtcAccount(
 
   if (addressType === AddressType.P2WPKH) {
     const p2wpkh = bitcoin.payments.p2wpkh({
-      pubkey: keyPair.publicKey,
+      pubkey: Buffer.from(keyPair.publicKey),
       network,
     });
     return {

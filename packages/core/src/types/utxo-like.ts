@@ -2,6 +2,9 @@ import { ccc } from "@ckb-ccc/core";
 
 import { UtxoSeal } from "./rgbpp/rgbpp.js";
 
+// Read more about the available address types:
+// - P2WPKH: https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki#p2wpkh
+// - P2TR: https://github.com/bitcoin/bips/blob/master/bip-0341.mediawiki
 export enum AddressType {
   P2PKH,
   P2WPKH,

@@ -1,4 +1,4 @@
-import { pickBy } from "lodash";
+import lodash from "lodash";
 import { BtcAssetsApiError, ErrorCodes } from "../error.js";
 import {
   BaseApiRequestOptions,
@@ -8,6 +8,8 @@ import {
   Json,
 } from "../types/index.js";
 import { isDomain } from "../utils.js";
+
+const { pickBy } = lodash;
 
 export class BtcAssetsApiBase implements BaseApis {
   public url: string;

@@ -1,8 +1,11 @@
 import { Rgbpp, Network } from "@rgbpp-js/core";
-import { BtcWallet } from "@rgbpp-js/bitcoin";
 
-const rgbpp = new Rgbpp(Network.BitcoinSignet, new BtcWallet());
-rgbpp.getSpvProof("0x123");
+import { utxoBasedWallet } from "./env.js";
+
+console.log(utxoBasedWallet);
+
+const rgbpp = new Rgbpp(Network.BitcoinSignet, utxoBasedWallet);
+console.log(rgbpp);
 
 /* 
 pnpm tsx packages/examples/src/index.ts

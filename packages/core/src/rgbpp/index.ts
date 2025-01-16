@@ -161,9 +161,8 @@ export class Rgbpp {
   buildAndSignUtxoLikeTx(
     inputs: TxInput[],
     outputs: TxOutput[],
-    network: Network,
   ): { txHex: string; rawTxHex: string } {
-    return this.utxoLikeWallet.buildAndSignTx(inputs, outputs, network);
+    return this.utxoLikeWallet.buildAndSignTx(inputs, outputs, this.network);
   }
 }
 
