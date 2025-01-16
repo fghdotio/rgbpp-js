@@ -81,9 +81,15 @@ importers:
       '@nervosnetwork/ckb-sdk-utils':
         specifier: ^0.109.4
         version: 0.109.4
+      bitcoinjs-lib:
+        specifier: ^6.1.7
+        version: 6.1.7
       js-sha256:
         specifier: ^0.11.0
         version: 0.11.0
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
     devDependencies:
       '@ckb-ccc/core':
         specifier: ^1.5.0
@@ -91,6 +97,9 @@ importers:
       '@types/jest':
         specifier: ^29.5.14
         version: 29.5.14
+      '@types/lodash':
+        specifier: ^4.17.14
+        version: 4.17.14
       '@types/node':
         specifier: ^22.10.6
         version: 22.10.6

@@ -3,7 +3,7 @@ import { ccc, Hex } from "@ckb-ccc/core";
 import { serializeWitnessArgs } from "@nervosnetwork/ckb-sdk-utils";
 import {
   RGBPP_CKB_WITNESS_PLACEHOLDER,
-  TX_HASH_PLACEHOLDER,
+  TX_ID_PLACEHOLDER,
   XUDT_LIKE_ISSUANCE_OUTPUT_INDEX,
 } from "../constants/index.js";
 import { deadLock, ScriptName } from "../scripts/index.js";
@@ -57,7 +57,7 @@ export class XudtLike {
         lock: {
           ...this.scripts[ScriptName.RgbppLock],
           args: buildRgbppLockArgs({
-            txHash: TX_HASH_PLACEHOLDER,
+            txId: TX_ID_PLACEHOLDER,
             index: XUDT_LIKE_ISSUANCE_OUTPUT_INDEX,
           }),
         },
@@ -74,7 +74,7 @@ export class XudtLike {
       {
         lock: {
           ...this.scripts[ScriptName.BtcTimeLock],
-          args: buildBtcTimeLockArgs(deadLock, TX_HASH_PLACEHOLDER),
+          args: buildBtcTimeLockArgs(deadLock, TX_ID_PLACEHOLDER),
         },
         type: {
           ...this.scripts[ScriptName.UniqueType],

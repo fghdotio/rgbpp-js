@@ -42,14 +42,14 @@ export const encodeRgbppXudtLikeToken = (token: RgbppXudtLikeToken): string => {
 
 // TODO: FIX THIS
 export const calculateRgbppXudtLikeTokenCellCapacity = (
-  tokenInfo: RgbppXudtLikeToken,
+  token: RgbppXudtLikeToken,
 ): bigint => {
   return BigInt(25300000000n);
 };
 
 // TODO: FIX THIS
 export const calculateRgbppXudtLikeTokenInfoCellCapacity = (
-  tokenInfo: RgbppXudtLikeToken,
+  token: RgbppXudtLikeToken,
 ): bigint => {
   return BigInt(22100000000n);
 };
@@ -62,7 +62,7 @@ export const calculateRgbppXudtLikeTokenInfoCellCapacity = (
 export const buildRgbppLockArgs = (utxoSeal: UtxoSeal): Hex => {
   return prependHexPrefix(
     `${u32ToHex(utxoSeal.index, true)}${trimHexPrefix(
-      reverseHexByteOrder(prependHexPrefix(utxoSeal.txHash)),
+      reverseHexByteOrder(prependHexPrefix(utxoSeal.txId)),
     )}`,
   );
 };

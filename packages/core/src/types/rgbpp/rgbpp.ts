@@ -10,7 +10,7 @@ export interface RgbppXudtLikeToken {
 }
 
 export interface UtxoSeal {
-  txHash: string;
+  txId: string;
   index: number;
 }
 

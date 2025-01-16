@@ -1,6 +1,6 @@
 import { Hex, hexFrom } from "@ckb-ccc/core";
 
-export const trimHexPrefix = (hex: Hex): string =>
+export const trimHexPrefix = (hex: string): string =>
   hex.startsWith("0x") ? hex.substring(2) : hex;
 
 export const prependHexPrefix = (hex: string): Hex =>

@@ -1,10 +1,11 @@
+import { UtxoSeal } from "../types/rgbpp/rgbpp.js";
 import { RgbppApiSpvProof } from "../types/spv.js";
 import {
+  TxInput,
   UtxoLikeApiRecommendedFeeRates,
   UtxoLikeApiTransaction,
   UtxoLikeApiUtxo,
 } from "../types/utxo-like.js";
-
 export interface IUtxoLikeDataSource {
   getTransaction(txId: string): Promise<UtxoLikeApiTransaction>;
   getUtxos(address: string): Promise<UtxoLikeApiUtxo[]>;
@@ -19,8 +20,18 @@ export interface IRgbppSpvProof {
 }
 
 export interface IUtxoLikeTxBuilder {
-  signTransaction(tx: any): Promise<any>;
-  sendTransaction(signedTx: any): Promise<string>;
+  getUtxoLikeTxInput(utxoSeal: UtxoSeal): Promise<TxInput | null>;
+
+  // buildInputsOutputs(
+  //   ckbPartialTx: ccc.Transaction,
+  //   utxoSeal: UtxoSeal,
+  // ): Promise<any>;
+
+  // signTransaction(tx: any): Promise<any>;
+  // sendTransaction(signedTx: any): Promise<string>;
 }
 
-export interface IUtxoLikeWallet extends IRgbppSpvProof, IUtxoLikeDataSource {}
+export interface IUtxoLikeWallet
+  extends IUtxoLikeDataSource,
+    IUtxoLikeTxBuilder,
+    IRgbppSpvProof {}
