@@ -2,9 +2,10 @@
   "name": "@rgbpp-js/examples",
   "type": "module",
   "private": true,
-  "dependencies": {
-    "@ckb-ccc/shell": "^1.1.3",
+  "devDependencies": {
+    "@ckb-ccc/core": "^1.5.0",
     "@rgbpp-js/bitcoin": "workspace:*",
-    "@rgbpp-js/core": "workspace:*"
+    "@rgbpp-js/core": "workspace:*",
+    "dotenv": "^16.4.7"
   }
 }

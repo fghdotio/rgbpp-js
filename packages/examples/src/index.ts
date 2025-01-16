@@ -1,10 +1,8 @@
-import { Rgbpp, Network } from "@rgbpp-js/core";
+import { Rgbpp } from "@rgbpp-js/core";
 
-import { utxoBasedWallet } from "./env.js";
+import { utxoBasedWallet, utxoBasedNetwork } from "./env.js";
 
-console.log(utxoBasedWallet);
-
-const rgbpp = new Rgbpp(Network.BitcoinSignet, utxoBasedWallet);
+const rgbpp = new Rgbpp(utxoBasedNetwork, utxoBasedWallet);
 console.log(rgbpp);
 
 /* 

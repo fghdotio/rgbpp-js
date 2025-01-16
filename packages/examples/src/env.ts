@@ -1,5 +1,5 @@
 import { BtcWallet, createBtcAccount } from "@rgbpp-js/bitcoin";
-import { Network, AddressType } from "@rgbpp-js/core";
+import { Network, AddressType, Networks } from "@rgbpp-js/core";
 
 import { fileURLToPath } from "url";
 import { dirname } from "path";
@@ -8,7 +8,8 @@ import dotenv from "dotenv";
 
 dotenv.config({ path: dirname(fileURLToPath(import.meta.url)) + "/.env" });
 
-export const utxoBasedChainName = process.env.UTXO_BASED_CHAIN_NAME!;
+const utxoBasedChainName = process.env.UTXO_BASED_CHAIN_NAME! as keyof typeof Networks;
+export const utxoBasedNetwork = Networks[utxoBasedChainName];
 
 const utxoBasedChainPrivateKey = process.env.UTXO_BASED_CHAIN_PRIVATE_KEY!;
 const utxoBasedChainAddressType = process.env.UTXO_BASED_CHAIN_ADDRESS_TYPE!;
