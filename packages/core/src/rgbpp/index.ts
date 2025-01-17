@@ -96,12 +96,12 @@ export class Rgbpp {
     const outputs: InitOutput[] = [];
     let lastCkbTypedOutputIndex = -1;
     ckbPartialTx.outputs.forEach((output, index) => {
-      // If output.type is not null, then the output.lock must be RgbppLock or RgbppTimeLock
+      // If output.type is not null, then the output.lock must be RGB++ Lock or Btc Time Lock
       if (output.type) {
         if (
           !isUsingOneOfScripts(output.lock, [
-            this.scripts.rgbppLock,
-            this.scripts.rgbppTimeLock,
+            this.scripts[ScriptName.RgbppLock],
+            this.scripts[ScriptName.BtcTimeLock],
           ])
         ) {
           throw new Error("Invalid cell lock");
@@ -109,8 +109,10 @@ export class Rgbpp {
         lastCkbTypedOutputIndex = index;
       }
 
-      // If output.lock is RgbppLock, generate a corresponding output in outputs
-      if (isSameScriptTemplate(output.lock, this.scripts.rgbppLock)) {
+      // If output.lock is RGB++ Lock, generate a corresponding output in outputs
+      if (
+        isSameScriptTemplate(output.lock, this.scripts[ScriptName.RgbppLock])
+      ) {
         outputs.push({
           fixed: true,
           address: to,
@@ -156,6 +158,7 @@ export class Rgbpp {
           inputs: ckbPartialTx.inputs,
           outputs: ckbPartialTx.outputs.slice(0, lastCkbTypedOutputIndex + 1),
           outputsData: ckbPartialTx.outputsData.slice(
+            0,
             lastCkbTypedOutputIndex + 1,
           ),
         }),

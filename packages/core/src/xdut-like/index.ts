@@ -67,7 +67,7 @@ export class XudtLike {
         },
         capacity: calculateRgbppXudtLikeTokenCellCapacity(params.token),
       },
-      u128ToLe(params.amount),
+      u128ToLe(params.amount * BigInt(10 ** params.token.decimal)),
     );
 
     tx.addOutput(

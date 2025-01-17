@@ -45,14 +45,14 @@ export const encodeRgbppXudtLikeToken = (token: RgbppXudtLikeToken): string => {
 export const calculateRgbppXudtLikeTokenCellCapacity = (
   token: RgbppXudtLikeToken,
 ): bigint => {
-  return BigInt(25300000000n);
+  return BigInt(25200000000n);
 };
 
 // TODO: FIX THIS
 export const calculateRgbppXudtLikeTokenInfoCellCapacity = (
   token: RgbppXudtLikeToken,
 ): bigint => {
-  return BigInt(22100000000n);
+  return BigInt(22200000000n);
 };
 
 /**
@@ -90,7 +90,7 @@ export const buildUniqueTypeArgs = (
   firstInput: ccc.CellInput,
   firstOutputIndex: number,
 ) => {
-  const input = bytesFrom(firstInput.hash());
+  const input = bytesFrom(firstInput.toBytes());
   const s = blake2b(32, null, null, PERSONAL);
   s.update(input);
   s.update(bytesFrom(prependHexPrefix(u64ToLe(BigInt(firstOutputIndex)))));
@@ -118,7 +118,7 @@ export const buildRgbppUnlock = (
 
 // The maximum length of inputs and outputs is 255, and the field type representing the length in the RGB++ protocol is Uint8
 // refer to https://github.com/ckb-cell/rgbpp/blob/0c090b039e8d026aad4336395b908af283a70ebf/contracts/rgbpp-lock/src/main.rs#L173-L211
-export const calculateCommitment = (ckbPartialTx: ccc.Transaction): ccc.Hex => {
+export const calculateCommitment = (ckbPartialTx: ccc.Transaction): string => {
   const hash = sha256.create();
   hash.update(hexToBytes(utf8ToHex("RGB++")));
   const version = [0, 0];
@@ -144,22 +144,20 @@ export const calculateCommitment = (ckbPartialTx: ccc.Transaction): ccc.Hex => {
     hash.update(hexToBytes(serializeOutPoint(outPoint)));
   }
   for (let index = 0; index < outputs.length; index++) {
-    const output = outputs[index];
+    const output = {
+      capacity: prependHexPrefix(`${outputs[index].capacity.toString(16)}`),
+      lock: outputs[index].lock,
+      type: outputs[index].type,
+    };
     const outputData = outputsData[index];
-    hash.update(
-      hexToBytes(
-        serializeOutput({
-          capacity: prependHexPrefix(`${output.capacity.toString(16)}`),
-          lock: output.lock,
-          type: output.type,
-        }),
-      ),
-    );
+    hash.update(hexToBytes(serializeOutput(output)));
 
     const outputDataLen = u32ToLe(trimHexPrefix(outputData).length / 2);
-    hash.update(hexToBytes(prependHexPrefix(outputDataLen)));
-    hash.update(hexToBytes(outputData));
+    const odl = hexToBytes(prependHexPrefix(outputDataLen));
+    const od = hexToBytes(outputData);
+    hash.update(odl);
+    hash.update(od);
   }
   // double sha256
-  return prependHexPrefix(sha256(hash.array()));
+  return sha256(hash.array());
 };
