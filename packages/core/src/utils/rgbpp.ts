@@ -14,6 +14,7 @@ import {
   DEFAULT_CONFIRMATIONS,
   RGBPP_MAX_CELL_NUM,
 } from "../constants/index.js";
+import { Script } from "../schemas/generated/blockchain.js";
 import {
   BTCTimeLock,
   RGBPPUnlock,
@@ -34,10 +35,10 @@ import {
 export const encodeRgbppXudtLikeToken = (token: RgbppXudtLikeToken): string => {
   const decimal = u8ToHex(token.decimal);
   const name = trimHexPrefix(utf8ToHex(token.name));
-  const nameSize = u8ToHex(name.length / 2);
+  const nameSize = trimHexPrefix(u8ToHex(name.length / 2));
   const symbol = trimHexPrefix(utf8ToHex(token.symbol));
-  const symbolSize = u8ToHex(symbol.length / 2);
-  return `0x${decimal}${nameSize}${name}${symbolSize}${symbol}`;
+  const symbolSize = trimHexPrefix(u8ToHex(symbol.length / 2));
+  return `${decimal}${nameSize}${name}${symbolSize}${symbol}`;
 };
 
 // TODO: FIX THIS
@@ -75,9 +76,13 @@ export const buildBtcTimeLockArgs = (
   const btcTxid = blockchain.Byte32.pack(
     reverseHexByteOrder(prependHexPrefix(btcTxId)),
   );
-  const lockScript = blockchain.Script.unpack(receiverLock.hash());
+  const lockScript = Script.unpack(receiverLock.toBytes());
   return hexFrom(
-    BTCTimeLock.pack({ lockScript, after: confirmations, btcTxid }),
+    BTCTimeLock.pack({
+      lockScript,
+      after: confirmations,
+      btcTxid,
+    }),
   );
 };
 

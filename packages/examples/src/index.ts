@@ -1,13 +1,8 @@
 import { ccc } from "@ckb-ccc/core";
 
-import { Rgbpp, UtxoSeal } from "@rgbpp-js/core";
+import { UtxoSeal } from "@rgbpp-js/core";
 
-import {
-  utxoBasedWallet,
-  utxoBasedNetwork,
-  ckbClient,
-  ckbSigner,
-} from "./env.js";
+import { ckbClient, ckbSigner, rgbppClient } from "./env.js";
 
 const xudtToken = {
   name: "Standard xUDT",
@@ -15,9 +10,8 @@ const xudtToken = {
   decimal: 8,
 };
 
-const issueXudt = async (utxoSeal: UtxoSeal) => {
-  const rgbpp = new Rgbpp(utxoBasedNetwork.name, utxoBasedWallet);
-  const rgbppLockScript = rgbpp.buildRgbppLockScript(utxoSeal);
+const prepareRgbppCell = async (utxoSeal: UtxoSeal) => {
+  const rgbppLockScript = rgbppClient.buildRgbppLockScript(utxoSeal);
 
   const rgbppCellGen = await ckbClient.findCellsByLock(rgbppLockScript);
   const rgbppCells: ccc.Cell[] = [];
@@ -26,16 +20,17 @@ const issueXudt = async (utxoSeal: UtxoSeal) => {
   }
   let rgbppCell: ccc.Cell;
   if (rgbppCells.length === 0) {
+    console.log("RGB++ cell not found, creating a new one");
     const tx = ccc.Transaction.default();
     tx.addOutput({
       lock: rgbppLockScript,
-      capacity: rgbpp.calculateXudtIssuanceCellCapacity(xudtToken),
+      capacity: rgbppClient.calculateXudtIssuanceCellCapacity(xudtToken),
     });
     await tx.completeInputsByCapacity(ckbSigner);
     await tx.completeFeeBy(ckbSigner);
     const txHash = await ckbSigner.sendTransaction(tx);
     await ckbClient.waitTransaction(txHash);
-    console.log(txHash);
+    console.log("RGB++ cell created, txHash: ", txHash);
 
     const cell = await ckbClient.getCellLive({
       txHash,
@@ -46,16 +41,36 @@ const issueXudt = async (utxoSeal: UtxoSeal) => {
     }
     rgbppCell = cell;
   } else {
+    console.log("Using existing RGB++ cell");
     rgbppCell = rgbppCells[0];
   }
 
-  console.log(rgbppCell);
+  return rgbppCell;
+};
+
+const issueXudt = async (utxoSeal: UtxoSeal) => {
+  const rgbppCell = await prepareRgbppCell(utxoSeal);
+
+  const partialTx = await rgbppClient.xudtLikeIssuanceCkbPartialTx({
+    token: xudtToken,
+    amount: 2100_0000n,
+    utxoSeal,
+    rgbppLiveCell: rgbppCell,
+  });
+  const commitment = rgbppClient.calculateCommitment(partialTx);
 };
 
 issueXudt({
   txId: "116ff4fed254357d5d321d8c9a6846ecf3b18b48f06a566c58278df58a38429e",
   index: 0,
-});
+})
+  .then(() => {
+    process.exit(0);
+  })
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  });
 
 /* 
 pnpm tsx packages/examples/src/index.ts

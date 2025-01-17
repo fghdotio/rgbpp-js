@@ -35,7 +35,7 @@ export class XudtLike {
     return buildRgbppLockArgs(utxoSeal);
   }
 
-  async issuancePartialTx(
+  async issuanceCkbPartialTx(
     params: RgbppXudtLikeIssuance,
   ): Promise<ccc.Transaction> {
     const xudtScript =

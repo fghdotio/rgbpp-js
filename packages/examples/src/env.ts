@@ -1,12 +1,17 @@
 import { ccc } from "@ckb-ccc/core";
-
-import { BtcWallet, createBtcAccount } from "@rgbpp-js/bitcoin";
-import { Network, AddressType, Networks, isMainnet } from "@rgbpp-js/core";
+import dotenv from "dotenv";
 
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 
-import dotenv from "dotenv";
+import { BtcWallet, createBtcAccount } from "@rgbpp-js/bitcoin";
+import {
+  Network,
+  AddressType,
+  Networks,
+  isMainnet,
+  Rgbpp,
+} from "@rgbpp-js/core";
 
 dotenv.config({ path: dirname(fileURLToPath(import.meta.url)) + "/.env" });
 
@@ -42,3 +47,5 @@ export const utxoBasedWallet = new BtcWallet(
   btcAssetsApiToken,
   btcAssetsApiOrigin
 );
+
+export const rgbppClient = new Rgbpp(utxoBasedNetwork.name, utxoBasedWallet);

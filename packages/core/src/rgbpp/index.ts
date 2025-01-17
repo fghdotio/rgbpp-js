@@ -78,10 +78,10 @@ export class Rgbpp {
     return calculateCommitment(tx);
   }
 
-  xudtLikeIssuancePartialTx(
+  xudtLikeIssuanceCkbPartialTx(
     params: RgbppXudtLikeIssuance,
   ): Promise<ccc.Transaction> {
-    return this.xudtLike.issuancePartialTx(params);
+    return this.xudtLike.issuanceCkbPartialTx(params);
   }
 
   async getSpvProof(
