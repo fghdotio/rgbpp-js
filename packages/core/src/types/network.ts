@@ -8,10 +8,28 @@ export enum Network {
 }
 
 export const Networks = {
-  [Network.BitcoinMainnet]: Network.BitcoinMainnet,
-  [Network.BitcoinTestnet3]: Network.BitcoinTestnet3,
-  [Network.BitcoinSignet]: Network.BitcoinSignet,
-
-  [Network.DogecoinMainnet]: Network.DogecoinMainnet,
-  [Network.DogecoinTestnet]: Network.DogecoinTestnet,
+  [Network.BitcoinMainnet]: {
+    name: Network.BitcoinMainnet,
+    isMainnet: true,
+  },
+  [Network.BitcoinTestnet3]: {
+    name: Network.BitcoinTestnet3,
+    isMainnet: false,
+  },
+  [Network.BitcoinSignet]: {
+    name: Network.BitcoinSignet,
+    isMainnet: false,
+  },
+  [Network.DogecoinMainnet]: {
+    name: Network.DogecoinMainnet,
+    isMainnet: true,
+  },
+  [Network.DogecoinTestnet]: {
+    name: Network.DogecoinTestnet,
+    isMainnet: false,
+  },
 } as const;
+
+export const isMainnet = (network: Network): boolean => {
+  return Networks[network].isMainnet;
+};

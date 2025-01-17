@@ -1,5 +1,7 @@
+import { ccc } from "@ckb-ccc/core";
+
 import { BtcWallet, createBtcAccount } from "@rgbpp-js/bitcoin";
-import { Network, AddressType, Networks } from "@rgbpp-js/core";
+import { Network, AddressType, Networks, isMainnet } from "@rgbpp-js/core";
 
 import { fileURLToPath } from "url";
 import { dirname } from "path";
@@ -8,8 +10,16 @@ import dotenv from "dotenv";
 
 dotenv.config({ path: dirname(fileURLToPath(import.meta.url)) + "/.env" });
 
-const utxoBasedChainName = process.env.UTXO_BASED_CHAIN_NAME! as keyof typeof Networks;
+const utxoBasedChainName = process.env
+  .UTXO_BASED_CHAIN_NAME! as keyof typeof Networks;
 export const utxoBasedNetwork = Networks[utxoBasedChainName];
+export const ckbClient = isMainnet(utxoBasedNetwork.name)
+  ? new ccc.ClientPublicMainnet()
+  : new ccc.ClientPublicTestnet();
+export const ckbSigner = new ccc.SignerCkbPrivateKey(
+  ckbClient,
+  process.env.CKB_SECP256K1_PRIVATE_KEY!
+);
 
 const utxoBasedChainPrivateKey = process.env.UTXO_BASED_CHAIN_PRIVATE_KEY!;
 const utxoBasedChainAddressType = process.env.UTXO_BASED_CHAIN_ADDRESS_TYPE!;

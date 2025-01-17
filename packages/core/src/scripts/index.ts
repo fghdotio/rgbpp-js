@@ -83,8 +83,8 @@ const signetCellDeps = {
 } as const;
 
 export const scripts = {
-  [Networks.BitcoinSignet]: signetScripts,
-  [Networks.BitcoinTestnet3]: {
+  [Networks.BitcoinSignet.name]: signetScripts,
+  [Networks.BitcoinTestnet3.name]: {
     ...signetScripts,
     [ScriptName.RgbppLock]: ccc.Script.from({
       codeHash:
@@ -100,14 +100,14 @@ export const scripts = {
     }),
   },
 
-  [Networks.BitcoinMainnet]: {},
-  [Networks.DogecoinMainnet]: {},
-  [Networks.DogecoinTestnet]: {},
+  [Networks.BitcoinMainnet.name]: {},
+  [Networks.DogecoinMainnet.name]: {},
+  [Networks.DogecoinTestnet.name]: {},
 } as const;
 
 export const cellDeps = {
-  [Networks.BitcoinSignet]: signetCellDeps,
-  [Networks.BitcoinTestnet3]: {
+  [Networks.BitcoinSignet.name]: signetCellDeps,
+  [Networks.BitcoinTestnet3.name]: {
     ...signetCellDeps,
     [ScriptName.RgbppLock]: ccc.CellDep.from({
       outPoint: {
@@ -127,9 +127,9 @@ export const cellDeps = {
     }),
   },
 
-  [Networks.BitcoinMainnet]: {},
-  [Networks.DogecoinMainnet]: {},
-  [Networks.DogecoinTestnet]: {},
+  [Networks.BitcoinMainnet.name]: {},
+  [Networks.DogecoinMainnet.name]: {},
+  [Networks.DogecoinTestnet.name]: {},
 } as const;
 
 export const deadLock = ccc.Script.from({

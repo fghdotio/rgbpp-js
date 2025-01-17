@@ -4,9 +4,14 @@ import { IUtxoLikeWallet } from "../interfaces/index.js";
 import {
   cellDeps as defaultCellDeps,
   scripts as defaultScripts,
+  ScriptName,
 } from "../scripts/index.js";
 import { Network } from "../types/network.js";
-import { ScriptInfo } from "../types/rgbpp/rgbpp.js";
+import {
+  RgbppXudtLikeToken,
+  ScriptInfo,
+  UtxoSeal,
+} from "../types/rgbpp/rgbpp.js";
 import { RgbppXudtLikeIssuance } from "../types/rgbpp/xudt-like.js";
 import { RgbppApiSpvProof } from "../types/spv.js";
 import {
@@ -15,7 +20,12 @@ import {
   TxOutput,
   UtxoLikeTransactionParams,
 } from "../types/utxo-like.js";
-import { calculateCommitment } from "../utils/rgbpp.js";
+import {
+  buildRgbppLockArgs,
+  calculateCommitment,
+  calculateRgbppXudtLikeTokenCellCapacity,
+  calculateRgbppXudtLikeTokenInfoCellCapacity,
+} from "../utils/rgbpp.js";
 import { isSameScriptTemplate, isUsingOneOfScripts } from "../utils/script.js";
 import { convertToOutput } from "../utils/utxo-like.js";
 import { XudtLike } from "../xdut-like/index.js";
@@ -45,6 +55,23 @@ export class Rgbpp {
     this.utxoLikeWallet = utxoLikeWallet;
 
     this.network = network;
+  }
+
+  buildRgbppLockScript(utxoSeal: UtxoSeal): ccc.Script {
+    return ccc.Script.from({
+      ...this.scripts[ScriptName.RgbppLock],
+      args: buildRgbppLockArgs({
+        txId: utxoSeal.txId,
+        index: utxoSeal.index,
+      }),
+    });
+  }
+
+  calculateXudtIssuanceCellCapacity(token: RgbppXudtLikeToken): bigint {
+    return (
+      calculateRgbppXudtLikeTokenCellCapacity(token) +
+      calculateRgbppXudtLikeTokenInfoCellCapacity(token)
+    );
   }
 
   calculateCommitment(tx: ccc.Transaction) {
