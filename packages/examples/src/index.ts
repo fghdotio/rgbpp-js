@@ -2,13 +2,19 @@ import { ccc } from "@ckb-ccc/core";
 
 import { UtxoSeal } from "@rgbpp-js/core";
 
-import { ckbClient, ckbSigner, rgbppClient } from "./env.js";
+import {
+  ckbClient,
+  ckbSigner,
+  rgbppClient,
+  utxoBasedAccountAddress,
+} from "./env.js";
 
 const xudtToken = {
   name: "Standard xUDT",
   symbol: "stdXUDT",
   decimal: 8,
 };
+const issuanceAmount = 2100_0000n;
 
 const prepareRgbppCell = async (utxoSeal: UtxoSeal) => {
   const rgbppLockScript = rgbppClient.buildRgbppLockScript(utxoSeal);
@@ -51,13 +57,22 @@ const prepareRgbppCell = async (utxoSeal: UtxoSeal) => {
 const issueXudt = async (utxoSeal: UtxoSeal) => {
   const rgbppCell = await prepareRgbppCell(utxoSeal);
 
-  const partialTx = await rgbppClient.xudtLikeIssuanceCkbPartialTx({
+  const ckbPartialTx = await rgbppClient.xudtLikeIssuanceCkbPartialTx({
     token: xudtToken,
-    amount: 2100_0000n,
+    amount: issuanceAmount,
     utxoSeal,
     rgbppLiveCell: rgbppCell,
   });
-  const commitment = rgbppClient.calculateCommitment(partialTx);
+
+  const commitment = rgbppClient.calculateCommitment(ckbPartialTx);
+
+await rgbppClient.buildUtxoLikeInputsOutputs({
+    ckbPartialTx,
+    utxoSeal,
+    from: utxoBasedAccountAddress,
+    to: utxoBasedAccountAddress,
+    commitment,
+  });
 };
 
 issueXudt({

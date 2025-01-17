@@ -40,6 +40,7 @@ const utxoBasedAccount = createBtcAccount(
   addressType,
   Network.BitcoinSignet
 );
+export const utxoBasedAccountAddress = utxoBasedAccount.from;
 
 export const utxoBasedWallet = new BtcWallet(
   utxoBasedAccount,
