@@ -66,13 +66,18 @@ const issueXudt = async (utxoSeal: UtxoSeal) => {
 
   const commitment = rgbppClient.calculateCommitment(ckbPartialTx);
 
-  await rgbppClient.buildUtxoLikeInputsOutputs({
+  const { inputs, outputs } = await rgbppClient.buildUtxoLikeInputsOutputs({
     ckbPartialTx,
     utxoSeal,
     from: utxoBasedAccountAddress,
     to: utxoBasedAccountAddress,
     commitment,
   });
+
+  const { txHex, rawTxHex } = rgbppClient.buildAndSignUtxoLikeTx(
+    inputs,
+    outputs
+  );
 };
 
 issueXudt({
