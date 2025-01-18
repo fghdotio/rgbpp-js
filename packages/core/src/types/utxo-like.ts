@@ -153,5 +153,5 @@ export interface UtxoLikeTransactionParams {
 }
 
 export interface UtxoLikeApiSentTransaction {
-  txId: string;
+  txid: string;
 }

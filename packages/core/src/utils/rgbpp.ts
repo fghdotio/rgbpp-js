@@ -98,7 +98,7 @@ export const buildUniqueTypeArgs = (
 };
 
 export const buildRgbppUnlock = (
-  btcLikeTxBytes: Hex,
+  btcLikeTxBytes: string,
   btcLikeTxProof: Hex,
   inputLen: number,
   outputLen: number,

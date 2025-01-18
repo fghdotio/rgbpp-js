@@ -93,6 +93,7 @@ export class XudtLike {
     tx.addCellDeps(
       xudtCellDep,
       this.cellDeps[ScriptName.RgbppLock],
+      this.cellDeps[ScriptName.RgbppLockConfig],
       this.cellDeps[ScriptName.UniqueType],
     );
     if (
@@ -136,7 +137,7 @@ export class XudtLike {
 
   injectWitnesses(
     partialTx: ccc.Transaction,
-    btcLikeTxBytes: Hex,
+    btcLikeTxBytes: string,
     spvClient: SpvProof,
   ): ccc.Transaction {
     const tx = partialTx.clone();
@@ -170,7 +171,7 @@ export class XudtLike {
   assembleFinalCkbTx(
     partialTx: ccc.Transaction,
     btcLikeTxId: string,
-    btcLikeTxBytes: Hex,
+    btcLikeTxBytes: string,
     spvProof: SpvProof,
   ): ccc.Transaction {
     const tx = this.injectWitnesses(

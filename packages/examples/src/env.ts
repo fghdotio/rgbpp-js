@@ -4,7 +4,6 @@ import dotenv from "dotenv";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 
-import { BtcWallet, createBtcAccount } from "@rgbpp-js/bitcoin";
 import {
   Network,
   AddressType,
@@ -12,6 +11,7 @@ import {
   isMainnet,
   Rgbpp,
 } from "@rgbpp-js/core";
+import { BtcWallet, createBtcAccount } from "@rgbpp-js/bitcoin";
 
 dotenv.config({ path: dirname(fileURLToPath(import.meta.url)) + "/.env" });
 

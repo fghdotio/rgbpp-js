@@ -115,7 +115,7 @@ export class BtcWallet extends BtcAssetsApiBase implements IUtxoLikeWallet {
   }
 
   async sendTransaction(txHex: string): Promise<string> {
-    const { txId } = await this.post<UtxoLikeApiSentTransaction>(
+    const { txid: txId } = await this.post<UtxoLikeApiSentTransaction>(
       "/bitcoin/v1/transaction",
       {
         body: JSON.stringify({

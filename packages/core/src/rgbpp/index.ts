@@ -13,7 +13,7 @@ import {
   UtxoSeal,
 } from "../types/rgbpp/rgbpp.js";
 import { RgbppXudtLikeIssuance } from "../types/rgbpp/xudt-like.js";
-import { RgbppApiSpvProof } from "../types/spv.js";
+import { RgbppApiSpvProof, SpvProof } from "../types/spv.js";
 import {
   InitOutput,
   TxInput,
@@ -84,11 +84,35 @@ export class Rgbpp {
     return this.xudtLike.issuanceCkbPartialTx(params);
   }
 
+  assembleFinalRgbppCkbTx(
+    partialTx: ccc.Transaction,
+    btcLikeTxId: string,
+    btcLikeTxBytes: string,
+    spvProof: SpvProof,
+  ): ccc.Transaction {
+    return this.xudtLike.assembleFinalCkbTx(
+      partialTx,
+      btcLikeTxId,
+      btcLikeTxBytes,
+      spvProof,
+    );
+  }
+
   async getSpvProof(
     txId: string,
     confirmations: number,
-  ): Promise<RgbppApiSpvProof | null> {
-    return this.utxoLikeWallet.getRgbppSpvProof(txId, confirmations);
+  ): Promise<SpvProof | null> {
+    const spvProof: RgbppApiSpvProof | null =
+      await this.utxoLikeWallet.getRgbppSpvProof(txId, confirmations);
+    return spvProof
+      ? {
+          proof: spvProof.proof as ccc.Hex,
+          spvClientOutpoint: ccc.OutPoint.from({
+            txHash: spvProof.spv_client.tx_hash,
+            index: spvProof.spv_client.index,
+          }),
+        }
+      : null;
   }
 
   buildUtxoLikeOutputs(params: UtxoLikeTransactionParams): TxOutput[] {
@@ -193,6 +217,10 @@ export class Rgbpp {
     outputs: TxOutput[],
   ): { txHex: string; rawTxHex: string } {
     return this.utxoLikeWallet.buildAndSignTx(inputs, outputs, this.network);
+  }
+
+  async sendUtxoLikeTx(txHex: string): Promise<string> {
+    return this.utxoLikeWallet.sendTransaction(txHex);
   }
 }
 
