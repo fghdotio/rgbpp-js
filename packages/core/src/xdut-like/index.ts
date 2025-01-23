@@ -16,8 +16,6 @@ import {
   buildRgbppLockArgs,
   buildRgbppUnlock,
   buildUniqueTypeArgs,
-  calculateRgbppXudtLikeTokenCellCapacity,
-  calculateRgbppXudtLikeTokenInfoCellCapacity,
   encodeRgbppXudtLikeToken,
 } from "../utils/rgbpp.js";
 import {
@@ -38,10 +36,8 @@ export class XudtLike {
   async issuanceCkbPartialTx(
     params: RgbppXudtLikeIssuance,
   ): Promise<ccc.Transaction> {
-    const xudtScript =
-      params.customScriptInfo?.script ?? this.scripts[ScriptName.XUdt];
-    const xudtCellDep =
-      params.customScriptInfo?.cellDep ?? this.cellDeps[ScriptName.XUdt];
+    const xudtScript = this.scripts[ScriptName.XudtLike];
+    const xudtCellDep = this.cellDeps[ScriptName.XudtLike];
 
     const tx = ccc.Transaction.default();
 
@@ -65,7 +61,6 @@ export class XudtLike {
           ...xudtScript,
           args: params.rgbppLiveCell.cellOutput.lock.hash(), // xUDT unique ID
         },
-        capacity: calculateRgbppXudtLikeTokenCellCapacity(params.token),
       },
       u128ToLe(params.amount * BigInt(10 ** params.token.decimal)),
     );
@@ -85,20 +80,18 @@ export class XudtLike {
             1,
           ),
         },
-        capacity: calculateRgbppXudtLikeTokenInfoCellCapacity(params.token),
       },
       encodeRgbppXudtLikeToken(params.token),
     );
 
+    // TODO: 挪到拼装 final tx
     tx.addCellDeps(
       xudtCellDep,
       this.cellDeps[ScriptName.RgbppLock],
       this.cellDeps[ScriptName.RgbppLockConfig],
       this.cellDeps[ScriptName.UniqueType],
     );
-    if (
-      params.rgbppLiveCell.cellOutput.capacity < (await tx.getOutputsCapacity())
-    ) {
+    if (params.rgbppLiveCell.cellOutput.capacity < tx.getOutputsCapacity()) {
       tx.addCellDeps(this.cellDeps[ScriptName.Secp256k1Blake160]);
     }
 
@@ -180,6 +173,7 @@ export class XudtLike {
       spvProof,
     );
 
+    //
     tx.addCellDeps(
       ccc.CellDep.from({
         outPoint: spvProof.spvClientOutpoint,

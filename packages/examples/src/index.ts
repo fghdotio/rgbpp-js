@@ -37,10 +37,13 @@ async function prepareRgbppCell(utxoSeal: UtxoSeal) {
 
   console.log("RGB++ cell not found, creating a new one");
   const tx = ccc.Transaction.default();
+
+  // ? The capacity of the prepared cell appears to be irrelevant.
+  // If additional capacity is required when used as an input in a transaction, it can always be supplemented in `completeInputsByCapacity`.
   tx.addOutput({
     lock: rgbppLockScript,
-    capacity: rgbppClient.calculateXudtIssuanceCellCapacity(xudtToken),
   });
+
   await tx.completeInputsByCapacity(ckbSigner);
   await tx.completeFeeBy(ckbSigner);
   const txHash = await ckbSigner.sendTransaction(tx);
@@ -64,7 +67,6 @@ async function issueXudt(utxoSeal: UtxoSeal) {
   const ckbPartialTx = await rgbppClient.xudtLikeIssuanceCkbPartialTx({
     token: xudtToken,
     amount: issuanceAmount,
-    utxoSeal,
     rgbppLiveCell: rgbppCell,
   });
   // console.log(
@@ -132,8 +134,9 @@ async function issueXudt(utxoSeal: UtxoSeal) {
   }, 34 * 1000);
 }
 
+// TODO: prepare utxo seal
 issueXudt({
-  txId: "d0e3586c5f7d818937f18b9b14b576f0dc1029d5a57cd299c157e37ad42998b1",
+  txId: "8ed9a8a426fdb7267d2a8013cdc324b006da4b0d71ef09350c846bd9bf577992",
   index: 2,
 });
 
