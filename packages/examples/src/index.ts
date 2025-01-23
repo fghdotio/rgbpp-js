@@ -20,7 +20,7 @@ const xudtToken = {
 };
 const issuanceAmount = 2100_0000n;
 
-const prepareRgbppCell = async (utxoSeal: UtxoSeal) => {
+async function prepareRgbppCell(utxoSeal: UtxoSeal) {
   const rgbppLockScript = rgbppClient.buildRgbppLockScript(utxoSeal);
 
   const rgbppCellGen = await ckbClient.findCellsByLock(rgbppLockScript);
@@ -28,37 +28,37 @@ const prepareRgbppCell = async (utxoSeal: UtxoSeal) => {
   for await (const cell of rgbppCellGen) {
     rgbppCells.push(cell);
   }
-  let rgbppCell: ccc.Cell;
-  if (rgbppCells.length === 0) {
-    console.log("RGB++ cell not found, creating a new one");
-    const tx = ccc.Transaction.default();
-    tx.addOutput({
-      lock: rgbppLockScript,
-      capacity: rgbppClient.calculateXudtIssuanceCellCapacity(xudtToken),
-    });
-    await tx.completeInputsByCapacity(ckbSigner);
-    await tx.completeFeeBy(ckbSigner);
-    const txHash = await ckbSigner.sendTransaction(tx);
-    await ckbClient.waitTransaction(txHash);
-    console.log("RGB++ cell created, txHash: ", txHash);
 
-    const cell = await ckbClient.getCellLive({
-      txHash,
-      index: 0,
-    });
-    if (!cell) {
-      throw new Error("Cell not found");
-    }
-    rgbppCell = cell;
-  } else {
+  // TODO: spend all related cells or just one
+  if (rgbppCells.length !== 0) {
     console.log("Using existing RGB++ cell");
-    rgbppCell = rgbppCells[0];
+    return rgbppCells[0];
   }
 
-  return rgbppCell;
-};
+  console.log("RGB++ cell not found, creating a new one");
+  const tx = ccc.Transaction.default();
+  tx.addOutput({
+    lock: rgbppLockScript,
+    capacity: rgbppClient.calculateXudtIssuanceCellCapacity(xudtToken),
+  });
+  await tx.completeInputsByCapacity(ckbSigner);
+  await tx.completeFeeBy(ckbSigner);
+  const txHash = await ckbSigner.sendTransaction(tx);
+  await ckbClient.waitTransaction(txHash);
+  console.log("RGB++ cell created, txHash: ", txHash);
 
-const issueXudt = async (utxoSeal: UtxoSeal) => {
+  const cell = await ckbClient.getCellLive({
+    txHash,
+    index: 0,
+  });
+  if (!cell) {
+    throw new Error("Cell not found");
+  }
+
+  return cell;
+}
+
+async function issueXudt(utxoSeal: UtxoSeal) {
   const rgbppCell = await prepareRgbppCell(utxoSeal);
 
   const ckbPartialTx = await rgbppClient.xudtLikeIssuanceCkbPartialTx({
@@ -89,6 +89,7 @@ const issueXudt = async (utxoSeal: UtxoSeal) => {
 
   const commitment = rgbppClient.calculateCommitment(ckbPartialTx);
 
+  // TODO: return a btc.Psbt
   const { inputs, outputs } = await rgbppClient.buildUtxoLikeInputsOutputs({
     ckbPartialTx,
     utxoSeal,
@@ -97,6 +98,7 @@ const issueXudt = async (utxoSeal: UtxoSeal) => {
     commitment,
   });
 
+  // TODO: 拆分 rgbpp.build (complete fee) and btcWallet.sign
   const { txHex, rawTxHex } = rgbppClient.buildAndSignUtxoLikeTx(
     inputs,
     outputs
@@ -128,10 +130,10 @@ const issueXudt = async (utxoSeal: UtxoSeal) => {
       }
     }
   }, 34 * 1000);
-};
+}
 
 issueXudt({
-  txId: "c1aae471264498c037a8da131c4b78d876528939b77aa3a6aa74d922732a309e",
+  txId: "d0e3586c5f7d818937f18b9b14b576f0dc1029d5a57cd299c157e37ad42998b1",
   index: 2,
 });
 
