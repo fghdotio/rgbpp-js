@@ -15,18 +15,28 @@ import {
 } from "../utils/rgbpp.js";
 
 export class ScriptManager {
-  private scripts: Record<string, ccc.Script>;
-  private cellDeps: Record<string, ccc.CellDep>;
+  private scripts: Record<ScriptName, ccc.Script>;
+  private cellDeps: Record<ScriptName, ccc.CellDep>;
 
   constructor(network: Network, scriptInfos?: ScriptInfo[]) {
-    this.scripts = Object.assign({}, defaultScripts[network]);
-    this.cellDeps = Object.assign({}, defaultCellDeps[network]);
+    this.scripts = Object.assign({}, defaultScripts[network]) as Record<
+      ScriptName,
+      ccc.Script
+    >;
+    this.cellDeps = Object.assign({}, defaultCellDeps[network]) as Record<
+      ScriptName,
+      ccc.CellDep
+    >;
 
     // override default scripts and cellDeps
     scriptInfos?.forEach((scriptInfo) => {
       this.scripts[scriptInfo.name] = scriptInfo.script;
       this.cellDeps[scriptInfo.name] = scriptInfo.cellDep;
     });
+  }
+
+  getScripts() {
+    return this.scripts;
   }
 
   buildRgbppLockScript(utxoSeal: UtxoSeal): ccc.Script {

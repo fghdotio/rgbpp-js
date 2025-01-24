@@ -5,8 +5,9 @@ import { ECPairFactory } from "ecpair";
 bitcoin.initEccLib(ecc);
 const ECPair = ECPairFactory(ecc);
 
-import { AddressType, Network, toXOnly, trimHexPrefix } from "@rgbpp-js/core";
-import { toNetwork } from "../utils.js";
+import { Network, trimHexPrefix } from "@rgbpp-js/core";
+import { AddressType } from "../types/tx.js";
+import { toNetwork, toXOnly } from "../utils/utils.js";
 
 export interface BtcAccount {
   from: string;

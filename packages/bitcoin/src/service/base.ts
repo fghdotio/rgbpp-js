@@ -1,5 +1,6 @@
 import lodash from "lodash";
 import { BtcAssetsApiError, ErrorCodes } from "../error.js";
+import { BtcAssetApiConfig } from "../types/btc-assets-api.js";
 import {
   BaseApiRequestOptions,
   BaseApis,
@@ -7,7 +8,7 @@ import {
   BtcAssetsApiToken,
   Json,
 } from "../types/index.js";
-import { isDomain } from "../utils.js";
+import { isDomain } from "../utils/utils.js";
 
 const { pickBy } = lodash;
 
@@ -18,18 +19,12 @@ export class BtcAssetsApiBase implements BaseApis {
   public origin?: string;
   private token?: string;
 
-  constructor(props: {
-    url: string;
-    app?: string;
-    domain?: string;
-    origin?: string;
-    token?: string;
-  }) {
-    this.url = props.url;
-    this.app = props.app;
-    this.domain = props.domain;
-    this.origin = props.origin;
-    this.token = props.token;
+  constructor(config: BtcAssetApiConfig) {
+    this.url = config.url;
+    this.app = config.app;
+    this.domain = config.domain;
+    this.origin = config.origin;
+    this.token = config.token;
 
     // Validation
     if (this.domain && !isDomain(this.domain, true)) {

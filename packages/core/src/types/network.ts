@@ -1,3 +1,4 @@
+// TODO: DEV network 设计
 export enum Network {
   BitcoinMainnet = "BitcoinMainnet",
   BitcoinTestnet3 = "BitcoinTestnet3",

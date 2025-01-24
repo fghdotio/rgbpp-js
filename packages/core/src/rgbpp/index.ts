@@ -190,6 +190,8 @@ export class Rgbpp {
     );
   }
 
+  // TODO: return a btc.Psbt
+  // focusing on the RGB++ part of inputs and outputs
   async buildUtxoLikeInputsOutputs(
     params: UtxoLikeTransactionParams,
   ): Promise<{ inputs: TxInput[]; outputs: TxOutput[] }> {
@@ -199,7 +201,7 @@ export class Rgbpp {
     }
     const outputs = this.buildUtxoLikeOutputs(params);
 
-    // TODO FIX ME: hardcoded tx fee
+    // TODO FIX ME: hardcoded tx fee, move to *sign and send*
     outputs.push({
       address: params.from,
       value: input.data.witnessUtxo.value - 8400,

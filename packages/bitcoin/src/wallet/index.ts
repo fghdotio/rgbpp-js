@@ -15,7 +15,11 @@ import {
 import { RgbppApiSpvProof } from "@rgbpp-js/core/dist/types/spv.js";
 import { Psbt } from "bitcoinjs-lib";
 import { BtcAssetsApiBase } from "../service/base.js";
-import { getAddressType, isOpReturnScriptPubkey, toNetwork } from "../utils.js";
+import {
+  getAddressType,
+  isOpReturnScriptPubkey,
+  toNetwork,
+} from "../utils/utils.js";
 import { BtcAccount, signPsbt, transactionToHex } from "./account.js";
 
 export class BtcWallet extends BtcAssetsApiBase implements IUtxoLikeWallet {

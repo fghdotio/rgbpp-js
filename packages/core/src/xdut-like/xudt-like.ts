@@ -7,7 +7,7 @@ import {
 } from "../constants/index.js";
 
 import { ScriptManager } from "../rgbpp/script-manager.js";
-import { deadLock } from "../scripts/index.js";
+import { deadLock, ScriptName } from "../scripts/index.js";
 import { Network } from "../types/network.js";
 import { ScriptInfo } from "../types/rgbpp/rgbpp.js";
 import { RgbppXudtLikeIssuance } from "../types/rgbpp/xudt-like.js";
@@ -23,6 +23,14 @@ export class RgbppXudtLike {
 
   calculateCommitment(ckbPartialTx: ccc.Transaction) {
     return calculateCommitment(ckbPartialTx);
+  }
+
+  rgbppLockScriptTemplate() {
+    return this.scriptManager.getScripts()[ScriptName.RgbppLock];
+  }
+
+  btcTimeLockScriptTemplate() {
+    return this.scriptManager.getScripts()[ScriptName.BtcTimeLock];
   }
 
   async issuanceCkbPartialTx(
