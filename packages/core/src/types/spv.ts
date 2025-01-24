@@ -12,3 +12,13 @@ export interface RgbppApiSpvProof {
     index: string;
   };
 }
+
+export interface RgbppUnlockParams {
+  spvProof: SpvProof;
+  txId: string;
+  rawTxHex: string;
+  ckbPartialTx: ccc.Transaction;
+
+  rgbppLockScriptTemplate: ccc.Script;
+  btcTimeLockScriptTemplate: ccc.Script;
+}
