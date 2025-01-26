@@ -14,8 +14,8 @@ export interface UtxoSeal {
   index: number;
 }
 
-export type ScriptInfo = {
+export interface ScriptInfo {
   name: ScriptName;
   script: ccc.Script;
   cellDep: ccc.CellDep;
-};
+}

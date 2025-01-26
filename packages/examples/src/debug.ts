@@ -1,76 +1,71 @@
 import { ccc } from "@ckb-ccc/core";
 
 import { inspect } from "util";
-import { writeFileSync, readFileSync } from "fs";
+import { readFileSync } from "fs";
 
-import { UtxoSeal } from "@rgbpp-js/core";
 import { BtcAssetsApiError } from "@rgbpp-js/bitcoin";
 
 import {
   ckbClient,
+  ckbRgbppSigner,
   ckbSigner,
-  rgbppClient,
-  utxoBasedAccountAddress,
+  rgbppXudtLikeClient,
+  rgbppBtcWallet,
 } from "./env.js";
 
-const xudtToken = {
-  name: "Standard xUDT",
-  symbol: "stdXUDT",
-  decimal: 8,
-};
-const issuanceAmount = 2100_0000n;
-
-const issueXudt = async (utxoSeal: UtxoSeal) => {
+const issueXudt = async () => {
   const ckbPartialTxBytesRead = readFileSync(
-    `/root/ckb/rgbpp-js/ckbPartialTxBytes-${1737187426188}.txt`
+    `/root/ckb/rgbpp-js/issuance-ckbPartialTxBytes-${1737871127553}.txt`
   );
   const ckbPartialTxRecovered = ccc.Transaction.fromBytes(
     ckbPartialTxBytesRead
   );
   console.log(
-    "ckbPartialTxRecovered\n",
+    "issuance ckbPartialTx Recovered\n",
     inspect(ckbPartialTxRecovered, { depth: null, colors: true })
   );
 
-  const rawTxHex =
-    "02000000019e302a7322d974aaa6a37ab739895276d8784b1c13daa837c098442671e4aac10200000000ffffffff030000000000000000226a203e26e3348162b3b9af2ed274d50d21569eac992e0827e6c81e42d81cf0c4bdb52202000000000000160014959a091c56d23fe0bb8e535520973a7212ad74728055a70000000000160014959a091c56d23fe0bb8e535520973a7212ad747200000000";
-  const txId =
-    "d0e3586c5f7d818937f18b9b14b576f0dc1029d5a57cd299c157e37ad42998b1";
+  const rawBtcTxHex =
+    "0200000001d1d69d799f9d66c2ce3c065b6376109592b2e6645b698a3fde67d841651f02960200000000ffffffff030000000000000000226a20445f46ac59a0bb38ff392392c0ca130f1609291ae4eca16578d14adb51806b6d2202000000000000160014959a091c56d23fe0bb8e535520973a7212ad7472e4d9c50000000000160014959a091c56d23fe0bb8e535520973a7212ad747200000000";
+  const btcTxId =
+    "f97ce80d69f3c3db75abb191c824ceca6589b11151c7cabd3ed5615950b22d20";
 
-  const polling = setInterval(async () => {
-    try {
-      console.log("Waiting for tx and proof to be ready");
+  // const polling = setInterval(async () => {
+  try {
+    console.log("Waiting for btc tx and proof to be ready");
 
-      const proof = await rgbppClient.getSpvProof(txId, 0);
-      clearInterval(polling);
+    const proof = await rgbppBtcWallet.getRgbppSpvProof(btcTxId, 0);
+    // clearInterval(polling);
 
-      const finalCkbTx = await rgbppClient.assembleFinalRgbppCkbTx(
-        ckbPartialTxRecovered,
-        txId,
-        rawTxHex,
-        proof!
-      );
-      await finalCkbTx.completeFeeBy(ckbSigner);
-      const txHash = await ckbSigner.sendTransaction(finalCkbTx);
-      await ckbClient.waitTransaction(txHash);
-      console.log("xUDT issued, txHash: ", txHash);
-    } catch (e) {
-      if (!(e instanceof BtcAssetsApiError)) {
-        console.error(e);
+    const semiFinalCkbTx = await ckbRgbppSigner.setRgbppUnlockParams(
+      ckbPartialTxRecovered,
+      {
+        spvProof: proof!,
+        txId: btcTxId,
+        rawTxHex: rawBtcTxHex,
+        ckbPartialTx: ckbPartialTxRecovered,
+        rgbppLockScriptTemplate: rgbppXudtLikeClient.rgbppLockScriptTemplate(),
+        btcTimeLockScriptTemplate:
+          rgbppXudtLikeClient.btcTimeLockScriptTemplate(),
       }
+    );
+    // ? ckbRgbppSigner 是否要做普通 signer 的事
+    const finalCkbTx = await ckbRgbppSigner.signTransaction(semiFinalCkbTx);
+
+    await finalCkbTx.completeFeeBy(ckbSigner);
+    const txHash = await ckbSigner.sendTransaction(finalCkbTx);
+    await ckbClient.waitTransaction(txHash);
+    console.log("xUDT issued, txHash: ", txHash);
+  } catch (e) {
+    if (!(e instanceof BtcAssetsApiError)) {
+      console.error(e);
     }
-  }, 3.4 * 1000);
+  }
+  // }, 3.4 * 1000);
 };
 
-issueXudt({
-  txId: "c1aae471264498c037a8da131c4b78d876528939b77aa3a6aa74d922732a309e",
-  index: 2,
-});
+issueXudt();
 
 /* 
 pnpm tsx packages/examples/src/debug.ts
-
-rawTxHex
- 02000000019e302a7322d974aaa6a37ab739895276d8784b1c13daa837c098442671e4aac10200000000ffffffff030000000000000000226a203e26e3348162b3b9af2ed274d50d21569eac992e0827e6c81e42d81cf0c4bdb52202000000000000160014959a091c56d23fe0bb8e535520973a7212ad74728055a70000000000160014959a091c56d23fe0bb8e535520973a7212ad747200000000
-txId:  d0e3586c5f7d818937f18b9b14b576f0dc1029d5a57cd299c157e37ad42998b1
 */

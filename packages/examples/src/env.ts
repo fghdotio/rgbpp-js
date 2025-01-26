@@ -10,8 +10,10 @@ import {
   Networks,
   isMainnet,
   Rgbpp,
+  RgbppXudtLikeClient,
+  CkbRgbppSigner,
 } from "@rgbpp-js/core";
-import { BtcWallet, createBtcAccount } from "@rgbpp-js/bitcoin";
+import { BtcWallet, createBtcAccount, RgbppBtcWallet } from "@rgbpp-js/bitcoin";
 
 dotenv.config({ path: dirname(fileURLToPath(import.meta.url)) + "/.env" });
 
@@ -50,3 +52,25 @@ export const utxoBasedWallet = new BtcWallet(
 );
 
 export const rgbppClient = new Rgbpp(utxoBasedNetwork.name, utxoBasedWallet);
+
+export const rgbppXudtLikeClient = new RgbppXudtLikeClient(
+  utxoBasedNetwork.name
+);
+
+export const rgbppBtcWallet = new RgbppBtcWallet(
+  utxoBasedChainPrivateKey,
+  addressType,
+  utxoBasedNetwork.name,
+  {
+    url: btcAssetsApiUrl,
+    token: btcAssetsApiToken,
+    origin: btcAssetsApiOrigin,
+  }
+);
+
+console.log(rgbppXudtLikeClient.getRgbppScriptsDetail());
+
+export const ckbRgbppSigner = new CkbRgbppSigner(
+  ckbClient,
+  rgbppXudtLikeClient.getRgbppScriptsDetail()
+);

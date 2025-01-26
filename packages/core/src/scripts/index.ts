@@ -4,9 +4,9 @@ import { Networks } from "../types/network.js";
 
 export enum ScriptName {
   RgbppLock = "RgbppLock",
-  RgbppLockConfig = "RgbppLockConfig",
+  // RgbppLockConfig = "RgbppLockConfig",
   BtcTimeLock = "BtcTimeLock",
-  BtcTimeLockConfig = "BtcTimeLockConfig",
+  // BtcTimeLockConfig = "BtcTimeLockConfig",
   XudtLike = "XudtLike",
   UniqueType = "UniqueType",
   Secp256k1Blake160 = "Secp256k1Blake160",
@@ -49,27 +49,11 @@ const signetCellDeps = {
     },
     depType: "code",
   }),
-  [ScriptName.RgbppLockConfig]: ccc.CellDep.from({
-    outPoint: {
-      txHash:
-        "0x61efdeddbaa0bb4132c0eb174b3e8002ff5ec430f61ba46f30768d683c516eec",
-      index: "0x1",
-    },
-    depType: "code",
-  }),
   [ScriptName.BtcTimeLock]: ccc.CellDep.from({
     outPoint: {
       txHash:
         "0x5364b3535965e9eac9a35dd7af8e9e45a61d30a16e115923c032f80b28783e21",
       index: "0x0",
-    },
-    depType: "code",
-  }),
-  [ScriptName.BtcTimeLockConfig]: ccc.CellDep.from({
-    outPoint: {
-      txHash:
-        "0x5364b3535965e9eac9a35dd7af8e9e45a61d30a16e115923c032f80b28783e21",
-      index: "0x1",
     },
     depType: "code",
   }),
@@ -134,27 +118,11 @@ export const cellDeps = {
       },
       depType: "code",
     }),
-    [ScriptName.RgbppLockConfig]: ccc.CellDep.from({
-      outPoint: {
-        txHash:
-          "0xf1de59e973b85791ec32debbba08dff80c63197e895eb95d67fc1e9f6b413e00",
-        index: "0x1",
-      },
-      depType: "code",
-    }),
     [ScriptName.BtcTimeLock]: ccc.CellDep.from({
       outPoint: {
         txHash:
           "0xde0f87878a97500f549418e5d46d2f7704c565a262aa17036c9c1c13ad638529",
         index: "0x0",
-      },
-      depType: "code",
-    }),
-    [ScriptName.BtcTimeLockConfig]: ccc.CellDep.from({
-      outPoint: {
-        txHash:
-          "0xde0f87878a97500f549418e5d46d2f7704c565a262aa17036c9c1c13ad638529",
-        index: "0x1",
       },
       depType: "code",
     }),

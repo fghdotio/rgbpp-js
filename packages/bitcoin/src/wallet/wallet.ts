@@ -57,7 +57,14 @@ export class RgbppBtcWallet extends BtcAssetsApiBase {
 
   async buildPsbt(params: RgbppXudtLikeIssuanceBtcTxParams): Promise<Psbt> {
     const inputs = await this.buildInputs(params.utxoSeals);
-    const outputs = this.buildOutputs(params);
+    const outputs = this.buildRgbppOutputs(params);
+
+    // TODO: complete fee logic
+    outputs.push({
+      address: params.from,
+      value: inputs[0].witnessUtxo.value - 8400,
+      fixed: true,
+    });
 
     const psbt = new Psbt({ network: toNetwork(this.network) });
     inputs.forEach((input) => {
@@ -123,7 +130,8 @@ export class RgbppBtcWallet extends BtcAssetsApiBase {
     return transactionToHex(tx, false);
   }
 
-  buildOutputs(params: RgbppXudtLikeIssuanceBtcTxParams) {
+  // RGB++ related outputs
+  buildRgbppOutputs(params: RgbppXudtLikeIssuanceBtcTxParams) {
     const {
       ckbPartialTx,
       to,
@@ -214,13 +222,24 @@ export class RgbppBtcWallet extends BtcAssetsApiBase {
     );
   }
 
-  getRgbppSpvProof(btcTxId: string, confirmations: number) {
-    return this.request<RgbppApiSpvProof>("/rgbpp/v1/btc-spv/proof", {
-      params: {
-        btc_txid: btcTxId,
-        confirmations,
-      },
-    });
+  async getRgbppSpvProof(btcTxId: string, confirmations: number) {
+    const spvProof: RgbppApiSpvProof | null =
+      await this.request<RgbppApiSpvProof>("/rgbpp/v1/btc-spv/proof", {
+        params: {
+          btc_txid: btcTxId,
+          confirmations,
+        },
+      });
+
+    return spvProof
+      ? {
+          proof: spvProof.proof as ccc.Hex,
+          spvClientOutpoint: ccc.OutPoint.from({
+            txHash: spvProof.spv_client.tx_hash,
+            index: spvProof.spv_client.index,
+          }),
+        }
+      : null;
   }
 
   getRecommendedFee() {

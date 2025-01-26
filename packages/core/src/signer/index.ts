@@ -10,8 +10,9 @@ import {
   RGBPP_CKB_WITNESS_PLACEHOLDER,
   RGBPP_UNLOCK_PARAMS_IDENTIFIER,
 } from "../constants/index.js";
+import { ScriptName } from "../scripts/index.js";
 import { RgbppUnlockParams, SpvProof } from "../types/spv.js";
-import { prependHexPrefix } from "../utils/encoder.js";
+import { prependHexPrefix, trimHexPrefix } from "../utils/encoder.js";
 import { buildRgbppUnlock } from "../utils/rgbpp.js";
 import {
   isUsingOneOfScripts,
@@ -19,7 +20,13 @@ import {
 } from "../utils/script.js";
 
 export class CkbRgbppSigner extends ccc.Signer {
-  constructor(private readonly ckbClient: ccc.Client) {
+  constructor(
+    private readonly ckbClient: ccc.Client,
+    private readonly scriptsDetail: Record<
+      ScriptName,
+      { script: ccc.Script; cellDep: ccc.CellDep }
+    >,
+  ) {
     super(ckbClient);
   }
 
@@ -38,7 +45,9 @@ export class CkbRgbppSigner extends ccc.Signer {
     const tx = ccc.Transaction.from(txLike);
     tx.witnesses.push(
       prependHexPrefix(
-        JSON.stringify(params.spvProof.proof) + RGBPP_UNLOCK_PARAMS_IDENTIFIER,
+        JSON.stringify(params, (_, value) =>
+          typeof value === "bigint" ? ccc.numToHex(value) : value,
+        ) + RGBPP_UNLOCK_PARAMS_IDENTIFIER,
       ),
     );
 
@@ -57,14 +66,35 @@ export class CkbRgbppSigner extends ccc.Signer {
     }
     tx.witnesses.pop();
 
-    const unlockParams = lastWitness.slice(
-      0,
-      lastWitness.length - RGBPP_UNLOCK_PARAMS_IDENTIFIER.length,
+    const unlockParams = trimHexPrefix(
+      lastWitness.slice(
+        0,
+        lastWitness.length - RGBPP_UNLOCK_PARAMS_IDENTIFIER.length,
+      ),
     );
     return JSON.parse(unlockParams);
   }
 
+  getRelatedCellDeps(tx: Transaction): ccc.CellDep[] {
+    // TODO: add cell deps of RGB++-related scripts from this.scriptsDetail
+    return [
+      this.scriptsDetail[ScriptName.RgbppLock].cellDep,
+      // RGB++ config cell dep
+      ccc.CellDep.from({
+        outPoint: {
+          ...this.scriptsDetail[ScriptName.RgbppLock].cellDep.outPoint,
+          index: "0x1",
+        },
+        depType: "code",
+      }),
+      this.scriptsDetail[ScriptName.UniqueType].cellDep,
+      this.scriptsDetail[ScriptName.XudtLike].cellDep,
+    ];
+  }
+
   async prepareTransaction(txLike: TransactionLike): Promise<Transaction> {
+    const tx = ccc.Transaction.from(txLike);
+    tx.addCellDeps(this.getRelatedCellDeps(tx));
     return Promise.resolve(ccc.Transaction.from(txLike));
   }
 
@@ -78,6 +108,12 @@ export class CkbRgbppSigner extends ccc.Signer {
       txId,
       rawTxHex,
     } = unlockParams;
+    tx.addCellDeps(
+      ccc.CellDep.from({
+        outPoint: spvProof.spvClientOutpoint,
+        depType: "code",
+      }),
+    );
 
     return Promise.resolve(
       this.injectWitnesses(

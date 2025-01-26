@@ -1,9 +1,11 @@
 import * as bitcoin from "bitcoinjs-lib";
-import { cloneDeep } from "lodash";
+import lodash from "lodash";
 
 import { InitOutput, Network, trimHexPrefix } from "@rgbpp-js/core";
 
 import { AddressType, TxInputData, TxOutput, Utxo } from "../types/tx.js";
+
+const { cloneDeep } = lodash;
 
 /**
  * Check if target string is a valid domain.

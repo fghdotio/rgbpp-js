@@ -39,6 +39,19 @@ export class ScriptManager {
     return this.scripts;
   }
 
+  getScriptsDetail() {
+    return Object.entries(this.scripts).reduce(
+      (acc, [name, script]) => ({
+        ...acc,
+        [name]: {
+          script,
+          cellDep: this.cellDeps[name as ScriptName],
+        },
+      }),
+      {} as Record<ScriptName, { script: ccc.Script; cellDep: ccc.CellDep }>,
+    );
+  }
+
   buildRgbppLockScript(utxoSeal: UtxoSeal): ccc.Script {
     return ccc.Script.from({
       ...this.scripts[ScriptName.RgbppLock],

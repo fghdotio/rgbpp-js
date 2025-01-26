@@ -88,7 +88,7 @@ export class XudtLike {
     tx.addCellDeps(
       xudtCellDep,
       this.cellDeps[ScriptName.RgbppLock],
-      this.cellDeps[ScriptName.RgbppLockConfig],
+      // this.cellDeps[ScriptName.RgbppLockConfig],
       this.cellDeps[ScriptName.UniqueType],
     );
     if (params.rgbppLiveCell.cellOutput.capacity < tx.getOutputsCapacity()) {

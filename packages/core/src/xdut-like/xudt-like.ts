@@ -8,17 +8,26 @@ import {
 
 import { ScriptManager } from "../rgbpp/script-manager.js";
 import { deadLock, ScriptName } from "../scripts/index.js";
+import { UtxoSeal } from "../types/index.js";
 import { Network } from "../types/network.js";
 import { ScriptInfo } from "../types/rgbpp/rgbpp.js";
 import { RgbppXudtLikeIssuance } from "../types/rgbpp/xudt-like.js";
 import { encodeRgbppXudtLikeToken, u128ToLe } from "../utils/index.js";
 import { calculateCommitment } from "../utils/rgbpp.js";
 
-export class RgbppXudtLike {
+export class RgbppXudtLikeClient {
   private scriptManager: ScriptManager;
 
   constructor(network: Network, scriptInfos?: ScriptInfo[]) {
     this.scriptManager = new ScriptManager(network, scriptInfos);
+  }
+
+  getRgbppScripts() {
+    return this.scriptManager.getScripts();
+  }
+
+  getRgbppScriptsDetail() {
+    return this.scriptManager.getScriptsDetail();
   }
 
   calculateCommitment(ckbPartialTx: ccc.Transaction) {
@@ -31,6 +40,10 @@ export class RgbppXudtLike {
 
   btcTimeLockScriptTemplate() {
     return this.scriptManager.getScripts()[ScriptName.BtcTimeLock];
+  }
+
+  buildRgbppLockScript(utxoSeal: UtxoSeal) {
+    return this.scriptManager.buildRgbppLockScript(utxoSeal);
   }
 
   async issuanceCkbPartialTx(
