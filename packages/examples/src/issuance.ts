@@ -3,6 +3,7 @@ import { ccc } from "@ckb-ccc/core";
 import { writeFileSync } from "fs";
 
 import { UtxoSeal } from "@rgbpp-js/core";
+import { BtcAssetsApiError } from "@rgbpp-js/bitcoin";
 
 import {
   ckbClient,
@@ -12,7 +13,6 @@ import {
   utxoBasedAccountAddress,
   ckbRgbppSigner,
 } from "./env.js";
-import { BtcAssetsApiError } from "@rgbpp-js/bitcoin";
 
 const xudtToken = {
   name: "Standard xUDT",
@@ -131,9 +131,8 @@ async function issueXudt(utxoSeal: UtxoSeal) {
   }, 28 * 1000);
 }
 
-// TODO: prepare utxo seal if not provided
 issueXudt({
-  txId: "96021f6541d867de3f8a695b64e6b292951076635b063ccec2669d9f799dd6d1",
+  txId: "f97ce80d69f3c3db75abb191c824ceca6589b11151c7cabd3ed5615950b22d20",
   index: 2,
 });
 

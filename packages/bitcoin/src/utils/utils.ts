@@ -1,9 +1,15 @@
 import * as bitcoin from "bitcoinjs-lib";
 import lodash from "lodash";
 
-import { InitOutput, Network, trimHexPrefix } from "@rgbpp-js/core";
+import { Network, trimHexPrefix } from "@rgbpp-js/core";
 
-import { AddressType, TxInputData, TxOutput, Utxo } from "../types/tx.js";
+import {
+  AddressType,
+  InitOutput,
+  TxInputData,
+  TxOutput,
+  Utxo,
+} from "../types/tx.js";
 
 const { cloneDeep } = lodash;
 
