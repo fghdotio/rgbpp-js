@@ -6,13 +6,16 @@ import { dirname } from "path";
 
 import {
   Network,
-  AddressType,
   Networks,
   isMainnet,
   RgbppXudtLikeClient,
   CkbRgbppSigner,
 } from "@rgbpp-js/core";
-import { createBtcAccount, RgbppBtcWallet } from "@rgbpp-js/bitcoin";
+import {
+  createBtcAccount,
+  RgbppBtcWallet,
+  AddressType,
+} from "@rgbpp-js/bitcoin";
 
 dotenv.config({ path: dirname(fileURLToPath(import.meta.url)) + "/.env" });
 

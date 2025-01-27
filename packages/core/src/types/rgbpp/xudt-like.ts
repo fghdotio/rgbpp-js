@@ -6,6 +6,5 @@ export interface RgbppXudtLikeIssuance {
   token: RgbppXudtLikeToken;
   amount: bigint;
 
-  // TODO: or cells
-  rgbppLiveCell: ccc.Cell;
+  rgbppLiveCells: ccc.Cell[];
 }

@@ -41,14 +41,14 @@ export const encodeRgbppXudtLikeToken = (token: RgbppXudtLikeToken): string => {
   return `${decimal}${nameSize}${name}${symbolSize}${symbol}`;
 };
 
-// TODO: FIX THIS
+// ? not necessary
 export const calculateRgbppXudtLikeTokenCellCapacity = (
   token: RgbppXudtLikeToken,
 ): bigint => {
   return BigInt(25200000000n);
 };
 
-// TODO: FIX THIS
+// ? not necessary
 export const calculateRgbppXudtLikeTokenInfoCellCapacity = (
   token: RgbppXudtLikeToken,
 ): bigint => {

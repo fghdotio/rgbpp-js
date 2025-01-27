@@ -22,7 +22,7 @@ const xudtToken = {
 const issuanceAmount = 2100_0000n;
 
 // TODO: prepare utxo seal
-async function prepareRgbppCell(utxoSeal: UtxoSeal) {
+async function prepareRgbppCell(utxoSeal: UtxoSeal): Promise<ccc.Cell[]> {
   const rgbppLockScript = rgbppXudtLikeClient.buildRgbppLockScript(utxoSeal);
 
   const rgbppCellGen = await ckbClient.findCellsByLock(rgbppLockScript);
@@ -31,10 +31,9 @@ async function prepareRgbppCell(utxoSeal: UtxoSeal) {
     rgbppCells.push(cell);
   }
 
-  // TODO: spend all related cells or just one
   if (rgbppCells.length !== 0) {
     console.log("Using existing RGB++ cell");
-    return rgbppCells[0];
+    return rgbppCells;
   }
 
   console.log("RGB++ cell not found, creating a new one");
@@ -60,17 +59,17 @@ async function prepareRgbppCell(utxoSeal: UtxoSeal) {
     throw new Error("Cell not found");
   }
 
-  return cell;
+  return [cell];
 }
 
 async function issueXudt(utxoSeal: UtxoSeal) {
-  const rgbppIssuanceCell = await prepareRgbppCell(utxoSeal);
-  console.log("rgbppIssuanceCell", rgbppIssuanceCell);
+  const rgbppIssuanceCells = await prepareRgbppCell(utxoSeal);
+  console.log("rgbppIssuanceCells", rgbppIssuanceCells);
 
   const ckbPartialTx = await rgbppXudtLikeClient.issuanceCkbPartialTx({
     token: xudtToken,
     amount: issuanceAmount,
-    rgbppLiveCell: rgbppIssuanceCell,
+    rgbppLiveCells: rgbppIssuanceCells,
   });
   const ckbPartialTxBytes = ckbPartialTx.toBytes();
   const timestamp = Date.now();
@@ -103,19 +102,15 @@ async function issueXudt(utxoSeal: UtxoSeal) {
       const proof = await rgbppBtcWallet.getRgbppSpvProof(btcTxId, 0);
       clearInterval(polling);
 
-      const semiFinalCkbTx = await ckbRgbppSigner.setRgbppUnlockParams(
+      const semiFinalCkbTx = await ckbRgbppSigner.setRgbppUnlockParams({
+        spvProof: proof!,
+        txId: btcTxId,
+        rawTxHex: rawBtcTxHex,
         ckbPartialTx,
-        {
-          spvProof: proof!,
-          txId: btcTxId,
-          rawTxHex: rawBtcTxHex,
-          ckbPartialTx,
-          rgbppLockScriptTemplate:
-            rgbppXudtLikeClient.rgbppLockScriptTemplate(),
-          btcTimeLockScriptTemplate:
-            rgbppXudtLikeClient.btcTimeLockScriptTemplate(),
-        }
-      );
+        rgbppLockScriptTemplate: rgbppXudtLikeClient.rgbppLockScriptTemplate(),
+        btcTimeLockScriptTemplate:
+          rgbppXudtLikeClient.btcTimeLockScriptTemplate(),
+      });
       // ? ckbRgbppSigner 是否要做普通 signer 的事
       const finalCkbTx = await ckbRgbppSigner.signTransaction(semiFinalCkbTx);
 
@@ -132,7 +127,7 @@ async function issueXudt(utxoSeal: UtxoSeal) {
 }
 
 issueXudt({
-  txId: "f97ce80d69f3c3db75abb191c824ceca6589b11151c7cabd3ed5615950b22d20",
+  txId: "c7c8f3b2416c2fc63f50858b3442d69c6dc65d4f451e578ac312aca8d57acbb2",
   index: 2,
 });
 

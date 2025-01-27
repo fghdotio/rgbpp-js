@@ -38,11 +38,8 @@ export class CkbRgbppSigner extends ccc.Signer {
     return SignerSignType.Unknown;
   }
 
-  setRgbppUnlockParams(
-    txLike: TransactionLike,
-    params: RgbppUnlockParams,
-  ): Transaction {
-    const tx = ccc.Transaction.from(txLike);
+  setRgbppUnlockParams(params: RgbppUnlockParams): Transaction {
+    const tx = ccc.Transaction.from(params.ckbPartialTx);
     tx.witnesses.push(
       prependHexPrefix(
         JSON.stringify(params, (_, value) =>

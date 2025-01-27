@@ -49,13 +49,20 @@ export class RgbppXudtLikeClient {
   async issuanceCkbPartialTx(
     params: RgbppXudtLikeIssuance,
   ): Promise<ccc.Transaction> {
-    const tx = ccc.Transaction.default();
+    if (params.rgbppLiveCells.length === 0) {
+      throw new Error("rgbppLiveCells is empty");
+    }
 
-    tx.inputs.push(
-      ccc.CellInput.from({
-        previousOutput: params.rgbppLiveCell.outPoint,
-      }),
-    );
+    const tx = ccc.Transaction.default();
+    params.rgbppLiveCells.forEach((cell) => {
+      tx.inputs.push(
+        ccc.CellInput.from({
+          previousOutput: cell.outPoint,
+        }),
+      );
+    });
+
+    tx.witnesses.push(RGBPP_CKB_WITNESS_PLACEHOLDER);
     tx.witnesses.push(RGBPP_CKB_WITNESS_PLACEHOLDER);
 
     tx.addOutput(
@@ -65,7 +72,7 @@ export class RgbppXudtLikeClient {
           index: XUDT_LIKE_ISSUANCE_OUTPUT_INDEX,
         }),
         type: this.scriptManager.buildXudtLikeTypeScript(
-          params.rgbppLiveCell.cellOutput.lock.hash(), // unique ID of xUDT-like token
+          params.rgbppLiveCells[0].cellOutput.lock.hash(), // unique ID of xUDT-like token
         ),
       },
       u128ToLe(params.amount * BigInt(10 ** params.token.decimal)),
