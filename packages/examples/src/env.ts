@@ -5,11 +5,11 @@ import { fileURLToPath } from "url";
 import { dirname } from "path";
 
 import {
-  Network,
-  Networks,
-  isMainnet,
   RgbppXudtLikeClient,
   CkbRgbppSigner,
+  isMainnet,
+  PredefinedNetwork,
+  networkConfigs,
 } from "@rgbpp-js/core";
 import {
   createBtcAccount,
@@ -19,9 +19,8 @@ import {
 
 dotenv.config({ path: dirname(fileURLToPath(import.meta.url)) + "/.env" });
 
-const utxoBasedChainName = process.env
-  .UTXO_BASED_CHAIN_NAME! as keyof typeof Networks;
-export const utxoBasedNetwork = Networks[utxoBasedChainName];
+const utxoBasedChainName = process.env.UTXO_BASED_CHAIN_NAME!;
+export const utxoBasedNetwork = networkConfigs[utxoBasedChainName];
 export const ckbClient = isMainnet(utxoBasedNetwork.name)
   ? new ccc.ClientPublicMainnet()
   : new ccc.ClientPublicTestnet();
@@ -42,7 +41,7 @@ const addressType =
 const utxoBasedAccount = createBtcAccount(
   utxoBasedChainPrivateKey,
   addressType,
-  Network.BitcoinSignet
+  utxoBasedNetwork.name
 );
 export const utxoBasedAccountAddress = utxoBasedAccount.from;
 

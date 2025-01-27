@@ -1,13 +1,9 @@
 import { ccc } from "@ckb-ccc/core";
 
 import { DEFAULT_CONFIRMATIONS } from "../constants/index.js";
-import {
-  cellDeps as defaultCellDeps,
-  scripts as defaultScripts,
-  ScriptName,
-} from "../scripts/index.js";
-import { Network } from "../types/network.js";
+import { ScriptName } from "../scripts/index.js";
 import { ScriptInfo, UtxoSeal } from "../types/rgbpp/rgbpp.js";
+import { networkConfigs } from "../utils/network.js";
 import {
   buildBtcTimeLockArgs,
   buildRgbppLockArgs,
@@ -18,15 +14,15 @@ export class ScriptManager {
   private scripts: Record<ScriptName, ccc.Script>;
   private cellDeps: Record<ScriptName, ccc.CellDep>;
 
-  constructor(network: Network, scriptInfos?: ScriptInfo[]) {
-    this.scripts = Object.assign({}, defaultScripts[network]) as Record<
+  constructor(network: string, scriptInfos?: ScriptInfo[]) {
+    this.scripts = Object.assign({}, networkConfigs[network].scripts) as Record<
       ScriptName,
       ccc.Script
     >;
-    this.cellDeps = Object.assign({}, defaultCellDeps[network]) as Record<
-      ScriptName,
-      ccc.CellDep
-    >;
+    this.cellDeps = Object.assign(
+      {},
+      networkConfigs[network].cellDeps,
+    ) as Record<ScriptName, ccc.CellDep>;
 
     // override default scripts and cellDeps
     scriptInfos?.forEach((scriptInfo) => {

@@ -1,5 +1,6 @@
-// TODO: DEV network 设计
-export enum Network {
+import { ccc } from "@ckb-ccc/core";
+
+export enum PredefinedNetwork {
   BitcoinMainnet = "BitcoinMainnet",
   BitcoinTestnet3 = "BitcoinTestnet3",
   BitcoinSignet = "BitcoinSignet",
@@ -8,29 +9,10 @@ export enum Network {
   DogecoinTestnet = "DogecoinTestnet",
 }
 
-export const Networks = {
-  [Network.BitcoinMainnet]: {
-    name: Network.BitcoinMainnet,
-    isMainnet: true,
-  },
-  [Network.BitcoinTestnet3]: {
-    name: Network.BitcoinTestnet3,
-    isMainnet: false,
-  },
-  [Network.BitcoinSignet]: {
-    name: Network.BitcoinSignet,
-    isMainnet: false,
-  },
-  [Network.DogecoinMainnet]: {
-    name: Network.DogecoinMainnet,
-    isMainnet: true,
-  },
-  [Network.DogecoinTestnet]: {
-    name: Network.DogecoinTestnet,
-    isMainnet: false,
-  },
-} as const;
+export interface NetworkConfig {
+  name: string;
+  isMainnet: boolean;
 
-export const isMainnet = (network: Network): boolean => {
-  return Networks[network].isMainnet;
-};
+  scripts: Record<string, ccc.Script>;
+  cellDeps: Record<string, ccc.CellDep>;
+}

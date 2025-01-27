@@ -1,7 +1,7 @@
 import * as bitcoin from "bitcoinjs-lib";
 import lodash from "lodash";
 
-import { Network, trimHexPrefix } from "@rgbpp-js/core";
+import { PredefinedNetwork, trimHexPrefix } from "@rgbpp-js/core";
 
 import {
   AddressType,
@@ -140,8 +140,8 @@ function getAddressTypeDust(addressType: AddressType) {
   }
 }
 
-export function toNetwork(network: Network): bitcoin.Network {
-  if (network === Network.BitcoinMainnet) {
+export function toNetwork(network: string): bitcoin.Network {
+  if (network === PredefinedNetwork.BitcoinMainnet) {
     return bitcoin.networks.bitcoin;
   } else {
     return bitcoin.networks.testnet;

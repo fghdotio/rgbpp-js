@@ -5,7 +5,7 @@ import { ECPairFactory } from "ecpair";
 bitcoin.initEccLib(ecc);
 const ECPair = ECPairFactory(ecc);
 
-import { Network, trimHexPrefix } from "@rgbpp-js/core";
+import { trimHexPrefix } from "@rgbpp-js/core";
 import { AddressType } from "../types/tx.js";
 import { toNetwork, toXOnly } from "../utils/utils.js";
 
@@ -15,13 +15,13 @@ export interface BtcAccount {
   keyPair: bitcoin.Signer;
   payment: bitcoin.Payment;
   addressType: AddressType;
-  networkType: Network;
+  networkType: string;
 }
 
 export function createBtcAccount(
   privateKey: string,
   addressType: AddressType,
-  networkType: Network,
+  networkType: string,
 ): BtcAccount {
   const network = toNetwork(networkType);
 
@@ -47,7 +47,7 @@ export function createBtcAccount(
 
 export function addressToScriptPublicKeyHex(
   address: string,
-  networkType: Network,
+  networkType: string,
 ): string {
   const network = toNetwork(networkType);
   const script = bitcoin.address.toOutputScript(address, network);

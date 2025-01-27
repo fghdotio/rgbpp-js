@@ -1,6 +1,6 @@
 import { ccc } from "@ckb-ccc/core";
 
-import { Networks } from "../types/network.js";
+import { PredefinedNetwork } from "../types/network.js";
 
 export enum ScriptName {
   RgbppLock = "RgbppLock",
@@ -84,8 +84,8 @@ const signetCellDeps = {
 } as const;
 
 export const scripts = {
-  [Networks.BitcoinSignet.name]: signetScripts,
-  [Networks.BitcoinTestnet3.name]: {
+  [PredefinedNetwork.BitcoinSignet]: signetScripts,
+  [PredefinedNetwork.BitcoinTestnet3]: {
     ...signetScripts,
     [ScriptName.RgbppLock]: ccc.Script.from({
       codeHash:
@@ -101,14 +101,14 @@ export const scripts = {
     }),
   },
 
-  [Networks.BitcoinMainnet.name]: {},
-  [Networks.DogecoinMainnet.name]: {},
-  [Networks.DogecoinTestnet.name]: {},
+  [PredefinedNetwork.BitcoinMainnet]: {},
+  [PredefinedNetwork.DogecoinMainnet]: {},
+  [PredefinedNetwork.DogecoinTestnet]: {},
 } as const;
 
 export const cellDeps = {
-  [Networks.BitcoinSignet.name]: signetCellDeps,
-  [Networks.BitcoinTestnet3.name]: {
+  [PredefinedNetwork.BitcoinSignet]: signetCellDeps,
+  [PredefinedNetwork.BitcoinTestnet3]: {
     ...signetCellDeps,
     [ScriptName.RgbppLock]: ccc.CellDep.from({
       outPoint: {
@@ -128,9 +128,9 @@ export const cellDeps = {
     }),
   },
 
-  [Networks.BitcoinMainnet.name]: {},
-  [Networks.DogecoinMainnet.name]: {},
-  [Networks.DogecoinTestnet.name]: {},
+  [PredefinedNetwork.BitcoinMainnet]: {},
+  [PredefinedNetwork.DogecoinMainnet]: {},
+  [PredefinedNetwork.DogecoinTestnet]: {},
 } as const;
 
 export const deadLock = ccc.Script.from({

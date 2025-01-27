@@ -127,7 +127,7 @@ async function issueXudt(utxoSeal: UtxoSeal) {
 }
 
 issueXudt({
-  txId: "c7c8f3b2416c2fc63f50858b3442d69c6dc65d4f451e578ac312aca8d57acbb2",
+  txId: "fb0b712d40413bf3c386ccf98101f4449095f05fda1b4795cb1c5dfe09c1c77d",
   index: 2,
 });
 

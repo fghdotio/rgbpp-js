@@ -6,7 +6,6 @@ import {
   calculateCommitment,
   isSameScriptTemplate,
   isUsingOneOfScripts,
-  Network,
   RgbppApiSpvProof,
   UtxoSeal,
 } from "@rgbpp-js/core";
@@ -41,12 +40,12 @@ import {
 
 export class RgbppBtcWallet extends BtcAssetsApiBase {
   private account: BtcAccount;
-  private network: Network;
+  private network: string;
 
   constructor(
     privateKey: string,
     addressType: AddressType,
-    networkType: Network,
+    networkType: string,
     btcAssetApiConfig: BtcAssetApiConfig,
   ) {
     super(btcAssetApiConfig);
