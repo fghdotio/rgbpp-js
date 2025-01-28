@@ -37,18 +37,15 @@ const issueXudt = async () => {
     const proof = await rgbppBtcWallet.getRgbppSpvProof(btcTxId, 0);
     // clearInterval(polling);
 
-    const semiFinalCkbTx = await ckbRgbppSigner.setRgbppUnlockParams(
-      ckbPartialTxRecovered,
-      {
-        spvProof: proof!,
-        txId: btcTxId,
-        rawTxHex: rawBtcTxHex,
-        ckbPartialTx: ckbPartialTxRecovered,
-        rgbppLockScriptTemplate: rgbppXudtLikeClient.rgbppLockScriptTemplate(),
-        btcTimeLockScriptTemplate:
-          rgbppXudtLikeClient.btcTimeLockScriptTemplate(),
-      }
-    );
+    const semiFinalCkbTx = await ckbRgbppSigner.setRgbppUnlockParams({
+      spvProof: proof!,
+      txId: btcTxId,
+      rawTxHex: rawBtcTxHex,
+      ckbPartialTx: ckbPartialTxRecovered,
+      rgbppLockScriptTemplate: rgbppXudtLikeClient.rgbppLockScriptTemplate(),
+      btcTimeLockScriptTemplate:
+        rgbppXudtLikeClient.btcTimeLockScriptTemplate(),
+    });
     // ? ckbRgbppSigner 是否要做普通 signer 的事
     const finalCkbTx = await ckbRgbppSigner.signTransaction(semiFinalCkbTx);
 

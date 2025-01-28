@@ -71,6 +71,8 @@ async function issueXudt(utxoSeal: UtxoSeal) {
     amount: issuanceAmount,
     rgbppLiveCells: rgbppIssuanceCells,
   });
+
+  // TODO: write ckbPartialTx as an object to a file
   const ckbPartialTxBytes = ckbPartialTx.toBytes();
   const timestamp = Date.now();
   writeFileSync(
@@ -95,41 +97,57 @@ async function issueXudt(utxoSeal: UtxoSeal) {
   const btcTxId = await rgbppBtcWallet.sendTx(signedBtcTx);
   console.log("btcTxId", btcTxId);
 
-  const polling = setInterval(async () => {
-    try {
-      console.log("Waiting for btc tx and proof to be ready");
+  const proof = await pollForProof(btcTxId, 28);
+  const semiFinalCkbTx = await ckbRgbppSigner.setRgbppUnlockParams({
+    spvProof: proof!,
+    txId: btcTxId,
+    rawTxHex: rawBtcTxHex,
+    ckbPartialTx,
+    rgbppLockScriptTemplate: rgbppXudtLikeClient.rgbppLockScriptTemplate(),
+    btcTimeLockScriptTemplate: rgbppXudtLikeClient.btcTimeLockScriptTemplate(),
+  });
 
-      const proof = await rgbppBtcWallet.getRgbppSpvProof(btcTxId, 0);
-      clearInterval(polling);
+  // ? ckbRgbppSigner 是否要做普通 signer 的事
+  const finalCkbTx = await ckbRgbppSigner.signTransaction(semiFinalCkbTx);
 
-      const semiFinalCkbTx = await ckbRgbppSigner.setRgbppUnlockParams({
-        spvProof: proof!,
-        txId: btcTxId,
-        rawTxHex: rawBtcTxHex,
-        ckbPartialTx,
-        rgbppLockScriptTemplate: rgbppXudtLikeClient.rgbppLockScriptTemplate(),
-        btcTimeLockScriptTemplate:
-          rgbppXudtLikeClient.btcTimeLockScriptTemplate(),
-      });
-      // ? ckbRgbppSigner 是否要做普通 signer 的事
-      const finalCkbTx = await ckbRgbppSigner.signTransaction(semiFinalCkbTx);
+  await finalCkbTx.completeFeeBy(ckbSigner);
+  const txHash = await ckbSigner.sendTransaction(finalCkbTx);
+  await ckbClient.waitTransaction(txHash);
+  console.log("xUDT issued, txHash: ", txHash);
+}
 
-      await finalCkbTx.completeFeeBy(ckbSigner);
-      const txHash = await ckbSigner.sendTransaction(finalCkbTx);
-      await ckbClient.waitTransaction(txHash);
-      console.log("xUDT issued, txHash: ", txHash);
-    } catch (e) {
-      if (!(e instanceof BtcAssetsApiError)) {
-        console.error(e);
+async function pollForProof(btcTxId: string, interval: number): Promise<any> {
+  return new Promise((resolve, reject) => {
+    const polling = setInterval(async () => {
+      try {
+        console.log("Waiting for btc tx and proof to be ready");
+        const proof = await rgbppBtcWallet.getRgbppSpvProof(btcTxId, 0);
+
+        if (proof) {
+          clearInterval(polling);
+          resolve(proof);
+        }
+      } catch (e) {
+        if (!(e instanceof BtcAssetsApiError)) {
+          clearInterval(polling);
+          reject(e);
+        }
       }
-    }
-  }, 28 * 1000);
+    }, interval * 1000);
+  });
 }
 
 issueXudt({
-  txId: "fb0b712d40413bf3c386ccf98101f4449095f05fda1b4795cb1c5dfe09c1c77d",
+  txId: "2d9b8c5d2cdda7c9d6289806bc0f51e107f466ddcc7bee98cdcd0ab4fcff8bce",
   index: 2,
-});
+})
+  .then(() => {
+    process.exit(0);
+  })
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  });
 
 /* 
 pnpm tsx packages/examples/src/issuance.ts

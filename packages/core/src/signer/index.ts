@@ -20,14 +20,24 @@ import {
 } from "../utils/script.js";
 
 export class CkbRgbppSigner extends ccc.Signer {
+  // map of script code hash to script name
+  private readonly scriptMap: Record<string, ScriptName>;
+
   constructor(
-    private readonly ckbClient: ccc.Client,
+    ckbClient: ccc.Client,
     private readonly scriptsDetail: Record<
       ScriptName,
       { script: ccc.Script; cellDep: ccc.CellDep }
     >,
   ) {
     super(ckbClient);
+
+    this.scriptMap = Object.fromEntries(
+      Object.entries(this.scriptsDetail).map(([key, value]) => [
+        value.script.codeHash,
+        key as ScriptName,
+      ]),
+    );
   }
 
   get type(): SignerType {
@@ -72,26 +82,48 @@ export class CkbRgbppSigner extends ccc.Signer {
     return JSON.parse(unlockParams);
   }
 
-  getRelatedCellDeps(tx: Transaction): ccc.CellDep[] {
-    // TODO: add cell deps of RGB++-related scripts from this.scriptsDetail
-    return [
-      this.scriptsDetail[ScriptName.RgbppLock].cellDep,
-      // RGB++ config cell dep
-      ccc.CellDep.from({
-        outPoint: {
-          ...this.scriptsDetail[ScriptName.RgbppLock].cellDep.outPoint,
-          index: "0x1",
-        },
-        depType: "code",
-      }),
-      this.scriptsDetail[ScriptName.UniqueType].cellDep,
-      this.scriptsDetail[ScriptName.XudtLike].cellDep,
-    ];
+  getScriptName(script?: ccc.Script): ScriptName | undefined {
+    return script && this.scriptMap[script.codeHash];
+  }
+
+  collectCellDeps(tx: Transaction): ccc.CellDep[] {
+    const scriptNames = new Set<ScriptName>(
+      [
+        ...tx.inputs.flatMap((input) =>
+          // ? Will cellOutput always exist?
+          input.cellOutput
+            ? [
+                this.getScriptName(input.cellOutput.lock),
+                this.getScriptName(input.cellOutput.type),
+              ]
+            : [],
+        ),
+        ...tx.outputs.map((output) => this.getScriptName(output.type)),
+      ].filter((name): name is ScriptName => !!name),
+    );
+
+    const cellDeps = Array.from(scriptNames).flatMap((name) => {
+      if (name === ScriptName.RgbppLock || name === ScriptName.BtcTimeLock) {
+        return [
+          this.scriptsDetail[name].cellDep,
+          ccc.CellDep.from({
+            outPoint: {
+              ...this.scriptsDetail[name].cellDep.outPoint,
+              index: "0x1",
+            },
+            depType: this.scriptsDetail[name].cellDep.depType,
+          }),
+        ];
+      }
+      return [this.scriptsDetail[name].cellDep];
+    });
+
+    return cellDeps;
   }
 
   async prepareTransaction(txLike: TransactionLike): Promise<Transaction> {
     const tx = ccc.Transaction.from(txLike);
-    tx.addCellDeps(this.getRelatedCellDeps(tx));
+    tx.addCellDeps(this.collectCellDeps(tx));
     return Promise.resolve(ccc.Transaction.from(txLike));
   }
 

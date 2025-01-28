@@ -57,6 +57,8 @@ export class RgbppXudtLikeClient {
       tx.inputs.push(
         ccc.CellInput.from({
           previousOutput: cell.outPoint,
+          // This field is required to populate the cellDep
+          cellOutput: cell.cellOutput,
         }),
       );
     });

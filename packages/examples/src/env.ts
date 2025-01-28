@@ -8,7 +8,6 @@ import {
   RgbppXudtLikeClient,
   CkbRgbppSigner,
   isMainnet,
-  PredefinedNetwork,
   networkConfigs,
 } from "@rgbpp-js/core";
 import {
