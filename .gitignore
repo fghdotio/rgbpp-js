@@ -33,6 +33,7 @@ pnpm-debug.log*
 coverage/
 
 # Temporary files
+tmp/
 *.tmp
 *.temp
 
