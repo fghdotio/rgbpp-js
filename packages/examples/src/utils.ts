@@ -1,8 +1,5 @@
 import { ccc } from "@ckb-ccc/core";
 
-import { mkdirSync, existsSync, writeFileSync, readFileSync } from "fs";
-import { inspect } from "util";
-
 import { UtxoSeal } from "@rgbpp-js/core";
 import { BtcAssetsApiError } from "@rgbpp-js/bitcoin";
 
@@ -12,9 +9,6 @@ import {
   rgbppBtcWallet,
   rgbppXudtLikeClient,
 } from "./env.js";
-import { dirname, join } from "path";
-import { fileURLToPath } from "url";
-import { json } from "stream/consumers";
 
 // TODO: prepare utxo seal
 export async function prepareRgbppCell(
@@ -46,7 +40,7 @@ export async function prepareRgbppCell(
   await tx.completeFeeBy(ckbSigner);
   const txHash = await ckbSigner.sendTransaction(tx);
   await ckbClient.waitTransaction(txHash);
-  console.log("RGB++ cell created, txHash: ", txHash);
+  console.log(`RGB++ cell created, txHash: ${txHash}`);
 
   const cell = await ckbClient.getCellLive({
     txHash,
@@ -57,45 +51,6 @@ export async function prepareRgbppCell(
   }
 
   return [cell];
-}
-
-// * using ccc.Transaction.toBytes() would lose optional fields of CellInput
-export function saveCkbTx(
-  ckbTx: ccc.Transaction,
-  opType: string,
-  dir = dirname(fileURLToPath(import.meta.url)) + "/tmp"
-) {
-  if (!existsSync(dir)) {
-    mkdirSync(dir, { recursive: true });
-  }
-  const timestamp = Date.now();
-  const fileName = `${opType}-ckbTx-${timestamp}`;
-  const filePath = join(dir, fileName);
-
-  const ckbTxJson = JSON.stringify(
-    ckbTx,
-    (_, value) => (typeof value === "bigint" ? ccc.numToHex(value) : value),
-    2
-  );
-
-  writeFileSync(filePath, ckbTxJson);
-}
-
-export function readCkbTx(
-  fileName: string,
-  doPrint = false,
-  dir = dirname(fileURLToPath(import.meta.url)) + "/tmp"
-): ccc.Transaction {
-  const filePath = join(dir, fileName);
-  // read from file and JSON.parse
-  const ckbTxJson = readFileSync(filePath, "utf8");
-  const tx = ccc.Transaction.from(JSON.parse(ckbTxJson));
-
-  if (doPrint) {
-    console.log(inspect(tx, { depth: null, colors: true }));
-  }
-
-  return tx;
 }
 
 export async function pollForSpvProof(

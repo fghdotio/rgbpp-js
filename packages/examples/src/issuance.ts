@@ -8,19 +8,21 @@ import {
   utxoBasedAccountAddress,
   ckbRgbppSigner,
 } from "./env.js";
-import { pollForSpvProof, prepareRgbppCell, saveCkbTx } from "./utils.js";
+import { pollForSpvProof, prepareRgbppCell } from "./utils.js";
 import { issuanceAmount, xudtToken } from "./asset.js";
+import { RgbppTxLogger } from "./logger.js";
+
+const logger = new RgbppTxLogger({ opType: "issuance" });
 
 async function issueXudt(utxoSeal: UtxoSeal) {
   const rgbppIssuanceCells = await prepareRgbppCell(utxoSeal);
-  console.log("rgbppIssuanceCells", rgbppIssuanceCells);
 
   const ckbPartialTx = await rgbppXudtLikeClient.issuanceCkbPartialTx({
     token: xudtToken,
     amount: issuanceAmount,
     rgbppLiveCells: rgbppIssuanceCells,
   });
-  saveCkbTx(ckbPartialTx, "issuance");
+  logger.logCkbTx("ckbPartialTx", ckbPartialTx);
 
   const commitment = rgbppXudtLikeClient.calculateCommitment(ckbPartialTx);
 
@@ -36,12 +38,13 @@ async function issueXudt(utxoSeal: UtxoSeal) {
 
   const signedBtcTx = await rgbppBtcWallet.signTx(psbt);
   const rawBtcTxHex = await rgbppBtcWallet.rawTxHex(signedBtcTx);
-  console.log("rawBtcTxHex", rawBtcTxHex);
-  const btcTxId = await rgbppBtcWallet.sendTx(signedBtcTx);
-  console.log("btcTxId", btcTxId);
+  logger.add("rawBtcTxHex", rawBtcTxHex);
 
-  const proof = await pollForSpvProof(btcTxId, 28);
-  const semiFinalCkbTx = await ckbRgbppSigner.setRgbppUnlockParams({
+  const btcTxId = await rgbppBtcWallet.sendTx(signedBtcTx);
+  logger.add("btcTxId", btcTxId, true);
+  const proof = await pollForSpvProof(btcTxId, 30);
+
+  const ckbTxWithRgbppUnlockParams = await ckbRgbppSigner.setRgbppUnlockParams({
     spvProof: proof!,
     txId: btcTxId,
     rawTxHex: rawBtcTxHex,
@@ -49,25 +52,29 @@ async function issueXudt(utxoSeal: UtxoSeal) {
     rgbppLockScriptTemplate: rgbppXudtLikeClient.rgbppLockScriptTemplate(),
     btcTimeLockScriptTemplate: rgbppXudtLikeClient.btcTimeLockScriptTemplate(),
   });
-
   // ? ckbRgbppSigner 是否要做普通 signer 的事
-  const finalCkbTx = await ckbRgbppSigner.signTransaction(semiFinalCkbTx);
+  const rgbppSignedCkbTx = await ckbRgbppSigner.signTransaction(
+    ckbTxWithRgbppUnlockParams
+  );
 
-  await finalCkbTx.completeFeeBy(ckbSigner);
-  const txHash = await ckbSigner.sendTransaction(finalCkbTx);
+  await rgbppSignedCkbTx.completeFeeBy(ckbSigner);
+  const ckbFinalTx = await ckbSigner.signTransaction(rgbppSignedCkbTx);
+  logger.logCkbTx("ckbFinalTx", ckbFinalTx);
+  const txHash = await ckbSigner.client.sendTransaction(ckbFinalTx);
   await ckbClient.waitTransaction(txHash);
-  console.log("xUDT issued, txHash: ", txHash);
+  logger.add("ckbTxId", txHash, true);
 }
 
 issueXudt({
-  txId: "5e380972d91ebd6a03c7c9f90ffaf3ddd17ec47c2b15d91c2ed487dae00725e8",
+  txId: "2e8eb5c4a5d0f3b59f6a548d34128da0a18d0d468c82cb4c391c132aa5986935",
   index: 2,
 })
   .then(() => {
+    logger.saveOnSuccess();
     process.exit(0);
   })
   .catch((e) => {
-    console.error(e);
+    logger.saveOnError(e);
     process.exit(1);
   });
 
