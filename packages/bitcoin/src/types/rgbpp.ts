@@ -8,6 +8,7 @@ export interface RgbppBtcTxParams {
   from: string;
   to: string;
   commitment: string;
+  feeRate?: number;
 }
 
 export interface RgbppXudtLikeIssuanceBtcTxParams extends RgbppBtcTxParams {
