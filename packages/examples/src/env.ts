@@ -1,4 +1,5 @@
 import { ccc } from "@ckb-ccc/core";
+
 import dotenv from "dotenv";
 
 import { fileURLToPath } from "url";
@@ -6,9 +7,10 @@ import { dirname } from "path";
 
 import {
   RgbppXudtLikeClient,
-  CkbRgbppSigner,
   isMainnet,
   networkConfigs,
+  CkbRgbppUnlockSinger,
+  SpvProof,
 } from "@rgbpp-js/core";
 import {
   createBtcAccount,
@@ -59,7 +61,21 @@ export const rgbppBtcWallet = new RgbppBtcWallet(
   }
 );
 
-export const ckbRgbppSigner = new CkbRgbppSigner(
-  ckbClient,
-  rgbppXudtLikeClient.getRgbppScriptsDetail()
-);
+export const createCkbRgbppUnlockSinger = (
+  btcTxId: string,
+  rawBtcTxHex: string,
+  spvProof: SpvProof
+) => {
+  return new CkbRgbppUnlockSinger(
+    ckbClient,
+    {
+      spvProof,
+      txId: btcTxId,
+      rawTxHex: rawBtcTxHex,
+      rgbppLockScriptTemplate: rgbppXudtLikeClient.rgbppLockScriptTemplate(),
+      btcTimeLockScriptTemplate:
+        rgbppXudtLikeClient.btcTimeLockScriptTemplate(),
+    },
+    rgbppXudtLikeClient.getRgbppScriptsDetail()
+  );
+};
