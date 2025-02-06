@@ -14,7 +14,11 @@ import { RgbppTxLogger } from "./logger.js";
 
 const logger = new RgbppTxLogger({ opType: "issuance" });
 
-async function issueXudt(utxoSeal: UtxoSeal) {
+async function issueXudt(utxoSeal?: UtxoSeal) {
+  if (!utxoSeal) {
+    utxoSeal = await rgbppBtcWallet.prepareUtxoSeal(10);
+  }
+
   const rgbppIssuanceCells = await prepareRgbppCell(utxoSeal);
 
   const ckbPartialTx = await rgbppXudtLikeClient.issuanceCkbPartialTx({
@@ -34,10 +38,11 @@ async function issueXudt(utxoSeal: UtxoSeal) {
     commitment,
     rgbppLockScriptTemplate: rgbppXudtLikeClient.rgbppLockScriptTemplate(),
     btcTimeLockScriptTemplate: rgbppXudtLikeClient.btcTimeLockScriptTemplate(),
+    // feeRate: 10,
   });
 
   const signedBtcTx = await rgbppBtcWallet.signTx(psbt);
-  const rawBtcTxHex = await rgbppBtcWallet.rawTxHex(signedBtcTx);
+  const rawBtcTxHex = rgbppBtcWallet.rawTxHex(signedBtcTx);
   logger.add("rawBtcTxHex", rawBtcTxHex);
 
   const btcTxId = await rgbppBtcWallet.sendTx(signedBtcTx);
@@ -60,10 +65,7 @@ async function issueXudt(utxoSeal: UtxoSeal) {
   logger.add("ckbTxId", txHash, true);
 }
 
-issueXudt({
-  txId: "a73b893edd866ce5c06917dd78529c225e527c79a6d34c096aa71bff96d37fc6",
-  index: 2,
-})
+issueXudt()
   .then(() => {
     logger.saveOnSuccess();
     process.exit(0);

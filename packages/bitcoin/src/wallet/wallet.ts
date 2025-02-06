@@ -131,7 +131,7 @@ export class RgbppBtcWallet extends BtcAssetsApiBase {
     return this.sendTransaction(txHex);
   }
 
-  async rawTxHex(tx: Transaction): Promise<string> {
+  rawTxHex(tx: Transaction): string {
     return transactionToHex(tx, false);
   }
 
@@ -211,15 +211,14 @@ export class RgbppBtcWallet extends BtcAssetsApiBase {
     let changeValue = inputsValue - outputsValue - requiredFee;
     if (changeValue < 0) {
       // TODO: verify if any of the required extra inputs are already present in the inputs array
-      const { extraInputs, changeValue: newChangeValue } =
-        await this.collectExtraUtxos(-changeValue, {
+      const { inputs: extraInputs, changeValue: newChangeValue } =
+        await this.collectUtxos(-changeValue, {
           only_non_rgbpp_utxos: true,
         });
       inputs.push(...extraInputs);
       changeValue = newChangeValue;
     }
 
-    // Add change output if needed
     if (changeValue >= DEFAULT_DUST_LIMIT) {
       outputs.push({
         address: this.account.from,
@@ -233,11 +232,11 @@ export class RgbppBtcWallet extends BtcAssetsApiBase {
     };
   }
 
-  async collectExtraUtxos(
+  async collectUtxos(
     requiredValue: number,
     params?: BtcApiUtxoParams,
-  ): Promise<{ extraInputs: TxInputData[]; changeValue: number }> {
-    // TODO: sort by value?
+  ): Promise<{ inputs: TxInputData[]; changeValue: number }> {
+    // ? sort by value
     const utxos = await this.getUtxos(this.account.from, params);
     if (utxos.length === 0) {
       throw new Error("Insufficient funds");
@@ -261,7 +260,7 @@ export class RgbppBtcWallet extends BtcAssetsApiBase {
     }
 
     return {
-      extraInputs: await this.buildInputs(
+      inputs: await this.buildInputs(
         selectedUtxos.map((utxo) => ({
           txId: utxo.txid,
           index: utxo.vout,
@@ -280,6 +279,7 @@ export class RgbppBtcWallet extends BtcAssetsApiBase {
     const psbt = new Psbt({ network: toNetwork(this.network) });
     inputs.forEach((input) => psbt.addInput(input));
     outputs.forEach((output) => psbt.addOutput(output));
+    // TODO: FIX ME: signTx will fail if inputs value is smaller than outputs value
     const tx = await this.signTx(psbt);
 
     // Calculate virtual size
@@ -322,6 +322,60 @@ export class RgbppBtcWallet extends BtcAssetsApiBase {
         }),
       )
     );
+  }
+
+  async prepareUtxoSeal(feeRate?: number): Promise<UtxoSeal> {
+    const targetValue = DEFAULT_DUST_LIMIT;
+    const outputs = [
+      {
+        address: this.account.from,
+        value: targetValue,
+      },
+    ];
+
+    const utxos = await this.getUtxos(this.account.from, {
+      only_non_rgbpp_utxos: true,
+    });
+    if (utxos.length === 0) {
+      throw new Error("Insufficient funds");
+    }
+    const inputs = await this.buildInputs([
+      {
+        txId: utxos[0].txid,
+        index: utxos[0].vout,
+      },
+    ]);
+
+    const { balancedInputs, balancedOutputs } = await this.balanceInputsOutputs(
+      inputs,
+      outputs,
+      feeRate,
+    );
+    const psbt = new Psbt({ network: toNetwork(this.network) });
+    balancedInputs.forEach((input) => {
+      psbt.data.addInput(input);
+    });
+    balancedOutputs.forEach((output) => {
+      psbt.addOutput(output);
+    });
+
+    const signedTx = await this.signTx(psbt);
+    const txId = await this.sendTx(signedTx);
+    console.log(`[prepareUtxoSeal] Transaction ${txId} sent`);
+
+    let tx = await this.getTransaction(txId);
+    while (!tx.status.confirmed) {
+      console.log(
+        `[prepareUtxoSeal] Transaction ${txId} not confirmed, waiting 30 seconds...`,
+      );
+      await new Promise((resolve) => setTimeout(resolve, 30 * 1000));
+      tx = await this.getTransaction(txId);
+    }
+
+    return {
+      txId,
+      index: 0,
+    };
   }
 
   getTransaction(txId: string) {
