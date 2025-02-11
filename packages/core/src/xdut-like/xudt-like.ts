@@ -16,9 +16,15 @@ import { calculateCommitment } from "../utils/rgbpp.js";
 
 export class RgbppXudtLikeClient {
   private scriptManager: ScriptManager;
+  private ckbClient: ccc.Client;
 
-  constructor(network: string, scriptInfos?: ScriptInfo[]) {
+  constructor(
+    network: string,
+    ckbClient: ccc.Client,
+    scriptInfos?: ScriptInfo[],
+  ) {
     this.scriptManager = new ScriptManager(network, scriptInfos);
+    this.ckbClient = ckbClient;
   }
 
   getRgbppScripts() {
@@ -54,13 +60,12 @@ export class RgbppXudtLikeClient {
 
     const tx = ccc.Transaction.default();
     params.rgbppLiveCells.forEach((cell) => {
-      tx.inputs.push(
-        ccc.CellInput.from({
-          previousOutput: cell.outPoint,
-          // This field is required to populate the cellDep
-          cellOutput: cell.cellOutput,
-        }),
-      );
+      const cellInput = ccc.CellInput.from({
+        previousOutput: cell.outPoint,
+      });
+      cellInput.completeExtraInfos(this.ckbClient);
+
+      tx.inputs.push(cellInput);
     });
 
     tx.witnesses.push(RGBPP_CKB_WITNESS_PLACEHOLDER);

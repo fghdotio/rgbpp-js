@@ -47,7 +47,8 @@ const utxoBasedAccount = createBtcAccount(
 export const utxoBasedAccountAddress = utxoBasedAccount.from;
 
 export const rgbppXudtLikeClient = new RgbppXudtLikeClient(
-  utxoBasedNetwork.name
+  utxoBasedNetwork.name,
+  ckbClient
 );
 
 export const rgbppBtcWallet = new RgbppBtcWallet(
