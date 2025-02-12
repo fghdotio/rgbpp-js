@@ -50,19 +50,19 @@ async function issueXudt(utxoSeal?: UtxoSeal) {
 
   const btcTxId = await rgbppBtcWallet.sendTx(signedBtcTx);
   logger.add("btcTxId", btcTxId, true);
+  const ckbPartialTxInjected = await rgbppXudtLikeClient.injectTxIdToRgbppCkbTx(
+    ckbPartialTx,
+    btcTxId
+  );
 
   const proof = await pollForSpvProof(btcTxId, 30);
-  const ckbRgbppUnlockSinger = createCkbRgbppUnlockSinger(
-    btcTxId,
-    rawBtcTxHex,
-    proof
-  );
+  const ckbRgbppUnlockSinger = createCkbRgbppUnlockSinger(rawBtcTxHex, proof);
 
   // TODO: set btcTxId first before sign (maybe us interface)，签名不改变除了 witness 外的内容
   // const ckbRgbppUnlockSinger = createCkbRgbppUnlockSinger(rgbppBtcWallet, rgbppSignedCkbTx);
 
   const rgbppSignedCkbTx =
-    await ckbRgbppUnlockSinger.signTransaction(ckbPartialTx);
+    await ckbRgbppUnlockSinger.signTransaction(ckbPartialTxInjected);
 
   await rgbppSignedCkbTx.completeFeeBy(ckbSigner);
   const ckbFinalTx = await ckbSigner.signTransaction(rgbppSignedCkbTx);
@@ -73,7 +73,7 @@ async function issueXudt(utxoSeal?: UtxoSeal) {
 }
 
 issueXudt({
-  txId: "72f285e9288466d60394128fa19cb0180a5bec490b0dd82dd50801df215d6be7",
+  txId: "caa1e12e546213343ca1fa5fa94dc093155b2be0f958246b87b635c7b6045367",
   index: 2,
 })
   .then(() => {
@@ -81,6 +81,7 @@ issueXudt({
     process.exit(0);
   })
   .catch((e) => {
+    console.log(e.message);
     logger.saveOnError(e);
     process.exit(1);
   });

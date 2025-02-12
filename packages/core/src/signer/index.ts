@@ -11,10 +11,6 @@ import { ScriptName } from "../scripts/index.js";
 import { RgbppUnlockParams, SpvProof } from "../types/spv.js";
 import { prependHexPrefix } from "../utils/encoder.js";
 import { buildRgbppUnlock } from "../utils/rgbpp.js";
-import {
-  isUsingOneOfScripts,
-  updateScriptArgsWithTxId,
-} from "../utils/script.js";
 
 // Each RGB++ transaction requires its own instance of CkbRgbppUnlockSinger
 export class CkbRgbppUnlockSinger extends ccc.Signer {
@@ -46,42 +42,6 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
   get signType(): SignerSignType {
     return SignerSignType.Unknown;
   }
-
-  /* 
-  setRgbppUnlockParams(params: RgbppUnlockParams): Transaction {
-    const tx = ccc.Transaction.from(params.ckbPartialTx);
-    tx.witnesses.push(
-      prependHexPrefix(
-        JSON.stringify(params, (_, value) =>
-          typeof value === "bigint" ? ccc.numToHex(value) : value,
-        ) + RGBPP_UNLOCK_PARAMS_IDENTIFIER,
-      ),
-    );
-
-    return tx;
-  }
-
-  popUnlockParamsFromWitnesses(tx: Transaction): RgbppUnlockParams {
-    const witnesses = tx.witnesses;
-    if (!witnesses || witnesses.length === 0) {
-      throw new Error("No witnesses found");
-    }
-
-    const lastWitness = witnesses[witnesses.length - 1];
-    if (!lastWitness.endsWith(RGBPP_UNLOCK_PARAMS_IDENTIFIER)) {
-      throw new Error("Unlock params not found");
-    }
-    tx.witnesses.pop();
-
-    const unlockParams = trimHexPrefix(
-      lastWitness.slice(
-        0,
-        lastWitness.length - RGBPP_UNLOCK_PARAMS_IDENTIFIER.length,
-      ),
-    );
-    return JSON.parse(unlockParams);
-  } 
-  */
 
   getScriptName(script?: ccc.Script): ScriptName | undefined {
     return script && this.scriptMap[script.codeHash];
@@ -137,59 +97,9 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
 
   async signOnlyTransaction(txLike: TransactionLike): Promise<Transaction> {
     const tx = ccc.Transaction.from(txLike);
-    const {
-      rgbppLockScriptTemplate,
-      btcTimeLockScriptTemplate,
-      spvProof,
-      txId,
-      rawTxHex,
-    } = this.unlockParams;
+    const { spvProof, rawTxHex } = this.unlockParams;
 
-    return Promise.resolve(
-      this.injectWitnesses(
-        this.injectTxId(
-          tx,
-          txId,
-          rgbppLockScriptTemplate,
-          btcTimeLockScriptTemplate,
-        ),
-        rawTxHex,
-        spvProof,
-      ),
-    );
-  }
-
-  injectTxId(
-    tx: ccc.Transaction,
-    txId: string,
-    rgbppLockScriptTemplate: ccc.Script,
-    btcTimeLockScriptTemplate: ccc.Script,
-  ): ccc.Transaction {
-    const outputs = tx.outputs.map((output) => {
-      if (
-        isUsingOneOfScripts(output.lock, [
-          rgbppLockScriptTemplate,
-          btcTimeLockScriptTemplate,
-        ])
-      ) {
-        return ccc.CellOutput.from({
-          ...output,
-          lock: {
-            ...output.lock,
-            args: updateScriptArgsWithTxId(
-              output.lock.args,
-              prependHexPrefix(txId),
-            ),
-          },
-        });
-      }
-      return output;
-    });
-
-    return ccc.Transaction.from({
-      ...tx,
-      outputs,
-    });
+    return Promise.resolve(this.injectWitnesses(tx, rawTxHex, spvProof));
   }
 
   injectWitnesses(

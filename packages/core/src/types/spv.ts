@@ -15,9 +15,5 @@ export interface RgbppApiSpvProof {
 
 export interface RgbppUnlockParams {
   spvProof: SpvProof;
-  txId: string;
   rawTxHex: string;
-
-  rgbppLockScriptTemplate: ccc.Script;
-  btcTimeLockScriptTemplate: ccc.Script;
 }

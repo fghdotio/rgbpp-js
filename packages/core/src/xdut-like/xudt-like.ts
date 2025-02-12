@@ -11,8 +11,14 @@ import { deadLock, ScriptName } from "../scripts/index.js";
 import { UtxoSeal } from "../types/index.js";
 import { ScriptInfo } from "../types/rgbpp/rgbpp.js";
 import { RgbppXudtLikeIssuance } from "../types/rgbpp/xudt-like.js";
-import { encodeRgbppXudtLikeToken, u128ToLe } from "../utils/index.js";
+import { prependHexPrefix } from "../utils/encoder.js";
+import {
+  encodeRgbppXudtLikeToken,
+  isUsingOneOfScripts,
+  u128ToLe,
+} from "../utils/index.js";
 import { calculateCommitment } from "../utils/rgbpp.js";
+import { updateScriptArgsWithTxId } from "../utils/script.js";
 
 export class RgbppXudtLikeClient {
   private scriptManager: ScriptManager;
@@ -50,6 +56,37 @@ export class RgbppXudtLikeClient {
   buildRgbppLockScript(utxoSeal: UtxoSeal) {
     return this.scriptManager.buildRgbppLockScript(utxoSeal);
   }
+
+  injectTxIdToRgbppCkbTx = (
+    tx: ccc.Transaction,
+    txId: string,
+  ): ccc.Transaction => {
+    const outputs = tx.outputs.map((output) => {
+      if (
+        isUsingOneOfScripts(output.lock, [
+          this.rgbppLockScriptTemplate(),
+          this.btcTimeLockScriptTemplate(),
+        ])
+      ) {
+        return ccc.CellOutput.from({
+          ...output,
+          lock: {
+            ...output.lock,
+            args: updateScriptArgsWithTxId(
+              output.lock.args,
+              prependHexPrefix(txId),
+            ),
+          },
+        });
+      }
+      return output;
+    });
+
+    return ccc.Transaction.from({
+      ...tx,
+      outputs,
+    });
+  };
 
   async issuanceCkbPartialTx(
     params: RgbppXudtLikeIssuance,
