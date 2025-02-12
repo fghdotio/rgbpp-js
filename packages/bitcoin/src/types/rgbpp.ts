@@ -1,17 +1,10 @@
-import { ccc } from "@ckb-ccc/core";
-
 import { UtxoSeal } from "@rgbpp-js/core";
 
+import { TxOutput } from "./tx.js";
 export interface RgbppBtcTxParams {
-  ckbPartialTx: ccc.Transaction;
+  rgbppOutputs: TxOutput[];
+
   utxoSeals: UtxoSeal[];
   from: string;
-  to: string;
-  commitment: string;
   feeRate?: number;
-}
-
-export interface RgbppXudtLikeIssuanceBtcTxParams extends RgbppBtcTxParams {
-  rgbppLockScriptTemplate: ccc.Script;
-  btcTimeLockScriptTemplate: ccc.Script;
 }

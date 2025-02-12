@@ -10,6 +10,8 @@ import {
   serializeOutput,
 } from "@nervosnetwork/ckb-sdk-utils";
 
+import { convertToOutput, InitOutput, TxOutput } from "@rgbpp-js/bitcoin";
+
 import {
   DEFAULT_CONFIRMATIONS,
   RGBPP_MAX_CELL_NUM,
@@ -21,6 +23,7 @@ import {
   Uint16,
 } from "../schemas/generated/rgbpp.js";
 import { RgbppXudtLikeToken, UtxoSeal } from "../types/rgbpp/rgbpp.js";
+import { isSameScriptTemplate, isUsingOneOfScripts } from "../utils/script.js";
 import {
   prependHexPrefix,
   reverseHexByteOrder,
@@ -160,4 +163,77 @@ export const calculateCommitment = (ckbPartialTx: ccc.Transaction): string => {
   }
   // double sha256
   return sha256(hash.array());
+};
+
+export const isCommitmentMatched = (
+  commitment: string,
+  ckbPartialTx: ccc.Transaction,
+  lastCkbTypedOutputIndex: number,
+): boolean => {
+  return (
+    commitment ===
+    calculateCommitment(
+      ccc.Transaction.from({
+        inputs: ckbPartialTx.inputs,
+        outputs: ckbPartialTx.outputs.slice(0, lastCkbTypedOutputIndex + 1),
+        outputsData: ckbPartialTx.outputsData.slice(
+          0,
+          lastCkbTypedOutputIndex + 1,
+        ),
+      }),
+    )
+  );
+};
+
+// RGB++ related outputs
+export const buildBtcRgbppOutputs = (
+  ckbPartialTx: ccc.Transaction,
+  to: string,
+  rgbppLockScriptTemplate: ccc.Script,
+  btcTimeLockScriptTemplate: ccc.Script,
+  commitment: string,
+): TxOutput[] => {
+  const outputs: InitOutput[] = [];
+  let lastCkbTypedOutputIndex = -1;
+  ckbPartialTx.outputs.forEach((output, index) => {
+    // If output.type is not null, then the output.lock must be RGB++ Lock or BTC Time Lock
+    if (output.type) {
+      if (
+        !isUsingOneOfScripts(output.lock, [
+          rgbppLockScriptTemplate,
+          btcTimeLockScriptTemplate,
+        ])
+      ) {
+        throw new Error("Invalid cell lock");
+      }
+      lastCkbTypedOutputIndex = index;
+    }
+
+    // If output.lock is RGB++ Lock, generate a corresponding output in outputs
+    if (isSameScriptTemplate(output.lock, rgbppLockScriptTemplate)) {
+      outputs.push({
+        fixed: true,
+        address: to,
+        value: 546,
+        minUtxoSatoshi: 546,
+      });
+    }
+  });
+
+  if (lastCkbTypedOutputIndex < 0) {
+    throw new Error("Invalid outputs");
+  }
+
+  if (!isCommitmentMatched(commitment, ckbPartialTx, lastCkbTypedOutputIndex)) {
+    throw new Error("Commitment mismatch");
+  }
+
+  // place the commitment as the first output
+  outputs.unshift({
+    data: commitment,
+    value: 0,
+    fixed: true,
+  });
+
+  return outputs.map((output) => convertToOutput(output));
 };

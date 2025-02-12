@@ -4,8 +4,6 @@ import { ccc } from "@ckb-ccc/core";
 
 import {
   calculateCommitment,
-  isSameScriptTemplate,
-  isUsingOneOfScripts,
   RgbppApiSpvProof,
   UtxoSeal,
 } from "@rgbpp-js/core";
@@ -18,7 +16,7 @@ import {
 } from "../index.js";
 import { BtcAssetsApiBase } from "../service/base.js";
 import { BtcAssetApiConfig } from "../types/btc-assets-api.js";
-import { RgbppXudtLikeIssuanceBtcTxParams } from "../types/rgbpp.js";
+import { RgbppBtcTxParams } from "../types/rgbpp.js";
 import {
   AddressType,
   BtcApiRecommendedFeeRates,
@@ -26,13 +24,11 @@ import {
   BtcApiTransaction,
   BtcApiUtxo,
   BtcApiUtxoParams,
-  InitOutput,
   TxInputData,
   TxOutput,
   Utxo,
 } from "../types/tx.js";
 import {
-  convertToOutput,
   getAddressType,
   isOpReturnScriptPubkey,
   toNetwork,
@@ -60,13 +56,12 @@ export class RgbppBtcWallet extends BtcAssetsApiBase {
     this.network = networkType;
   }
 
-  async buildPsbt(params: RgbppXudtLikeIssuanceBtcTxParams): Promise<Psbt> {
+  async buildPsbt(params: RgbppBtcTxParams): Promise<Psbt> {
     const inputs = await this.buildInputs(params.utxoSeals);
-    const outputs = this.buildRgbppOutputs(params);
 
     const { balancedInputs, balancedOutputs } = await this.balanceInputsOutputs(
       inputs,
-      outputs,
+      params.rgbppOutputs,
       params.feeRate,
     );
 
@@ -135,65 +130,6 @@ export class RgbppBtcWallet extends BtcAssetsApiBase {
     return transactionToHex(tx, false);
   }
 
-  // RGB++ related outputs
-  buildRgbppOutputs(params: RgbppXudtLikeIssuanceBtcTxParams): TxOutput[] {
-    const {
-      ckbPartialTx,
-      to,
-      rgbppLockScriptTemplate,
-      btcTimeLockScriptTemplate,
-    } = params;
-    const outputs: InitOutput[] = [];
-    let lastCkbTypedOutputIndex = -1;
-    ckbPartialTx.outputs.forEach((output, index) => {
-      // If output.type is not null, then the output.lock must be RGB++ Lock or BTC Time Lock
-      if (output.type) {
-        if (
-          !isUsingOneOfScripts(output.lock, [
-            rgbppLockScriptTemplate,
-            btcTimeLockScriptTemplate,
-          ])
-        ) {
-          throw new Error("Invalid cell lock");
-        }
-        lastCkbTypedOutputIndex = index;
-      }
-
-      // If output.lock is RGB++ Lock, generate a corresponding output in outputs
-      if (isSameScriptTemplate(output.lock, rgbppLockScriptTemplate)) {
-        outputs.push({
-          fixed: true,
-          address: to,
-          value: 546,
-          minUtxoSatoshi: 546,
-        });
-      }
-    });
-
-    if (lastCkbTypedOutputIndex < 0) {
-      throw new Error("Invalid outputs");
-    }
-
-    if (
-      !this.isCommitmentMatched(
-        params.commitment,
-        ckbPartialTx,
-        lastCkbTypedOutputIndex,
-      )
-    ) {
-      throw new Error("Commitment mismatch");
-    }
-
-    // place the commitment as the first output
-    outputs.unshift({
-      data: params.commitment,
-      value: 0,
-      fixed: true,
-    });
-
-    return outputs.map((output) => convertToOutput(output));
-  }
-
   async balanceInputsOutputs(
     inputs: TxInputData[],
     outputs: TxOutput[],
@@ -236,7 +172,7 @@ export class RgbppBtcWallet extends BtcAssetsApiBase {
     requiredValue: number,
     params?: BtcApiUtxoParams,
   ): Promise<{ inputs: TxInputData[]; changeValue: number }> {
-    // ? sort by value
+    // TODO: more pages
     const utxos = await this.getUtxos(this.account.from, params);
     if (utxos.length === 0) {
       throw new Error("Insufficient funds");
@@ -324,6 +260,7 @@ export class RgbppBtcWallet extends BtcAssetsApiBase {
     );
   }
 
+  // TODO: target value as a parameter
   async prepareUtxoSeal(feeRate?: number): Promise<UtxoSeal> {
     const targetValue = DEFAULT_DUST_LIMIT;
     const outputs = [
@@ -333,6 +270,7 @@ export class RgbppBtcWallet extends BtcAssetsApiBase {
       },
     ];
 
+    // TODO: only_non_rgbpp_utxos seems not working
     const utxos = await this.getUtxos(this.account.from, {
       only_non_rgbpp_utxos: true,
     });
@@ -359,6 +297,7 @@ export class RgbppBtcWallet extends BtcAssetsApiBase {
       psbt.addOutput(output);
     });
 
+    // TODO: 构建、签名、发送分离
     const signedTx = await this.signTx(psbt);
     const txId = await this.sendTx(signedTx);
     console.log(`[prepareUtxoSeal] Transaction ${txId} sent`);

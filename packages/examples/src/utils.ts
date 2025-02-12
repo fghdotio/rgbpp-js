@@ -10,7 +10,6 @@ import {
   rgbppXudtLikeClient,
 } from "./env.js";
 
-// TODO: prepare utxo seal
 export async function prepareRgbppCell(
   utxoSeal: UtxoSeal
 ): Promise<ccc.Cell[]> {
@@ -39,6 +38,7 @@ export async function prepareRgbppCell(
   await tx.completeInputsByCapacity(ckbSigner);
   await tx.completeFeeBy(ckbSigner);
   const txHash = await ckbSigner.sendTransaction(tx);
+  // TODO: combine this waitTransaction with the second one
   await ckbClient.waitTransaction(txHash);
   console.log(`RGB++ cell created, txHash: ${txHash}`);
 
