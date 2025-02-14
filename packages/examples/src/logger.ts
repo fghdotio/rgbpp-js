@@ -109,8 +109,10 @@ export class RgbppTxLogger {
   logCkbTx(key: string, ckbTx: ccc.Transaction, doPrint = false): void {
     this.add(
       key,
-      JSON.stringify(ckbTx, (_, value) =>
-        typeof value === "bigint" ? ccc.numToHex(value) : value
+      JSON.stringify(
+        ckbTx,
+        (_, value) => (typeof value === "bigint" ? ccc.numToHex(value) : value),
+        2
       ),
       doPrint
     );
@@ -150,11 +152,13 @@ export class RgbppTxLogger {
   }
 
   saveOnSuccess(): void {
+    this.logStartTime();
     this.logEndTime();
     this.saveLog(this.logFilePath);
   }
 
   saveOnError(error: Error): void {
+    this.logStartTime();
     this.logEndTime();
     this.currentLog.error = error.message;
     this.saveLog(this.logFilePath);
@@ -163,6 +167,7 @@ export class RgbppTxLogger {
   saveLog(filePath: string): void {
     try {
       writeFileSync(filePath, JSON.stringify(this.currentLog, null, 2));
+      console.log("Log saved to", parse(filePath).base);
     } catch (error) {
       console.error("Failed to save log:", error);
       throw error;
