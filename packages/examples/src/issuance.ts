@@ -26,7 +26,7 @@ async function issueXudt(utxoSeal?: UtxoSeal) {
     amount: issuanceAmount,
     rgbppLiveCells: rgbppIssuanceCells,
   });
-  logger.logCkbTx("ckbPartialTx", ckbPartialTx);
+  logger.logCkbTx("ckbPartialTx", ckbPartialTx, true);
 
   const commitment = rgbppXudtLikeClient.calculateCommitment(ckbPartialTx);
 
@@ -73,7 +73,7 @@ async function issueXudt(utxoSeal?: UtxoSeal) {
 }
 
 issueXudt({
-  txId: "caa1e12e546213343ca1fa5fa94dc093155b2be0f958246b87b635c7b6045367",
+  txId: "644c6217e5c5aa08cbca11401be8f6106e6617a0be49a65c03814d4db461e58f",
   index: 2,
 })
   .then(() => {

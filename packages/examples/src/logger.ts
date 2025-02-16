@@ -10,13 +10,13 @@ interface RgbppTxLog {
   rawBtcTxHex?: string;
 
   ckbTxId?: string;
-  ckbPartialTx?: string;
-  ckbFinalTx?: string;
+  ckbPartialTx?: ccc.Transaction;
+  ckbFinalTx?: ccc.Transaction;
 
   startTime?: string;
   endTime?: string;
   error?: string;
-  [key: string]: string | undefined;
+  [key: string]: string | ccc.Transaction | undefined;
 }
 
 type NewLoggerOptions = {
@@ -107,15 +107,10 @@ export class RgbppTxLogger {
 
   // * using ccc.Transaction.toBytes() would lose optional fields of CellInput
   logCkbTx(key: string, ckbTx: ccc.Transaction, doPrint = false): void {
-    this.add(
-      key,
-      JSON.stringify(
-        ckbTx,
-        (_, value) => (typeof value === "bigint" ? ccc.numToHex(value) : value),
-        2
-      ),
-      doPrint
-    );
+    this.currentLog[key] = ckbTx;
+    if (doPrint) {
+      console.log(inspect(ckbTx, { depth: null, colors: true }));
+    }
   }
 
   logStartTime(): void {
@@ -130,7 +125,7 @@ export class RgbppTxLogger {
     }
   }
 
-  getLogValue(key: string, doPrint = false): string | undefined {
+  getLogValue(key: string, doPrint = false): unknown {
     const value = this.currentLog[key];
     if (doPrint) {
       console.log(`${key}: ${value ?? ""}`);
@@ -138,13 +133,11 @@ export class RgbppTxLogger {
     return value;
   }
 
-  parseCkbTxFromLogFile(doPrint = false): ccc.Transaction {
-    if (!this.currentLog.ckbPartialTx) {
+  getCkbTxFromLogFile(doPrint = false): ccc.Transaction {
+    const ckbTx = this.currentLog.ckbPartialTx;
+    if (!ckbTx) {
       throw new Error("ckbPartialTx not found in log file");
     }
-    const ckbTx = ccc.Transaction.from(
-      JSON.parse(this.currentLog.ckbPartialTx)
-    );
     if (doPrint) {
       console.log(inspect(ckbTx, { depth: null, colors: true }));
     }
@@ -166,7 +159,15 @@ export class RgbppTxLogger {
 
   saveLog(filePath: string): void {
     try {
-      writeFileSync(filePath, JSON.stringify(this.currentLog, null, 2));
+      writeFileSync(
+        filePath,
+        JSON.stringify(
+          this.currentLog,
+          (_, value) =>
+            typeof value === "bigint" ? ccc.numToHex(value) : value,
+          2
+        )
+      );
       console.log("Log saved to", parse(filePath).base);
     } catch (error) {
       console.error("Failed to save log:", error);
