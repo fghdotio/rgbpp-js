@@ -13,6 +13,7 @@ import { SpvProof } from "../types/spv.js";
 import { prependHexPrefix } from "../utils/encoder.js";
 import { buildRgbppUnlock } from "../utils/rgbpp.js";
 import { pollForSpvProof } from "../utils/spv.js";
+
 // Each RGB++ transaction requires its own instance of CkbRgbppUnlockSinger
 export class CkbRgbppUnlockSinger extends ccc.Signer {
   // map of script code hash to script name
@@ -113,9 +114,24 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
       }),
     );
 
-    return Promise.resolve(
+    const txInjected = await Promise.resolve(
       this.injectWitnesses(tx, this.tmpRawBtcTxHex, spvProof),
     );
+    txInjected.cellDeps = this.sortCellDeps(txInjected.cellDeps);
+    return txInjected;
+  }
+
+  // all cell deps with depType of `code` should be at the start of the array
+  sortCellDeps(cellDeps: ccc.CellDep[]): ccc.CellDep[] {
+    return cellDeps.sort((a, b) => {
+      if (a.depType === "code" && b.depType !== "code") {
+        return -1;
+      }
+      if (a.depType !== "code" && b.depType === "code") {
+        return 1;
+      }
+      return 0;
+    });
   }
 
   injectWitnesses(
@@ -146,6 +162,14 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
     );
 
     return tx;
+  }
+
+  getCommittedInputLength(tx: Transaction): number {
+    return tx.inputs.filter((input) => input.cellOutput?.type).length;
+  }
+
+  getCommittedOutputLength(tx: Transaction): number {
+    return tx.outputs.filter((output) => output.type).length;
   }
 
   async connect(): Promise<void> {}

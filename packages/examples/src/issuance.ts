@@ -60,10 +60,21 @@ async function issueXudt(utxoSeal?: UtxoSeal) {
   // TODO: set btcTxId first before sign (maybe us interface)，签名不改变除了 witness 外的内容
   // const ckbRgbppUnlockSinger = createCkbRgbppUnlockSinger(rgbppBtcWallet, rgbppSignedCkbTx);
 
+  // > Commitment must cover all Inputs and Outputs where Type is not null;
+  // https://github.com/utxostack/RGBPlusPlus-design/blob/main/docs/lockscript-design-prd-en.md#requirements-and-limitations-on-isomorphic-binding
+  // TODO: should only select cells with null type script
+  // ? 需要注意 cell deps 的顺序；
+  // ? 需要重新计算 input length 和 output length 以正确验证 commitment，增加耦合度
+  // ? CkbRgbppUnlockSinger 中需要 rawBtcTxHex 需要缓存或者从 btc assets api 中获取并构造，额外增加复杂度
+  // ? btc tx id 需要从 script args 中解析
+  await ckbPartialTxInjected.completeFeeBy(
+    ckbRgbppUnlockSinger.feeSigner,
+    5000
+  );
+
   const rgbppSignedCkbTx =
     await ckbRgbppUnlockSinger.signTransaction(ckbPartialTxInjected);
 
-  await rgbppSignedCkbTx.completeFeeBy(ckbRgbppUnlockSinger.feeSigner);
   const ckbFinalTx = await ckbSigner.signTransaction(rgbppSignedCkbTx);
   logger.logCkbTx("ckbFinalTx", ckbFinalTx);
 
@@ -73,7 +84,7 @@ async function issueXudt(utxoSeal?: UtxoSeal) {
 }
 
 issueXudt({
-  txId: "dd9975b89922ce3b4416ac0fe734b7e04c3eceba6ce950ea3b04e71b86d8b9c0",
+  txId: "90872fd407a35ca6c8e527f6f89d85fa78a1da41fe9acfa862b83f40e4bba7bf",
   index: 2,
 })
   .then(() => {
