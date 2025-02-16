@@ -4,22 +4,29 @@ import { SpvProof } from "../types/spv.js";
 export async function pollForSpvProof(
   spvProofProvider: SpvProofProvider,
   btcTxId: string,
-  intervalInSeconds: number = 10,
+  confirmations: number = 0,
+  intervalInSeconds?: number,
 ): Promise<SpvProof> {
   return new Promise((resolve, reject) => {
-    const polling = setInterval(async () => {
-      try {
-        console.log("Waiting for btc tx and proof to be ready");
-        const proof = await spvProofProvider.getRgbppSpvProof(btcTxId, 0);
+    const polling = setInterval(
+      async () => {
+        try {
+          console.log("Waiting for btc tx and proof to be ready");
+          const proof = await spvProofProvider.getRgbppSpvProof(
+            btcTxId,
+            confirmations,
+          );
 
-        if (proof) {
-          clearInterval(polling);
-          resolve(proof);
+          if (proof) {
+            clearInterval(polling);
+            resolve(proof);
+          }
+        } catch (e) {
+          // TODO: fix this
+          console.log(String(e));
         }
-      } catch (e) {
-        // TODO: fix this
-        console.log(String(e));
-      }
-    }, intervalInSeconds * 1000);
+      },
+      intervalInSeconds ?? 10 * 1000,
+    );
   });
 }

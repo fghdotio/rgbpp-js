@@ -7,11 +7,12 @@ import {
 } from "@ckb-ccc/core";
 import { serializeWitnessArgs } from "@nervosnetwork/ckb-sdk-utils";
 import { RGBPP_CKB_WITNESS_PLACEHOLDER } from "../constants/index.js";
+import { SpvProofProvider } from "../interfaces/spv.js";
 import { ScriptName } from "../scripts/index.js";
-import { RgbppUnlockParams, SpvProof } from "../types/spv.js";
+import { SpvProof } from "../types/spv.js";
 import { prependHexPrefix } from "../utils/encoder.js";
 import { buildRgbppUnlock } from "../utils/rgbpp.js";
-
+import { pollForSpvProof } from "../utils/spv.js";
 // Each RGB++ transaction requires its own instance of CkbRgbppUnlockSinger
 export class CkbRgbppUnlockSinger extends ccc.Signer {
   // map of script code hash to script name
@@ -19,11 +20,15 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
 
   constructor(
     ckbClient: ccc.Client,
-    private readonly unlockParams: RgbppUnlockParams,
+    private readonly _feeSigner: ccc.SignerCkbPrivateKey,
+    private readonly spvProofProvider: SpvProofProvider,
     private readonly scriptsDetail: Record<
       ScriptName,
       { script: ccc.Script; cellDep: ccc.CellDep }
     >,
+
+    private readonly tmpBtcTxId: string,
+    private readonly tmpRawBtcTxHex: string,
   ) {
     super(ckbClient);
 
@@ -41,6 +46,10 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
 
   get signType(): SignerSignType {
     return SignerSignType.Unknown;
+  }
+
+  get feeSigner(): ccc.SignerCkbPrivateKey {
+    return this._feeSigner;
   }
 
   getScriptName(script?: ccc.Script): ScriptName | undefined {
@@ -79,13 +88,6 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
       return [this.scriptsDetail[name].cellDep];
     });
 
-    cellDeps.push(
-      ccc.CellDep.from({
-        outPoint: this.unlockParams.spvProof.spvClientOutpoint,
-        depType: "code",
-      }),
-    );
-
     return cellDeps;
   }
 
@@ -97,9 +99,23 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
 
   async signOnlyTransaction(txLike: TransactionLike): Promise<Transaction> {
     const tx = ccc.Transaction.from(txLike);
-    const { spvProof, rawTxHex } = this.unlockParams;
+    const spvProof = await pollForSpvProof(
+      this.spvProofProvider,
+      this.tmpBtcTxId,
+    );
+    if (!spvProof) {
+      throw new Error("Spv proof not found");
+    }
+    tx.cellDeps.push(
+      ccc.CellDep.from({
+        outPoint: spvProof.spvClientOutpoint,
+        depType: "code",
+      }),
+    );
 
-    return Promise.resolve(this.injectWitnesses(tx, rawTxHex, spvProof));
+    return Promise.resolve(
+      this.injectWitnesses(tx, this.tmpRawBtcTxHex, spvProof),
+    );
   }
 
   injectWitnesses(

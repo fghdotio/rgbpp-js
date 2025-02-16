@@ -10,7 +10,6 @@ import {
   isMainnet,
   networkConfigs,
   CkbRgbppUnlockSinger,
-  SpvProof,
 } from "@rgbpp-js/core";
 import {
   createBtcAccount,
@@ -63,15 +62,15 @@ export const rgbppBtcWallet = new RgbppBtcWallet(
 );
 
 export const createCkbRgbppUnlockSinger = (
-  rawBtcTxHex: string,
-  spvProof: SpvProof
+  btcTxId: string,
+  rawBtcTxHex: string
 ) => {
   return new CkbRgbppUnlockSinger(
     ckbClient,
-    {
-      spvProof,
-      rawTxHex: rawBtcTxHex,
-    },
-    rgbppXudtLikeClient.getRgbppScriptsDetail()
+    ckbSigner,
+    rgbppBtcWallet,
+    rgbppXudtLikeClient.getRgbppScriptsDetail(),
+    btcTxId,
+    rawBtcTxHex
   );
 };
