@@ -63,7 +63,9 @@ export const rgbppBtcWallet = new RgbppBtcWallet(
 
 export const createCkbRgbppUnlockSinger = (
   btcTxId: string,
-  rawBtcTxHex: string
+  rawBtcTxHex: string,
+  committedInputLength: number,
+  committedOutputLength: number
 ) => {
   return new CkbRgbppUnlockSinger(
     ckbClient,
@@ -71,6 +73,8 @@ export const createCkbRgbppUnlockSinger = (
     rgbppBtcWallet,
     rgbppXudtLikeClient.getRgbppScriptsDetail(),
     btcTxId,
-    rawBtcTxHex
+    rawBtcTxHex,
+    committedInputLength,
+    committedOutputLength
   );
 };

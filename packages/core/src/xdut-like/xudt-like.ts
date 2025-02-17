@@ -106,7 +106,6 @@ export class RgbppXudtLikeClient {
     });
 
     tx.witnesses.push(RGBPP_CKB_WITNESS_PLACEHOLDER);
-    tx.witnesses.push(RGBPP_CKB_WITNESS_PLACEHOLDER);
 
     tx.addOutput(
       {

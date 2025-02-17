@@ -55,7 +55,12 @@ async function issueXudt(utxoSeal?: UtxoSeal) {
     btcTxId
   );
 
-  const ckbRgbppUnlockSinger = createCkbRgbppUnlockSinger(btcTxId, rawBtcTxHex);
+  const ckbRgbppUnlockSinger = createCkbRgbppUnlockSinger(
+    btcTxId,
+    rawBtcTxHex,
+    ckbPartialTxInjected.inputs.length,
+    ckbPartialTxInjected.outputs.length
+  );
 
   // TODO: set btcTxId first before sign (maybe us interface)，签名不改变除了 witness 外的内容
   // const ckbRgbppUnlockSinger = createCkbRgbppUnlockSinger(rgbppBtcWallet, rgbppSignedCkbTx);
@@ -84,7 +89,7 @@ async function issueXudt(utxoSeal?: UtxoSeal) {
 }
 
 issueXudt({
-  txId: "90872fd407a35ca6c8e527f6f89d85fa78a1da41fe9acfa862b83f40e4bba7bf",
+  txId: "42fd06a1ef25197d4b8ba968fe0ca76d08a6fc84eb5c62bfe94d5421f2420fd7",
   index: 2,
 })
   .then(() => {

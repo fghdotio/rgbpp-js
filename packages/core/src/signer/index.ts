@@ -30,6 +30,8 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
 
     private readonly tmpBtcTxId: string,
     private readonly tmpRawBtcTxHex: string,
+    private readonly committedInputLength: number,
+    private readonly committedOutputLength: number,
   ) {
     super(ckbClient);
 
@@ -144,8 +146,8 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
     const rgbppUnlock = buildRgbppUnlock(
       btcLikeTxBytes,
       spvClient.proof,
-      tx.inputs.length,
-      tx.outputs.length,
+      this.committedInputLength,
+      this.committedOutputLength,
     );
 
     const rgbppWitness = prependHexPrefix(
