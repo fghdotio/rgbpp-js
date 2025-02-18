@@ -18,11 +18,7 @@ const debug = async (fileName: string) => {
     btcTxId
   );
 
-  const ckbRgbppUnlockSinger = createCkbRgbppUnlockSinger(
-    rawBtcTxHex,
-    ckbPartialTxRecovered.inputs.length,
-    ckbPartialTxRecovered.outputs.length
-  );
+  const ckbRgbppUnlockSinger = createCkbRgbppUnlockSinger(rawBtcTxHex);
 
   await ckbPartialTxInjected.completeFeeBy(ckbRgbppUnlockSinger.feeSigner);
   const ckbFinalTx =
@@ -33,7 +29,7 @@ const debug = async (fileName: string) => {
   console.log(`CKB txHash: ${txHash}`);
 };
 
-debug("issuance-1739881437831-logs.json");
+debug("issuance-1739901307259-logs.json");
 
 /* 
 pnpm tsx packages/examples/src/debug.ts

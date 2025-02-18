@@ -14,6 +14,7 @@ import { convertToOutput, InitOutput, TxOutput } from "@rgbpp-js/bitcoin";
 
 import {
   DEFAULT_CONFIRMATIONS,
+  RGBPP_CKB_WITNESS_PLACEHOLDER,
   RGBPP_MAX_CELL_NUM,
 } from "../constants/index.js";
 import { Script } from "../schemas/generated/blockchain.js";
@@ -22,7 +23,11 @@ import {
   RGBPPUnlock,
   Uint16,
 } from "../schemas/generated/rgbpp.js";
-import { RgbppXudtLikeToken, UtxoSeal } from "../types/rgbpp/rgbpp.js";
+import {
+  CommittedLength,
+  RgbppXudtLikeToken,
+  UtxoSeal,
+} from "../types/rgbpp/rgbpp.js";
 import { isSameScriptTemplate, isUsingOneOfScripts } from "../utils/script.js";
 import {
   prependHexPrefix,
@@ -237,3 +242,55 @@ export const buildBtcRgbppOutputs = (
 
   return outputs.map((output) => convertToOutput(output));
 };
+
+export function encodeCommittedLength(cl: CommittedLength): ccc.Hex {
+  const encoder = new TextEncoder();
+  const uint8Array = new Uint8Array(
+    RGBPP_CKB_WITNESS_PLACEHOLDER.length +
+      cl.inputLength.length +
+      cl.outputLength.length,
+  );
+  uint8Array.set(encoder.encode(RGBPP_CKB_WITNESS_PLACEHOLDER));
+  uint8Array.set(cl.inputLength, RGBPP_CKB_WITNESS_PLACEHOLDER.length);
+  uint8Array.set(
+    cl.outputLength,
+    RGBPP_CKB_WITNESS_PLACEHOLDER.length + cl.inputLength.length,
+  );
+
+  return ccc.hexFrom(uint8Array);
+}
+
+export function decodeCommittedLength(witness: ccc.Hex): {
+  committedLength: CommittedLength;
+  hasRgbppWitnessPrefix: boolean;
+} {
+  const decoder = new TextDecoder();
+  const witnessBytes = ccc.bytesFrom(witness);
+  const witnessPrefix = decoder.decode(
+    witnessBytes.slice(0, RGBPP_CKB_WITNESS_PLACEHOLDER.length),
+  );
+
+  if (witnessPrefix !== RGBPP_CKB_WITNESS_PLACEHOLDER) {
+    return {
+      committedLength: {
+        inputLength: new Uint8Array([0]),
+        outputLength: new Uint8Array([0]),
+      },
+      hasRgbppWitnessPrefix: false,
+    };
+  }
+
+  return {
+    committedLength: {
+      inputLength: witnessBytes.slice(
+        RGBPP_CKB_WITNESS_PLACEHOLDER.length,
+        RGBPP_CKB_WITNESS_PLACEHOLDER.length + 1,
+      ),
+      outputLength: witnessBytes.slice(
+        RGBPP_CKB_WITNESS_PLACEHOLDER.length + 1,
+        RGBPP_CKB_WITNESS_PLACEHOLDER.length + 2,
+      ),
+    },
+    hasRgbppWitnessPrefix: true,
+  };
+}

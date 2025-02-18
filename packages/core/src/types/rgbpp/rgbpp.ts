@@ -19,3 +19,8 @@ export interface ScriptInfo {
   script: ccc.Script;
   cellDep: ccc.CellDep;
 }
+
+export interface CommittedLength {
+  inputLength: Uint8Array;
+  outputLength: Uint8Array;
+}

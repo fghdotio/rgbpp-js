@@ -6,12 +6,12 @@ import {
   TransactionLike,
 } from "@ckb-ccc/core";
 import { serializeWitnessArgs } from "@nervosnetwork/ckb-sdk-utils";
-import { RGBPP_CKB_WITNESS_PLACEHOLDER } from "../constants/index.js";
 import { SpvProofProvider } from "../interfaces/spv.js";
 import { ScriptName } from "../scripts/index.js";
+import { CommittedLength } from "../types/rgbpp/rgbpp.js";
 import { SpvProof } from "../types/spv.js";
 import { prependHexPrefix } from "../utils/encoder.js";
-import { buildRgbppUnlock } from "../utils/rgbpp.js";
+import { buildRgbppUnlock, decodeCommittedLength } from "../utils/rgbpp.js";
 import { getTxIdFromScriptArgs, isUsingOneOfScripts } from "../utils/script.js";
 import { pollForSpvProof } from "../utils/spv.js";
 
@@ -30,8 +30,6 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
     >,
 
     private readonly tmpRawBtcTxHex: string,
-    private readonly committedInputLength: number,
-    private readonly committedOutputLength: number,
   ) {
     super(ckbClient);
 
@@ -161,11 +159,31 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
   ): ccc.Transaction {
     const tx = partialTx.clone();
 
+    let committedLength: CommittedLength | undefined;
+    const rgbppWitnessIndices = tx.witnesses
+      .map((witness, index) => ({ witness, index }))
+      .filter(({ witness }) => {
+        const { committedLength: cl, hasRgbppWitnessPrefix } =
+          decodeCommittedLength(witness);
+        if (hasRgbppWitnessPrefix) {
+          committedLength = cl;
+        }
+
+        return hasRgbppWitnessPrefix;
+      })
+      .map(({ index }) => index);
+
+    if (!committedLength) {
+      throw new Error("Committed length not found");
+    }
+
+    console.log("rgbppWitnessIndices", rgbppWitnessIndices, committedLength);
+
     const rgbppUnlock = buildRgbppUnlock(
       btcLikeTxBytes,
       spvClient.proof,
-      this.committedInputLength,
-      this.committedOutputLength,
+      committedLength.inputLength[0],
+      committedLength.outputLength[0],
     );
 
     const rgbppWitness = prependHexPrefix(
@@ -175,19 +193,12 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
         outputType: "",
       }),
     );
-    tx.witnesses = tx.witnesses.map((witness) =>
-      witness === RGBPP_CKB_WITNESS_PLACEHOLDER ? rgbppWitness : witness,
-    );
+
+    rgbppWitnessIndices.forEach((index) => {
+      tx.witnesses[index] = rgbppWitness;
+    });
 
     return tx;
-  }
-
-  getCommittedInputLength(tx: Transaction): number {
-    return tx.inputs.filter((input) => input.cellOutput?.type).length;
-  }
-
-  getCommittedOutputLength(tx: Transaction): number {
-    return tx.outputs.filter((output) => output.type).length;
   }
 
   async connect(): Promise<void> {}

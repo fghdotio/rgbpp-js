@@ -1,6 +1,5 @@
 import { ccc } from "@ckb-ccc/core";
 import {
-  RGBPP_CKB_WITNESS_PLACEHOLDER,
   TX_ID_PLACEHOLDER,
   UNIQUE_TYPE_OUTPUT_INDEX,
   XUDT_LIKE_ISSUANCE_OUTPUT_INDEX,
@@ -16,7 +15,7 @@ import {
   isUsingOneOfScripts,
   u128ToLe,
 } from "../utils/index.js";
-import { calculateCommitment } from "../utils/rgbpp.js";
+import { calculateCommitment, encodeCommittedLength } from "../utils/rgbpp.js";
 import { updateScriptArgsWithTxId } from "../utils/script.js";
 
 export class RgbppXudtLikeClient {
@@ -101,8 +100,6 @@ export class RgbppXudtLikeClient {
       tx.inputs.push(cellInput);
     });
 
-    tx.witnesses.push(RGBPP_CKB_WITNESS_PLACEHOLDER);
-
     tx.addOutput(
       {
         lock: this.scriptManager.buildRgbppLockScript({
@@ -129,6 +126,13 @@ export class RgbppXudtLikeClient {
       },
       encodeRgbppXudtLikeToken(params.token),
     );
+
+    const committedLength = encodeCommittedLength({
+      inputLength: new Uint8Array([tx.inputs.length]),
+      outputLength: new Uint8Array([tx.outputs.length]),
+    });
+
+    tx.witnesses.push(committedLength);
 
     return tx;
   }
