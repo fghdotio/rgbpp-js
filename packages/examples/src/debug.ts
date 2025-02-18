@@ -19,20 +19,26 @@ const debug = async (fileName: string) => {
     btcTxId
   );
 
-  const proof = await pollForSpvProof(btcTxId, 5);
-  const ckbRgbppUnlockSinger = createCkbRgbppUnlockSinger(rawBtcTxHex, proof);
+  const ckbRgbppUnlockSinger = createCkbRgbppUnlockSinger(
+    btcTxId,
+    rawBtcTxHex,
+    ckbPartialTxRecovered.inputs.length,
+    ckbPartialTxRecovered.outputs.length
+  );
 
-  const rgbppSignedCkbTx =
+  await ckbPartialTxInjected.completeFeeBy(
+    ckbRgbppUnlockSinger.feeSigner,
+    5000
+  );
+  const ckbFinalTx =
     await ckbRgbppUnlockSinger.signTransaction(ckbPartialTxInjected);
 
-  await rgbppSignedCkbTx.completeFeeBy(ckbSigner);
-  const ckbFinalTx = await ckbSigner.signTransaction(rgbppSignedCkbTx);
   const txHash = await ckbSigner.client.sendTransaction(ckbFinalTx);
   await ckbClient.waitTransaction(txHash);
   console.log(`CKB txHash: ${txHash}`);
 };
 
-debug("issuance-1739664022580-logs.json");
+debug("issuance-1739844013398-logs.json");
 
 /* 
 pnpm tsx packages/examples/src/debug.ts

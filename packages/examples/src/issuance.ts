@@ -41,7 +41,7 @@ async function issueXudt(utxoSeal?: UtxoSeal) {
 
     utxoSeals: [utxoSeal],
     from: utxoBasedAccountAddress,
-    feeRate: 256,
+    feeRate: 512,
   });
 
   const signedBtcTx = await rgbppBtcWallet.signTx(psbt);
@@ -76,11 +76,13 @@ async function issueXudt(utxoSeal?: UtxoSeal) {
     ckbRgbppUnlockSinger.feeSigner,
     5000
   );
+  logger.logCkbTx("ckbPartialTxWithFee", ckbPartialTxInjected);
 
-  const rgbppSignedCkbTx =
+  // const rgbppSignedCkbTx =
+  //   await ckbRgbppUnlockSinger.signTransaction(ckbPartialTxInjected);
+
+  const ckbFinalTx =
     await ckbRgbppUnlockSinger.signTransaction(ckbPartialTxInjected);
-
-  const ckbFinalTx = await ckbSigner.signTransaction(rgbppSignedCkbTx);
   logger.logCkbTx("ckbFinalTx", ckbFinalTx);
 
   const txHash = await ckbSigner.client.sendTransaction(ckbFinalTx);
@@ -89,7 +91,7 @@ async function issueXudt(utxoSeal?: UtxoSeal) {
 }
 
 issueXudt({
-  txId: "42fd06a1ef25197d4b8ba968fe0ca76d08a6fc84eb5c62bfe94d5421f2420fd7",
+  txId: "65580feee5be445749e1acf34b6edfbc3fb3df01ee7da771fd6a2625552e55d1",
   index: 2,
 })
   .then(() => {

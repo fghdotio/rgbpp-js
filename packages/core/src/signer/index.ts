@@ -119,8 +119,12 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
     const txInjected = await Promise.resolve(
       this.injectWitnesses(tx, this.tmpRawBtcTxHex, spvProof),
     );
-    txInjected.cellDeps = this.sortCellDeps(txInjected.cellDeps);
-    return txInjected;
+
+    const preparedTx = await this.feeSigner.prepareTransaction(txInjected);
+    preparedTx.cellDeps = this.sortCellDeps(preparedTx.cellDeps);
+    const signedTx = await this.feeSigner.signOnlyTransaction(preparedTx);
+
+    return signedTx;
   }
 
   // all cell deps with depType of `code` should be at the start of the array
@@ -158,9 +162,7 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
       }),
     );
     tx.witnesses = tx.witnesses.map((witness) =>
-      witness.startsWith(RGBPP_CKB_WITNESS_PLACEHOLDER)
-        ? rgbppWitness
-        : witness,
+      witness === RGBPP_CKB_WITNESS_PLACEHOLDER ? rgbppWitness : witness,
     );
 
     return tx;

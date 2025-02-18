@@ -7,6 +7,7 @@ export const UNIQUE_TYPE_OUTPUT_INDEX = 1;
 
 export const DEFAULT_CONFIRMATIONS = 6;
 
+// TODO: try use other placeholder
 export const RGBPP_CKB_WITNESS_PLACEHOLDER = "0x";
 
 export const RGBPP_MAX_CELL_NUM = 255;
