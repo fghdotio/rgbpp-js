@@ -12,6 +12,7 @@ import { ScriptName } from "../scripts/index.js";
 import { SpvProof } from "../types/spv.js";
 import { prependHexPrefix } from "../utils/encoder.js";
 import { buildRgbppUnlock } from "../utils/rgbpp.js";
+import { getTxIdFromScriptArgs, isUsingOneOfScripts } from "../utils/script.js";
 import { pollForSpvProof } from "../utils/spv.js";
 
 // Each RGB++ transaction requires its own instance of CkbRgbppUnlockSinger
@@ -28,7 +29,6 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
       { script: ccc.Script; cellDep: ccc.CellDep }
     >,
 
-    private readonly tmpBtcTxId: string,
     private readonly tmpRawBtcTxHex: string,
     private readonly committedInputLength: number,
     private readonly committedOutputLength: number,
@@ -104,7 +104,7 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
     const tx = ccc.Transaction.from(txLike);
     const spvProof = await pollForSpvProof(
       this.spvProofProvider,
-      this.tmpBtcTxId,
+      this.parseBtcTxIdFromScriptArgs(tx),
     );
     if (!spvProof) {
       throw new Error("Spv proof not found");
@@ -125,6 +125,20 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
     const signedTx = await this.feeSigner.signOnlyTransaction(preparedTx);
 
     return signedTx;
+  }
+
+  parseBtcTxIdFromScriptArgs(tx: ccc.Transaction): string {
+    const outputs = tx.outputs.filter((output) => output.lock);
+    const rgbppOutput = outputs.find((output) =>
+      isUsingOneOfScripts(output.lock, [
+        this.scriptsDetail[ScriptName.RgbppLock].script,
+        this.scriptsDetail[ScriptName.BtcTimeLock].script,
+      ]),
+    );
+    if (!rgbppOutput) {
+      throw new Error("Rgbpp or btcTimeLock output not found");
+    }
+    return getTxIdFromScriptArgs(rgbppOutput.lock.args);
   }
 
   // all cell deps with depType of `code` should be at the start of the array

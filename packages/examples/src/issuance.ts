@@ -56,7 +56,6 @@ async function issueXudt(utxoSeal?: UtxoSeal) {
   );
 
   const ckbRgbppUnlockSinger = createCkbRgbppUnlockSinger(
-    btcTxId,
     rawBtcTxHex,
     ckbPartialTxInjected.inputs.length,
     ckbPartialTxInjected.outputs.length
@@ -67,7 +66,8 @@ async function issueXudt(utxoSeal?: UtxoSeal) {
 
   // > Commitment must cover all Inputs and Outputs where Type is not null;
   // https://github.com/utxostack/RGBPlusPlus-design/blob/main/docs/lockscript-design-prd-en.md#requirements-and-limitations-on-isomorphic-binding
-  // TODO: should only select cells with null type script
+  // https://github.com/fghdotio/rgbpp/blob/main/contracts/rgbpp-lock/src/main.rs#L197-L200
+  // TODO: should only select cells with null type script（补充 rs 链接，确定 witness 是否占用手续费）
   // ? 需要注意 cell deps 的顺序；
   // ? 需要重新计算 input length 和 output length 以正确验证 commitment，增加耦合度
   // ? CkbRgbppUnlockSinger 中需要 rawBtcTxHex 需要缓存或者从 btc assets api 中获取并构造，额外增加复杂度
@@ -78,20 +78,17 @@ async function issueXudt(utxoSeal?: UtxoSeal) {
   );
   logger.logCkbTx("ckbPartialTxWithFee", ckbPartialTxInjected);
 
-  // const rgbppSignedCkbTx =
-  //   await ckbRgbppUnlockSinger.signTransaction(ckbPartialTxInjected);
-
   const ckbFinalTx =
     await ckbRgbppUnlockSinger.signTransaction(ckbPartialTxInjected);
   logger.logCkbTx("ckbFinalTx", ckbFinalTx);
 
-  const txHash = await ckbSigner.client.sendTransaction(ckbFinalTx);
+  const txHash = await ckbRgbppUnlockSinger.client.sendTransaction(ckbFinalTx);
   await ckbClient.waitTransaction(txHash);
   logger.add("ckbTxId", txHash, true);
 }
 
 issueXudt({
-  txId: "65580feee5be445749e1acf34b6edfbc3fb3df01ee7da771fd6a2625552e55d1",
+  txId: "dd419ae8df679906fcadcc150b2dc9ab719c0878207874c65f9faecaa57f2115",
   index: 2,
 })
   .then(() => {

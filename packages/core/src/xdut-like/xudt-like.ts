@@ -11,7 +11,6 @@ import { deadLock, ScriptName } from "../scripts/index.js";
 import { UtxoSeal } from "../types/index.js";
 import { ScriptInfo } from "../types/rgbpp/rgbpp.js";
 import { RgbppXudtLikeIssuance } from "../types/rgbpp/xudt-like.js";
-import { prependHexPrefix } from "../utils/encoder.js";
 import {
   encodeRgbppXudtLikeToken,
   isUsingOneOfScripts,
@@ -72,10 +71,7 @@ export class RgbppXudtLikeClient {
           ...output,
           lock: {
             ...output.lock,
-            args: updateScriptArgsWithTxId(
-              output.lock.args,
-              prependHexPrefix(txId),
-            ),
+            args: updateScriptArgsWithTxId(output.lock.args, txId),
           },
         });
       }

@@ -11,7 +11,7 @@ export async function pollForSpvProof(
     const polling = setInterval(
       async () => {
         try {
-          console.log("Waiting for btc tx and proof to be ready");
+          console.log(`Waiting for btc tx ${btcTxId} and proof to be ready`);
           const proof = await spvProofProvider.getRgbppSpvProof(
             btcTxId,
             confirmations,

@@ -24,7 +24,7 @@ export const isUsingOneOfScripts = (
 
 export const updateScriptArgsWithTxId = (
   args: ccc.Hex,
-  txId: ccc.Hex,
+  txId: string,
 ): string => {
   const argsLength = trimHexPrefix(args).length;
   if (argsLength < (32 + 2) * 2) {
@@ -32,7 +32,16 @@ export const updateScriptArgsWithTxId = (
   }
   return prependHexPrefix(
     `${trimHexPrefix(args).substring(0, argsLength - 32 * 2)}${trimHexPrefix(
-      reverseHexByteOrder(txId),
+      reverseHexByteOrder(prependHexPrefix(txId)),
     )}`,
   );
 };
+
+export function getTxIdFromScriptArgs(args: ccc.Hex): string {
+  if (args.length < 32 * 2) {
+    throw new Error("Lock args length is invalid");
+  }
+  return trimHexPrefix(
+    reverseHexByteOrder(args.substring(args.length - 32 * 2) as ccc.Hex),
+  );
+}

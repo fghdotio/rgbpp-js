@@ -5,7 +5,6 @@ import {
   createCkbRgbppUnlockSinger,
 } from "./env.js";
 import { RgbppTxLogger } from "./logger.js";
-import { pollForSpvProof } from "./utils.js";
 
 const debug = async (fileName: string) => {
   const logger = RgbppTxLogger.createFromLogFile(fileName);
@@ -20,16 +19,12 @@ const debug = async (fileName: string) => {
   );
 
   const ckbRgbppUnlockSinger = createCkbRgbppUnlockSinger(
-    btcTxId,
     rawBtcTxHex,
     ckbPartialTxRecovered.inputs.length,
     ckbPartialTxRecovered.outputs.length
   );
 
-  await ckbPartialTxInjected.completeFeeBy(
-    ckbRgbppUnlockSinger.feeSigner,
-    5000
-  );
+  await ckbPartialTxInjected.completeFeeBy(ckbRgbppUnlockSinger.feeSigner);
   const ckbFinalTx =
     await ckbRgbppUnlockSinger.signTransaction(ckbPartialTxInjected);
 
@@ -38,7 +33,7 @@ const debug = async (fileName: string) => {
   console.log(`CKB txHash: ${txHash}`);
 };
 
-debug("issuance-1739844013398-logs.json");
+debug("issuance-1739881437831-logs.json");
 
 /* 
 pnpm tsx packages/examples/src/debug.ts
