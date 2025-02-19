@@ -193,7 +193,8 @@ export const isCommitmentMatched = (
 // RGB++ related outputs
 export const buildBtcRgbppOutputs = (
   ckbPartialTx: ccc.Transaction,
-  to: string,
+  ownerBtcAddress: string,
+  receiverBtcAddresses: string[],
   rgbppLockScriptTemplate: ccc.Script,
   btcTimeLockScriptTemplate: ccc.Script,
   commitment: string,
@@ -218,7 +219,7 @@ export const buildBtcRgbppOutputs = (
     if (isSameScriptTemplate(output.lock, rgbppLockScriptTemplate)) {
       outputs.push({
         fixed: true,
-        address: to,
+        address: receiverBtcAddresses[index] ?? ownerBtcAddress,
         value: 546,
         minUtxoSatoshi: 546,
       });

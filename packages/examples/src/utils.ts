@@ -10,7 +10,7 @@ import {
   rgbppXudtLikeClient,
 } from "./env.js";
 
-export async function prepareIssuanceRgbppCell(
+export async function prepareIssuanceRgbppCells(
   utxoSeal: UtxoSeal
 ): Promise<ccc.Cell[]> {
   const rgbppLockScript = rgbppXudtLikeClient.buildRgbppLockScript(utxoSeal);
@@ -53,7 +53,7 @@ export async function prepareIssuanceRgbppCell(
   return [cell];
 }
 
-export async function prepareDistributionRgbppCell(
+export async function collectRgbppCells(
   utxoSeals: UtxoSeal[],
   xUdtTokenId: string
 ): Promise<{ rgbppLiveCells: ccc.Cell[]; xudtLikeTypeScript: ccc.Script }> {

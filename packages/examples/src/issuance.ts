@@ -6,7 +6,7 @@ import {
   rgbppXudtLikeClient,
   utxoBasedAccountAddress,
 } from "./env.js";
-import { prepareIssuanceRgbppCell } from "./utils.js";
+import { prepareIssuanceRgbppCells } from "./utils.js";
 import { issuanceAmount, xudtToken } from "./asset.js";
 import { RgbppTxLogger } from "./logger.js";
 
@@ -17,7 +17,7 @@ async function issueXudt(utxoSeal?: UtxoSeal) {
     utxoSeal = await rgbppBtcWallet.prepareUtxoSeal(10);
   }
 
-  const rgbppIssuanceCells = await prepareIssuanceRgbppCell(utxoSeal);
+  const rgbppIssuanceCells = await prepareIssuanceRgbppCells(utxoSeal);
 
   const ckbPartialTx = await rgbppXudtLikeClient.issuanceCkbPartialTx({
     token: xudtToken,
@@ -36,6 +36,7 @@ async function issueXudt(utxoSeal?: UtxoSeal) {
     rgbppOutputs: buildBtcRgbppOutputs(
       ckbPartialTx,
       utxoBasedAccountAddress,
+      [utxoBasedAccountAddress],
       rgbppXudtLikeClient.rgbppLockScriptTemplate(),
       rgbppXudtLikeClient.btcTimeLockScriptTemplate(),
       commitment

@@ -15,7 +15,6 @@ import { buildRgbppUnlock, decodeCommittedLength } from "../utils/rgbpp.js";
 import { getTxIdFromScriptArgs, isUsingOneOfScripts } from "../utils/script.js";
 import { pollForSpvProof } from "../utils/spv.js";
 
-// Each RGB++ transaction requires its own instance of CkbRgbppUnlockSinger
 export class CkbRgbppUnlockSinger extends ccc.Signer {
   // map of script code hash to script name
   private readonly scriptMap: Record<string, ScriptName>;
