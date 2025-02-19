@@ -4,6 +4,7 @@ import {
   TX_ID_PLACEHOLDER,
   UNIQUE_TYPE_OUTPUT_INDEX,
   XUDT_LIKE_ISSUANCE_OUTPUT_INDEX,
+  XUDT_LIKE_LEAP_FROM_BTC_OUTPUT_INDEX,
 } from "../constants/index.js";
 
 import { ScriptManager } from "../rgbpp/script-manager.js";
@@ -284,7 +285,7 @@ export class RgbppXudtLikeClient {
         {
           lock: this.scriptManager.buildRgbppLockScript({
             txId: TX_ID_PLACEHOLDER,
-            index: tx.outputs.length + 1,
+            index: XUDT_LIKE_LEAP_FROM_BTC_OUTPUT_INDEX,
           }),
           type: xudtLikeTypeScript,
         },
