@@ -13,17 +13,17 @@ import {
 
 async function leapFromBtcToCkb(
   utxoSeals: UtxoSeal[],
-  xUdtTokenId: string,
+  xudtTokenId: string,
   amount: bigint,
   ckbAddress: string
 ) {
   const { rgbppLiveCells, xudtLikeTypeScript } = await collectRgbppCells(
     utxoSeals,
-    xUdtTokenId
+    xudtTokenId
   );
   console.log(rgbppLiveCells);
 
-  const ckbPartialTx = await rgbppXudtLikeClient.leapFromBtcToCkb({
+  const ckbPartialTx = await rgbppXudtLikeClient.leapFromBtcCkbPartialTx({
     rgbppLiveCells,
     xudtLikeTypeScript,
     address: ckbAddress,
@@ -81,7 +81,7 @@ leapFromBtcToCkb(
   [
     {
       txId: "b1d1580919aa4ce73b29be12173e00fdb28fde38ab32e57be00866d9c647fc69",
-      index: 2,
+      index: 3,
     },
   ],
   "0xcafc80445e16b49e9b849be4912f93970f80956d62f01fdc0238f1f694bea996",

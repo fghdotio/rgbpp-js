@@ -1,23 +1,17 @@
 import { ccc } from "@ckb-ccc/core";
 
 import { UtxoSeal } from "@rgbpp-js/core";
-import { BtcAssetsApiError } from "@rgbpp-js/bitcoin";
 
-import {
-  ckbClient,
-  ckbSigner,
-  rgbppBtcWallet,
-  rgbppXudtLikeClient,
-} from "./env.js";
+import { ckbClient, ckbSigner, rgbppXudtLikeClient } from "./env.js";
 
 export async function prepareIssuanceRgbppCells(
   utxoSeal: UtxoSeal
 ): Promise<ccc.Cell[]> {
   const rgbppLockScript = rgbppXudtLikeClient.buildRgbppLockScript(utxoSeal);
 
-  const rgbppCellGen = await ckbClient.findCellsByLock(rgbppLockScript);
+  const rgbppCellsGen = await ckbClient.findCellsByLock(rgbppLockScript);
   const rgbppCells: ccc.Cell[] = [];
-  for await (const cell of rgbppCellGen) {
+  for await (const cell of rgbppCellsGen) {
     rgbppCells.push(cell);
   }
 
@@ -55,23 +49,23 @@ export async function prepareIssuanceRgbppCells(
 
 export async function collectRgbppCells(
   utxoSeals: UtxoSeal[],
-  xUdtTokenId: string
+  xudtTokenId: string
 ): Promise<{ rgbppLiveCells: ccc.Cell[]; xudtLikeTypeScript: ccc.Script }> {
   let rgbppLiveCells: ccc.Cell[] = [];
   const xudtLikeTypeScript = ccc.Script.from({
     ...rgbppXudtLikeClient.xudtLikeTypeScriptTemplate(),
-    args: xUdtTokenId,
+    args: xudtTokenId,
   });
 
   await Promise.all(
     utxoSeals.map(async (utxoSeal) => {
       const rgbppLockScript =
         rgbppXudtLikeClient.buildRgbppLockScript(utxoSeal);
-      const rgbppCellGen = await ckbClient.findCellsByLock(
+      const rgbppCellsGen = await ckbClient.findCellsByLock(
         rgbppLockScript,
         xudtLikeTypeScript
       );
-      for await (const cell of rgbppCellGen) {
+      for await (const cell of rgbppCellsGen) {
         rgbppLiveCells.push(cell);
       }
     })
@@ -82,4 +76,38 @@ export async function collectRgbppCells(
   }
 
   return { rgbppLiveCells, xudtLikeTypeScript };
+}
+
+export async function collectBtcTimeLockCells(
+  btcTimeLockArgs: string
+): Promise<ccc.Cell[]> {
+  const btcTimeLockCellsGen = await ckbClient.findCellsByLock({
+    ...rgbppXudtLikeClient.btcTimeLockScriptTemplate(),
+    args: btcTimeLockArgs,
+  });
+  const btcTimeLockCells: ccc.Cell[] = [];
+  for await (const cell of btcTimeLockCellsGen) {
+    btcTimeLockCells.push(cell);
+  }
+  return btcTimeLockCells;
+}
+
+export async function collectXudtCells(
+  ckbAddress: string,
+  xudtTokenId: string
+): Promise<{ xudtCells: ccc.Cell[]; xudtLikeTypeScript: ccc.Script }> {
+  const lock = (await ccc.Address.fromString(ckbAddress, ckbClient)).script;
+  const xudtLikeTypeScript = ccc.Script.from({
+    ...rgbppXudtLikeClient.xudtLikeTypeScriptTemplate(),
+    args: xudtTokenId,
+  });
+  const xudtCellsGen = await ckbClient.findCellsByLock(
+    lock,
+    xudtLikeTypeScript
+  );
+  const xudtCells: ccc.Cell[] = [];
+  for await (const cell of xudtCellsGen) {
+    xudtCells.push(cell);
+  }
+  return { xudtCells, xudtLikeTypeScript };
 }

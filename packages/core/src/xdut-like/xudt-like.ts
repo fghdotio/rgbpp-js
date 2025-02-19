@@ -16,16 +16,18 @@ import {
   RgbppXudtLikeLeapFromBtcToCkb,
 } from "../types/rgbpp/xudt-like.js";
 import {
+  calculateCommitment,
+  encodeCommittedLength,
   encodeRgbppXudtLikeToken,
   isUsingOneOfScripts,
   leToU128,
   trimHexPrefix,
   u128ToLe,
 } from "../utils/index.js";
-import { calculateCommitment, encodeCommittedLength } from "../utils/rgbpp.js";
+
 import { updateScriptArgsWithTxId } from "../utils/script.js";
 
-// TODO: rgbppLiveCells de-duplication
+// TODO: rgbppLiveCells, btcTimeLockCells de-duplication
 export class RgbppXudtLikeClient {
   private scriptManager: ScriptManager;
   private ckbClient: ccc.Client;
@@ -226,7 +228,7 @@ export class RgbppXudtLikeClient {
     return tx;
   }
 
-  async leapFromBtcToCkb(
+  async leapFromBtcCkbPartialTx(
     params: RgbppXudtLikeLeapFromBtcToCkb,
   ): Promise<ccc.Transaction> {
     const {

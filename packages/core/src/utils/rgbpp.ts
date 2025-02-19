@@ -1,5 +1,6 @@
-import { bytesFrom, ccc, Hex, hexFrom } from "@ckb-ccc/core";
 import { sha256 } from "js-sha256";
+
+import { bytesFrom, ccc, Hex, hexFrom } from "@ckb-ccc/core";
 
 import { blockchain } from "@ckb-lumos/base";
 import {
@@ -18,6 +19,7 @@ import {
   RGBPP_MAX_CELL_NUM,
 } from "../constants/index.js";
 import { Script } from "../schemas/generated/blockchain.js";
+
 import {
   BTCTimeLock,
   RGBPPUnlock,

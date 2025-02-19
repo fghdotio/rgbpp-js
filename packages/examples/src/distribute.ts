@@ -16,12 +16,12 @@ import { xudtToken } from "./asset.js";
 
 async function distributeXudt(
   utxoSeals: UtxoSeal[],
-  xUdtTokenId: string,
+  xudtTokenId: string,
   receivers: RgbppBtcReceiver[]
 ) {
   const { rgbppLiveCells, xudtLikeTypeScript } = await collectRgbppCells(
     utxoSeals,
-    xUdtTokenId
+    xudtTokenId
   );
   console.log(rgbppLiveCells);
 
