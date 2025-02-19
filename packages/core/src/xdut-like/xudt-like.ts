@@ -236,6 +236,7 @@ export class RgbppXudtLikeClient {
       address: ckbAddress,
       amount,
       rgbppLiveCells,
+      confirmations,
     } = params;
 
     // XUDT cell.data = <amount: uint128> <xudt data (optional)>
@@ -271,6 +272,7 @@ export class RgbppXudtLikeClient {
         lock: this.scriptManager.buildBtcTimeLockScript(
           receiverLock,
           TX_ID_PLACEHOLDER,
+          confirmations,
         ),
         type: xudtLikeTypeScript,
       },

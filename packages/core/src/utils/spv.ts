@@ -7,7 +7,7 @@ export async function pollForSpvProof(
   confirmations: number = 0,
   intervalInSeconds?: number,
 ): Promise<SpvProof> {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const polling = setInterval(
       async () => {
         try {

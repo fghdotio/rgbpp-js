@@ -26,6 +26,8 @@ export interface RgbppXudtLikeLeapFromBtcToCkb {
   address: string;
   amount: bigint;
   rgbppLiveCells: ccc.Cell[];
+
+  confirmations?: number;
 }
 
 export interface RgbppXudtLikeUnlockBtcTimeLock {
