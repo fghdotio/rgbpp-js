@@ -52,6 +52,17 @@ export const u128ToLe = (u128: bigint): string => {
   return buffer.toString("hex");
 };
 
+export function leToU128(le: string): bigint {
+  const trimmedLe = trimHexPrefix(le);
+  if (!/^[0-9a-fA-F]+$/.test(trimmedLe)) {
+    throw new Error("Input must be a valid hex string");
+  }
+  const paddedLe = trimmedLe.padStart(32, "0");
+
+  const beHex = paddedLe.match(/.{2}/g)?.reverse().join("") || "";
+  return BigInt(`0x${beHex}`);
+}
+
 export const u64ToLe = (u64: bigint): string => {
   if (u64 < 0n || u64 > 0xffffffffffffffffn) {
     throw new Error("Input must be an unsigned 64-bit integer");

@@ -177,7 +177,10 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
       throw new Error("Committed length not found");
     }
 
-    console.log("rgbppWitnessIndices", rgbppWitnessIndices, committedLength);
+    console.log("rgbppWitnessIndices:", rgbppWitnessIndices);
+    console.log(
+      `committed input length: ${committedLength.inputLength[0]}, output length: ${committedLength.outputLength[0]}`,
+    );
 
     const rgbppUnlock = buildRgbppUnlock(
       btcLikeTxBytes,

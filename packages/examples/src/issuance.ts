@@ -1,14 +1,12 @@
 import { UtxoSeal, buildBtcRgbppOutputs } from "@rgbpp-js/core";
 
 import {
-  ckbClient,
-  ckbSigner,
   createCkbRgbppUnlockSinger,
   rgbppBtcWallet,
   rgbppXudtLikeClient,
   utxoBasedAccountAddress,
 } from "./env.js";
-import { prepareRgbppCell } from "./utils.js";
+import { prepareIssuanceRgbppCell } from "./utils.js";
 import { issuanceAmount, xudtToken } from "./asset.js";
 import { RgbppTxLogger } from "./logger.js";
 
@@ -19,14 +17,18 @@ async function issueXudt(utxoSeal?: UtxoSeal) {
     utxoSeal = await rgbppBtcWallet.prepareUtxoSeal(10);
   }
 
-  const rgbppIssuanceCells = await prepareRgbppCell(utxoSeal);
+  const rgbppIssuanceCells = await prepareIssuanceRgbppCell(utxoSeal);
 
   const ckbPartialTx = await rgbppXudtLikeClient.issuanceCkbPartialTx({
     token: xudtToken,
     amount: issuanceAmount,
     rgbppLiveCells: rgbppIssuanceCells,
   });
-  logger.logCkbTx("ckbPartialTx", ckbPartialTx, true);
+  logger.logCkbTx("ckbPartialTx", ckbPartialTx);
+  console.log(
+    "Unique ID of issued xUDT token",
+    ckbPartialTx.outputs[0].type!.args[0]
+  );
 
   const commitment = rgbppXudtLikeClient.calculateCommitment(ckbPartialTx);
 
@@ -50,6 +52,7 @@ async function issueXudt(utxoSeal?: UtxoSeal) {
 
   const btcTxId = await rgbppBtcWallet.sendTx(signedBtcTx);
   logger.add("btcTxId", btcTxId, true);
+
   const ckbPartialTxInjected = await rgbppXudtLikeClient.injectTxIdToRgbppCkbTx(
     ckbPartialTx,
     btcTxId
@@ -75,7 +78,7 @@ async function issueXudt(utxoSeal?: UtxoSeal) {
   logger.logCkbTx("ckbFinalTx", ckbFinalTx);
 
   const txHash = await ckbRgbppUnlockSinger.client.sendTransaction(ckbFinalTx);
-  await ckbClient.waitTransaction(txHash);
+  await ckbRgbppUnlockSinger.client.waitTransaction(txHash);
   logger.add("ckbTxId", txHash, true);
 }
 

@@ -10,7 +10,7 @@ import {
   rgbppXudtLikeClient,
 } from "./env.js";
 
-export async function prepareRgbppCell(
+export async function prepareIssuanceRgbppCell(
   utxoSeal: UtxoSeal
 ): Promise<ccc.Cell[]> {
   const rgbppLockScript = rgbppXudtLikeClient.buildRgbppLockScript(utxoSeal);
@@ -53,26 +53,33 @@ export async function prepareRgbppCell(
   return [cell];
 }
 
-export async function pollForSpvProof(
-  btcTxId: string,
-  intervalInSeconds: number
-): Promise<any> {
-  return new Promise((resolve, reject) => {
-    const polling = setInterval(async () => {
-      try {
-        console.log("Waiting for btc tx and proof to be ready");
-        const proof = await rgbppBtcWallet.getRgbppSpvProof(btcTxId, 0);
-
-        if (proof) {
-          clearInterval(polling);
-          resolve(proof);
-        }
-      } catch (e) {
-        if (!(e instanceof BtcAssetsApiError)) {
-          clearInterval(polling);
-          reject(e);
-        }
-      }
-    }, intervalInSeconds * 1000);
+export async function prepareDistributionRgbppCell(
+  utxoSeals: UtxoSeal[],
+  xUdtTokenId: string
+): Promise<{ rgbppLiveCells: ccc.Cell[]; xudtLikeTypeScript: ccc.Script }> {
+  let rgbppLiveCells: ccc.Cell[] = [];
+  const xudtLikeTypeScript = ccc.Script.from({
+    ...rgbppXudtLikeClient.xudtLikeTypeScriptTemplate(),
+    args: xUdtTokenId,
   });
+
+  await Promise.all(
+    utxoSeals.map(async (utxoSeal) => {
+      const rgbppLockScript =
+        rgbppXudtLikeClient.buildRgbppLockScript(utxoSeal);
+      const rgbppCellGen = await ckbClient.findCellsByLock(
+        rgbppLockScript,
+        xudtLikeTypeScript
+      );
+      for await (const cell of rgbppCellGen) {
+        rgbppLiveCells.push(cell);
+      }
+    })
+  );
+
+  if (rgbppLiveCells.length === 0) {
+    throw new Error("No rgbpp live cells found");
+  }
+
+  return { rgbppLiveCells, xudtLikeTypeScript };
 }

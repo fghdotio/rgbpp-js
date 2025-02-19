@@ -8,3 +8,15 @@ export interface RgbppXudtLikeIssuance {
 
   rgbppLiveCells: ccc.Cell[];
 }
+
+export interface RgbppXudtLikeDistribution {
+  receivers: RgbppBtcReceiver[];
+
+  xudtLikeTypeScript: ccc.Script;
+  rgbppLiveCells: ccc.Cell[];
+}
+
+export interface RgbppBtcReceiver {
+  address: string;
+  amount: bigint;
+}

@@ -2,6 +2,8 @@ import { ccc } from "@ckb-ccc/core";
 
 import { PredefinedNetwork } from "../types/network.js";
 
+// TODO: register new script info
+
 export enum ScriptName {
   RgbppLock = "RgbppLock",
   // RgbppLockConfig = "RgbppLockConfig",

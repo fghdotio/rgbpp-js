@@ -150,6 +150,7 @@ export class RgbppBtcWallet extends BtcAssetsApiBase {
       const { inputs: extraInputs, changeValue: newChangeValue } =
         await this.collectUtxos(-changeValue, {
           only_non_rgbpp_utxos: true,
+          min_satoshi: 1000,
         });
       inputs.push(...extraInputs);
       changeValue = newChangeValue;
@@ -215,7 +216,27 @@ export class RgbppBtcWallet extends BtcAssetsApiBase {
     const psbt = new Psbt({ network: toNetwork(this.network) });
     inputs.forEach((input) => psbt.addInput(input));
     outputs.forEach((output) => psbt.addOutput(output));
+
     // TODO: FIX ME: signTx will fail if inputs value is smaller than outputs value
+    let totalInputValue = inputs.reduce(
+      (acc, input) => acc + input.witnessUtxo.value,
+      0,
+    );
+    const totalOutputValue = outputs.reduce(
+      (acc, output) => acc + output.value,
+      0,
+    );
+    if (totalInputValue < totalOutputValue) {
+      const { inputs: extraInputs } = await this.collectUtxos(
+        totalOutputValue - totalInputValue,
+        {
+          only_non_rgbpp_utxos: true,
+          min_satoshi: 1000,
+        },
+      );
+      extraInputs.forEach((input) => psbt.addInput(input));
+    }
+
     const tx = await this.signTx(psbt);
 
     // Calculate virtual size
@@ -273,6 +294,7 @@ export class RgbppBtcWallet extends BtcAssetsApiBase {
     // TODO: only_non_rgbpp_utxos seems not working
     const utxos = await this.getUtxos(this.account.from, {
       only_non_rgbpp_utxos: true,
+      min_satoshi: 1000,
     });
     if (utxos.length === 0) {
       throw new Error("Insufficient funds");
