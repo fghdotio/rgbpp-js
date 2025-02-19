@@ -28,6 +28,7 @@ export const ckbSigner = new ccc.SignerCkbPrivateKey(
   ckbClient,
   process.env.CKB_SECP256K1_PRIVATE_KEY!
 );
+export const ckbAddress = await ckbSigner.getRecommendedAddress();
 
 const utxoBasedChainPrivateKey = process.env.UTXO_BASED_CHAIN_PRIVATE_KEY!;
 const utxoBasedChainAddressType = process.env.UTXO_BASED_CHAIN_ADDRESS_TYPE!;

@@ -13,6 +13,7 @@ import { ScriptInfo } from "../types/rgbpp/rgbpp.js";
 import {
   RgbppXudtLikeDistribution,
   RgbppXudtLikeIssuance,
+  RgbppXudtLikeLeapFromBtcToCkb,
 } from "../types/rgbpp/xudt-like.js";
 import {
   encodeRgbppXudtLikeToken,
@@ -24,6 +25,7 @@ import {
 import { calculateCommitment, encodeCommittedLength } from "../utils/rgbpp.js";
 import { updateScriptArgsWithTxId } from "../utils/script.js";
 
+// TODO: rgbppLiveCells de-duplication
 export class RgbppXudtLikeClient {
   private scriptManager: ScriptManager;
   private ckbClient: ccc.Client;
@@ -202,6 +204,87 @@ export class RgbppXudtLikeClient {
           type: xudtLikeTypeScript,
         },
         u128ToLe(sealedAmount - totalAmount),
+      );
+    }
+
+    const committedLength = encodeCommittedLength({
+      inputLength: new Uint8Array([tx.inputs.length]),
+      outputLength: new Uint8Array([tx.outputs.length]),
+    });
+
+    // ? push("0x")
+    const lockArgsSet: Set<string> = new Set();
+    for (const cell of rgbppLiveCells) {
+      if (lockArgsSet.has(cell.cellOutput.lock.args)) {
+        tx.witnesses.push("0x");
+      } else {
+        lockArgsSet.add(cell.cellOutput.lock.args);
+        tx.witnesses.push(committedLength);
+      }
+    }
+
+    return tx;
+  }
+
+  async leapFromBtcToCkb(
+    params: RgbppXudtLikeLeapFromBtcToCkb,
+  ): Promise<ccc.Transaction> {
+    const {
+      xudtLikeTypeScript,
+      address: ckbAddress,
+      amount,
+      rgbppLiveCells,
+    } = params;
+
+    // XUDT cell.data = <amount: uint128> <xudt data (optional)>
+    // https://blog.cryptape.com/enhance-sudts-programmability-with-xudt#heading-xudt-cell
+    const sealedAmount = rgbppLiveCells.reduce(
+      (acc: bigint, cell: ccc.Cell) => {
+        return acc + leToU128(trimHexPrefix(cell.outputData).slice(0, 32));
+      },
+      BigInt(0),
+    );
+    if (sealedAmount < amount) {
+      throw new Error("Not enough xUDT-like token to leap from BTC to CKB");
+    }
+    console.log(sealedAmount, amount);
+
+    const tx = ccc.Transaction.default();
+
+    rgbppLiveCells.forEach((cell) => {
+      const cellInput = ccc.CellInput.from({
+        previousOutput: cell.outPoint,
+      });
+      cellInput.completeExtraInfos(this.ckbClient);
+
+      tx.inputs.push(cellInput);
+    });
+
+    const receiverLock = (
+      await ccc.Address.fromString(ckbAddress, this.ckbClient)
+    ).script;
+
+    tx.addOutput(
+      {
+        lock: this.scriptManager.buildBtcTimeLockScript(
+          receiverLock,
+          TX_ID_PLACEHOLDER,
+        ),
+        type: xudtLikeTypeScript,
+      },
+      u128ToLe(amount),
+    );
+
+    if (sealedAmount > amount) {
+      tx.addOutput(
+        {
+          lock: this.scriptManager.buildRgbppLockScript({
+            txId: TX_ID_PLACEHOLDER,
+            index: tx.outputs.length + 1,
+          }),
+          type: xudtLikeTypeScript,
+        },
+        u128ToLe(sealedAmount - amount),
       );
     }
 
