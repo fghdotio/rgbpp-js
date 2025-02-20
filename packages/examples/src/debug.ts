@@ -2,7 +2,7 @@ import {
   ckbClient,
   ckbSigner,
   rgbppXudtLikeClient,
-  createCkbRgbppUnlockSinger,
+  ckbRgbppUnlockSinger,
 } from "./env.js";
 import { RgbppTxLogger } from "./logger.js";
 
@@ -17,8 +17,6 @@ const debug = async (fileName: string) => {
     ckbPartialTxRecovered,
     btcTxId
   );
-
-  const ckbRgbppUnlockSinger = createCkbRgbppUnlockSinger(rawBtcTxHex);
 
   await ckbPartialTxInjected.completeFeeBy(ckbRgbppUnlockSinger.feeSigner);
   const ckbFinalTx =

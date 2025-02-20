@@ -22,6 +22,7 @@ import {
   BtcApiRecommendedFeeRates,
   BtcApiSentTransaction,
   BtcApiTransaction,
+  BtcApiTransactionHex,
   BtcApiUtxo,
   BtcApiUtxoParams,
   TxInputData,
@@ -341,6 +342,13 @@ export class RgbppBtcWallet extends BtcAssetsApiBase {
 
   getTransaction(txId: string) {
     return this.request<BtcApiTransaction>(`/bitcoin/v1/transaction/${txId}`);
+  }
+
+  async getTransactionHex(txId: string) {
+    const { hex } = await this.request<BtcApiTransactionHex>(
+      `/bitcoin/v1/transaction/${txId}/hex`,
+    );
+    return hex;
   }
 
   getUtxos(address: string, params?: BtcApiUtxoParams) {

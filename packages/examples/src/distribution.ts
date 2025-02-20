@@ -9,16 +9,20 @@ import {
   rgbppBtcWallet,
   rgbppXudtLikeClient,
   utxoBasedAccountAddress,
-  createCkbRgbppUnlockSinger,
+  ckbRgbppUnlockSinger,
 } from "./env.js";
 import { collectRgbppCells } from "./utils.js";
 import { xudtToken } from "./asset.js";
 
-async function distributeXudt(
-  utxoSeals: UtxoSeal[],
-  xudtTokenId: string,
-  receivers: RgbppBtcReceiver[]
-) {
+async function distributeXudt({
+  utxoSeals,
+  xudtTokenId,
+  receivers,
+}: {
+  utxoSeals: UtxoSeal[];
+  xudtTokenId: string;
+  receivers: RgbppBtcReceiver[];
+}) {
   const { rgbppLiveCells, xudtLikeTypeScript } = await collectRgbppCells(
     utxoSeals,
     xudtTokenId
@@ -44,7 +48,7 @@ async function distributeXudt(
 
     utxoSeals,
     from: utxoBasedAccountAddress,
-    feeRate: 512,
+    feeRate: 256,
   });
 
   const signedBtcTx = await rgbppBtcWallet.signTx(psbt);
@@ -60,7 +64,6 @@ async function distributeXudt(
   );
   logger.logCkbTx("ckbPartialTxInjected", ckbPartialTxInjected);
 
-  const ckbRgbppUnlockSinger = createCkbRgbppUnlockSinger(rawBtcTxHex);
   await ckbPartialTxInjected.completeFeeBy(
     ckbRgbppUnlockSinger.feeSigner,
     5000
@@ -78,15 +81,16 @@ async function distributeXudt(
 
 const logger = new RgbppTxLogger({ opType: "distribute" });
 
-distributeXudt(
-  [
+distributeXudt({
+  utxoSeals: [
     {
-      txId: "b1d1580919aa4ce73b29be12173e00fdb28fde38ab32e57be00866d9c647fc69",
-      index: 6,
+      txId: "b795abab3fb5fef1552dd076120b1f69aafe255e383aabb60db0bb9db442b850",
+      index: 1,
     },
   ],
-  "0xcafc80445e16b49e9b849be4912f93970f80956d62f01fdc0238f1f694bea996",
-  [
+  xudtTokenId:
+    "0x4ca344db2ad7f107177a6f42ea2a0d184b54bf71ac0cab8396aacfdc32bae178",
+  receivers: [
     {
       address: "tb1qjkdqj8zk6gl7pwuw2d2jp9e6wgf26arjl8pcys",
       amount: BigInt(1001) * BigInt(10 ** xudtToken.decimal),
@@ -107,8 +111,8 @@ distributeXudt(
       address: "tb1qyyhdxmhc059rksfh9jjlkqgvs4w6mdl0z3zqj3",
       amount: BigInt(5005) * BigInt(10 ** xudtToken.decimal),
     },
-  ]
-)
+  ],
+})
   .then(() => {
     logger.saveOnSuccess();
     process.exit(0);
@@ -120,5 +124,5 @@ distributeXudt(
   });
 
 /* 
-pnpm tsx packages/examples/src/distribute.ts
+pnpm tsx packages/examples/src/distribution.ts
 */

@@ -1,3 +1,7 @@
+import * as bitcoin from "bitcoinjs-lib";
+
+import { serializeWitnessArgs } from "@nervosnetwork/ckb-sdk-utils";
+
 import {
   ccc,
   SignerSignType,
@@ -5,7 +9,10 @@ import {
   Transaction,
   TransactionLike,
 } from "@ckb-ccc/core";
-import { serializeWitnessArgs } from "@nervosnetwork/ckb-sdk-utils";
+
+import { transactionToHex } from "@rgbpp-js/bitcoin";
+
+import { SimpleBtcClient } from "../interfaces/btc.js";
 import { SpvProofProvider } from "../interfaces/spv.js";
 import { ScriptName } from "../scripts/index.js";
 import { CommittedLength } from "../types/rgbpp/rgbpp.js";
@@ -23,12 +30,11 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
     ckbClient: ccc.Client,
     private readonly _feeSigner: ccc.SignerCkbPrivateKey,
     private readonly spvProofProvider: SpvProofProvider,
+    private readonly simpleBtcClient: SimpleBtcClient,
     private readonly scriptsDetail: Record<
       ScriptName,
       { script: ccc.Script; cellDep: ccc.CellDep }
     >,
-
-    private readonly tmpRawBtcTxHex: string,
   ) {
     super(ckbClient);
 
@@ -99,10 +105,9 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
 
   async signOnlyTransaction(txLike: TransactionLike): Promise<Transaction> {
     const tx = ccc.Transaction.from(txLike);
-    const spvProof = await pollForSpvProof(
-      this.spvProofProvider,
-      this.parseBtcTxIdFromScriptArgs(tx),
-    );
+
+    const btcTxId = this.parseBtcTxIdFromScriptArgs(tx);
+    const spvProof = await pollForSpvProof(this.spvProofProvider, btcTxId);
     if (!spvProof) {
       throw new Error("Spv proof not found");
     }
@@ -113,8 +118,9 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
       }),
     );
 
+    const rawBtcTxHex = await this.getRawBtcTxHex(btcTxId);
     const txInjected = await Promise.resolve(
-      this.injectWitnesses(tx, this.tmpRawBtcTxHex, spvProof),
+      this.injectWitnesses(tx, rawBtcTxHex, spvProof),
     );
 
     const preparedTx = await this.feeSigner.prepareTransaction(txInjected);
@@ -122,6 +128,12 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
     const signedTx = await this.feeSigner.signOnlyTransaction(preparedTx);
 
     return signedTx;
+  }
+
+  async getRawBtcTxHex(txId: string): Promise<string> {
+    const hex = await this.simpleBtcClient.getTransactionHex(txId);
+    const parseTx = bitcoin.Transaction.fromHex(hex);
+    return transactionToHex(parseTx, false);
   }
 
   parseBtcTxIdFromScriptArgs(tx: ccc.Transaction): string {

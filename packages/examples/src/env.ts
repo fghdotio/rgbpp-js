@@ -62,12 +62,10 @@ export const rgbppBtcWallet = new RgbppBtcWallet(
   }
 );
 
-export const createCkbRgbppUnlockSinger = (rawBtcTxHex: string) => {
-  return new CkbRgbppUnlockSinger(
-    ckbClient,
-    ckbSigner,
-    rgbppBtcWallet,
-    rgbppXudtLikeClient.getRgbppScriptsDetail(),
-    rawBtcTxHex
-  );
-};
+export const ckbRgbppUnlockSinger = new CkbRgbppUnlockSinger(
+  ckbClient,
+  ckbSigner,
+  rgbppBtcWallet,
+  rgbppBtcWallet,
+  rgbppXudtLikeClient.getRgbppScriptsDetail()
+);

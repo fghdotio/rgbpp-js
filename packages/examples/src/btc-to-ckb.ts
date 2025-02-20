@@ -8,15 +8,20 @@ import {
   ckbAddress,
   rgbppBtcWallet,
   utxoBasedAccountAddress,
-  createCkbRgbppUnlockSinger,
+  ckbRgbppUnlockSinger,
 } from "./env.js";
 
-async function leapFromBtcToCkb(
-  utxoSeals: UtxoSeal[],
-  xudtTokenId: string,
-  amount: bigint,
-  ckbAddress: string
-) {
+async function leapFromBtcToCkb({
+  utxoSeals,
+  xudtTokenId,
+  amount,
+  ckbAddress,
+}: {
+  utxoSeals: UtxoSeal[];
+  xudtTokenId: string;
+  amount: bigint;
+  ckbAddress: string;
+}) {
   const { rgbppLiveCells, xudtLikeTypeScript } = await collectRgbppCells(
     utxoSeals,
     xudtTokenId
@@ -28,8 +33,10 @@ async function leapFromBtcToCkb(
     xudtLikeTypeScript,
     address: ckbAddress,
     amount,
+    confirmations: 1024,
   });
   logger.logCkbTx("ckbPartialTx", ckbPartialTx, true);
+
   const commitment = rgbppXudtLikeClient.calculateCommitment(ckbPartialTx);
   const psbt = await rgbppBtcWallet.buildPsbt({
     rgbppOutputs: buildBtcRgbppOutputs(
@@ -43,7 +50,7 @@ async function leapFromBtcToCkb(
 
     utxoSeals,
     from: utxoBasedAccountAddress,
-    feeRate: 512,
+    feeRate: 256,
   });
 
   const signedBtcTx = await rgbppBtcWallet.signTx(psbt);
@@ -59,7 +66,6 @@ async function leapFromBtcToCkb(
   );
   logger.logCkbTx("ckbPartialTxInjected", ckbPartialTxInjected);
 
-  const ckbRgbppUnlockSinger = createCkbRgbppUnlockSinger(rawBtcTxHex);
   await ckbPartialTxInjected.completeFeeBy(
     ckbRgbppUnlockSinger.feeSigner,
     5000
@@ -68,7 +74,7 @@ async function leapFromBtcToCkb(
 
   const ckbFinalTx =
     await ckbRgbppUnlockSinger.signTransaction(ckbPartialTxInjected);
-  logger.logCkbTx("ckbFinalTx", ckbFinalTx);
+  logger.logCkbTx("ckbFinalTx", ckbFinalTx, true);
 
   const txHash = await ckbRgbppUnlockSinger.client.sendTransaction(ckbFinalTx);
   await ckbRgbppUnlockSinger.client.waitTransaction(txHash);
@@ -77,17 +83,18 @@ async function leapFromBtcToCkb(
 
 const logger = new RgbppTxLogger({ opType: "btc-to-ckb" });
 
-leapFromBtcToCkb(
-  [
+leapFromBtcToCkb({
+  utxoSeals: [
     {
-      txId: "b1d1580919aa4ce73b29be12173e00fdb28fde38ab32e57be00866d9c647fc69",
-      index: 3,
+      txId: "b5dac109ed4331f374ec07503d7384399b7c8744535410e5495c530bbf0f81f7",
+      index: 1,
     },
   ],
-  "0xcafc80445e16b49e9b849be4912f93970f80956d62f01fdc0238f1f694bea996",
-  BigInt(1000) * BigInt(10 ** xudtToken.decimal),
-  ckbAddress
-)
+  xudtTokenId:
+    "0x4ca344db2ad7f107177a6f42ea2a0d184b54bf71ac0cab8396aacfdc32bae178",
+  amount: BigInt(10) * BigInt(10 ** xudtToken.decimal),
+  ckbAddress,
+})
   .then(() => {
     logger.saveOnSuccess();
     process.exit(0);

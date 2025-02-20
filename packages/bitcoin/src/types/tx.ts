@@ -80,6 +80,10 @@ export interface BtcApiTransaction {
   };
 }
 
+export interface BtcApiTransactionHex {
+  hex: string;
+}
+
 export interface BtcApiUtxo {
   txid: string;
   vout: number;
