@@ -8,15 +8,15 @@ import {
   ScriptName,
 } from "@rgbpp-js/core";
 
-import { RgbppTxLogger } from "./logger.js";
-import { xudtToken } from "./asset.js";
-import { collectXudtCells } from "./utils.js";
+import { RgbppTxLogger } from "../common/logger.js";
+import { xudtToken } from "../common/assets.js";
+import { collectXudtCells } from "../common/utils.js";
 import {
   rgbppXudtLikeClient,
   ckbAddress,
   ckbClient,
   ckbSigner,
-} from "./env.js";
+} from "../common/env.js";
 
 async function leapFromCkbToBtc({
   utxoSeal,
@@ -100,5 +100,5 @@ leapFromCkbToBtc({
   });
 
 /* 
-pnpm tsx packages/examples/src/ckb-to-btc.ts
+pnpm tsx packages/examples/src/xUDT/5-ckb-to-btc.ts
 */

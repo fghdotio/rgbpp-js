@@ -1,15 +1,15 @@
 import { buildBtcRgbppOutputs, UtxoSeal } from "@rgbpp-js/core";
 
-import { RgbppTxLogger } from "./logger.js";
-import { xudtToken } from "./asset.js";
-import { collectRgbppCells } from "./utils.js";
+import { RgbppTxLogger } from "../common/logger.js";
+import { xudtToken } from "../common/assets.js";
+import { collectRgbppCells } from "../common/utils.js";
 import {
   rgbppXudtLikeClient,
   ckbAddress,
   rgbppBtcWallet,
   utxoBasedAccountAddress,
   ckbRgbppUnlockSinger,
-} from "./env.js";
+} from "../common/env.js";
 
 async function leapFromBtcToCkb({
   utxoSeals,
@@ -33,7 +33,7 @@ async function leapFromBtcToCkb({
     xudtLikeTypeScript,
     address: ckbAddress,
     amount,
-    confirmations: 1024,
+    confirmations: 6,
   });
   logger.logCkbTx("ckbPartialTx", ckbPartialTx, true);
 
@@ -87,12 +87,12 @@ leapFromBtcToCkb({
   utxoSeals: [
     {
       txId: "b5dac109ed4331f374ec07503d7384399b7c8744535410e5495c530bbf0f81f7",
-      index: 1,
+      index: 2,
     },
   ],
   xudtTokenId:
     "0x4ca344db2ad7f107177a6f42ea2a0d184b54bf71ac0cab8396aacfdc32bae178",
-  amount: BigInt(10) * BigInt(10 ** xudtToken.decimal),
+  amount: BigInt(101) * BigInt(10 ** xudtToken.decimal),
   ckbAddress,
 })
   .then(() => {
@@ -106,5 +106,5 @@ leapFromBtcToCkb({
   });
 
 /* 
-pnpm tsx packages/examples/src/btc-to-ckb.ts
+pnpm tsx packages/examples/src/xUDT/3-btc-to-ckb.ts
 */

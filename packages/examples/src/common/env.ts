@@ -17,7 +17,7 @@ import {
   AddressType,
 } from "@rgbpp-js/bitcoin";
 
-dotenv.config({ path: dirname(fileURLToPath(import.meta.url)) + "/.env" });
+dotenv.config({ path: dirname(fileURLToPath(import.meta.url)) + "/../.env" });
 
 const utxoBasedChainName = process.env.UTXO_BASED_CHAIN_NAME!;
 export const utxoBasedNetwork = networkConfigs[utxoBasedChainName];

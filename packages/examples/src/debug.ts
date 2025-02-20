@@ -3,8 +3,8 @@ import {
   ckbSigner,
   rgbppXudtLikeClient,
   ckbRgbppUnlockSinger,
-} from "./env.js";
-import { RgbppTxLogger } from "./logger.js";
+} from "./common/env.js";
+import { RgbppTxLogger } from "./common/logger.js";
 
 const debug = async (fileName: string) => {
   const logger = RgbppTxLogger.createFromLogFile(fileName);

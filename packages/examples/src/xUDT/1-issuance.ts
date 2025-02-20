@@ -5,10 +5,10 @@ import {
   rgbppBtcWallet,
   rgbppXudtLikeClient,
   utxoBasedAccountAddress,
-} from "./env.js";
-import { prepareIssuanceRgbppCells } from "./utils.js";
-import { issuanceAmount, xudtToken } from "./asset.js";
-import { RgbppTxLogger } from "./logger.js";
+} from "../common/env.js";
+import { prepareIssuanceRgbppCells } from "../common/utils.js";
+import { issuanceAmount, xudtToken } from "../common/assets.js";
+import { RgbppTxLogger } from "../common/logger.js";
 
 const logger = new RgbppTxLogger({ opType: "issuance" });
 
@@ -93,5 +93,5 @@ issueXudt({
   });
 
 /* 
-pnpm tsx packages/examples/src/issuance.ts
+pnpm tsx packages/examples/src/xUDT/1-issuance.ts
 */

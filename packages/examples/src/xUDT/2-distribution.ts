@@ -4,15 +4,15 @@ import {
   buildBtcRgbppOutputs,
 } from "@rgbpp-js/core";
 
-import { RgbppTxLogger } from "./logger.js";
+import { RgbppTxLogger } from "../common/logger.js";
 import {
   rgbppBtcWallet,
   rgbppXudtLikeClient,
   utxoBasedAccountAddress,
   ckbRgbppUnlockSinger,
-} from "./env.js";
-import { collectRgbppCells } from "./utils.js";
-import { xudtToken } from "./asset.js";
+} from "../common/env.js";
+import { collectRgbppCells } from "../common/utils.js";
+import { xudtToken } from "../common/assets.js";
 
 async function distributeXudt({
   utxoSeals,
@@ -124,5 +124,5 @@ distributeXudt({
   });
 
 /* 
-pnpm tsx packages/examples/src/distribution.ts
+pnpm tsx packages/examples/src/xUDT/2-distribution.ts
 */

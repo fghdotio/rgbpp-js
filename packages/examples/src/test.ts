@@ -1,4 +1,5 @@
 import { ccc } from "@ckb-ccc/core";
+
 import { getTxIdFromScriptArgs } from "@rgbpp-js/core";
 
 const txId = getTxIdFromScriptArgs(
@@ -50,8 +51,8 @@ const inputLength = witnessBytes.slice(prefix.length, prefix.length + 1);
 const outputLength = witnessBytes.slice(prefix.length + 1, prefix.length + 2);
 
 console.log("Witness prefix check:", hasCorrectPrefix);
-console.log("Input Length:", inputLength[0]); // Should print 1
-console.log("Output Length:", outputLength[0]); // Should print 2
+console.log("Input Length:", inputLength[0]);
+console.log("Output Length:", outputLength[0]);
 /* 
 pnpm tsx packages/examples/src/test.ts
 */
