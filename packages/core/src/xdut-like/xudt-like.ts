@@ -62,8 +62,15 @@ export class RgbppXudtLikeClient {
     return this.scriptManager.getScripts()[PredefinedScriptName.BtcTimeLock];
   }
 
-  xudtLikeTypeScriptTemplate() {
-    return this.scriptManager.getScripts()[PredefinedScriptName.Xudt];
+  xudtLikeTypeScriptTemplate(compatibleXudtToken?: string) {
+    const scripts = this.scriptManager.getScripts();
+    const token = compatibleXudtToken || PredefinedScriptName.Xudt;
+
+    if (!(token in scripts)) {
+      throw new Error(`Invalid script type: ${token}`);
+    }
+
+    return scripts[token];
   }
 
   buildRgbppLockScript(utxoSeal: UtxoSeal) {
@@ -121,9 +128,14 @@ export class RgbppXudtLikeClient {
           txId: TX_ID_PLACEHOLDER,
           index: XUDT_LIKE_ISSUANCE_OUTPUT_INDEX,
         }),
-        type: this.scriptManager.buildXudtLikeTypeScript(
-          params.rgbppLiveCells[0].cellOutput.lock.hash(), // unique ID of xUDT-like token
-        ),
+        type: params.compatibleXudtToken
+          ? this.scriptManager.buildCompatibleXudtScript(
+              params.compatibleXudtToken,
+              params.rgbppLiveCells[0].cellOutput.lock.hash(), // unique ID of xUDT-like token
+            )
+          : this.scriptManager.buildXudtLikeTypeScript(
+              params.rgbppLiveCells[0].cellOutput.lock.hash(), // unique ID of xUDT-like token
+            ),
       },
       u128ToLe(params.amount * BigInt(10 ** params.token.decimal)),
     );

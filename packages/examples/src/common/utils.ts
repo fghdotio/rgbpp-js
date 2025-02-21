@@ -49,11 +49,12 @@ export async function prepareIssuanceRgbppCells(
 
 export async function collectRgbppCells(
   utxoSeals: UtxoSeal[],
-  xudtTokenId: string
+  xudtTokenId: string,
+  compatibleXudtToken?: string
 ): Promise<{ rgbppLiveCells: ccc.Cell[]; xudtLikeTypeScript: ccc.Script }> {
   let rgbppLiveCells: ccc.Cell[] = [];
   const xudtLikeTypeScript = ccc.Script.from({
-    ...rgbppXudtLikeClient.xudtLikeTypeScriptTemplate(),
+    ...rgbppXudtLikeClient.xudtLikeTypeScriptTemplate(compatibleXudtToken),
     args: xudtTokenId,
   });
 

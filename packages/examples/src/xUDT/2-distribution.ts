@@ -79,7 +79,7 @@ async function distributeXudt({
   logger.add("ckbTxId", txHash, true);
 }
 
-const logger = new RgbppTxLogger({ opType: "distribute" });
+const logger = new RgbppTxLogger({ opType: "xudt-distribution" });
 
 distributeXudt({
   utxoSeals: [

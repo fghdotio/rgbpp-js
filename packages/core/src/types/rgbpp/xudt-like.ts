@@ -5,8 +5,9 @@ import { RgbppXudtLikeToken } from "./rgbpp.js";
 export interface RgbppXudtLikeIssuance {
   token: RgbppXudtLikeToken;
   amount: bigint;
-
   rgbppLiveCells: ccc.Cell[];
+
+  compatibleXudtToken?: string;
 }
 
 export interface RgbppXudtLikeDistribution {

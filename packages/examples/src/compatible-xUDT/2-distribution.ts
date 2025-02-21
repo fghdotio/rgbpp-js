@@ -1,48 +1,47 @@
-import { buildBtcRgbppOutputs, UtxoSeal } from "@rgbpp-js/core";
+import {
+  RgbppBtcReceiver,
+  UtxoSeal,
+  buildBtcRgbppOutputs,
+} from "@rgbpp-js/core";
 
 import { RgbppTxLogger } from "../common/logger.js";
-import { xudtToken } from "../common/assets.js";
-import { collectRgbppCells } from "../common/utils.js";
 import {
-  rgbppXudtLikeClient,
-  ckbAddress,
   rgbppBtcWallet,
+  rgbppXudtLikeClient,
   utxoBasedAccountAddress,
   ckbRgbppUnlockSinger,
 } from "../common/env.js";
+import { collectRgbppCells } from "../common/utils.js";
+import { xudtToken } from "../common/assets.js";
 
-async function leapFromBtcToCkb({
+async function distributeSudt({
   utxoSeals,
-  xudtTokenId,
-  amount,
-  ckbAddress,
+  compatibleXudtTokenId,
+  receivers,
 }: {
   utxoSeals: UtxoSeal[];
-  xudtTokenId: string;
-  amount: bigint;
-  ckbAddress: string;
+  compatibleXudtTokenId: string;
+  receivers: RgbppBtcReceiver[];
 }) {
   const { rgbppLiveCells, xudtLikeTypeScript } = await collectRgbppCells(
     utxoSeals,
-    xudtTokenId
+    compatibleXudtTokenId,
+    "sudt"
   );
   console.log(rgbppLiveCells);
 
-  const ckbPartialTx = await rgbppXudtLikeClient.leapFromBtcCkbPartialTx({
+  const ckbPartialTx = await rgbppXudtLikeClient.distributionCkbPartialTx({
     rgbppLiveCells,
     xudtLikeTypeScript,
-    address: ckbAddress,
-    amount,
-    confirmations: 6,
+    receivers,
   });
   logger.logCkbTx("ckbPartialTx", ckbPartialTx, true);
-
   const commitment = rgbppXudtLikeClient.calculateCommitment(ckbPartialTx);
   const psbt = await rgbppBtcWallet.buildPsbt({
     rgbppOutputs: buildBtcRgbppOutputs(
       ckbPartialTx,
       utxoBasedAccountAddress,
-      [utxoBasedAccountAddress],
+      receivers.map((receiver) => receiver.address),
       rgbppXudtLikeClient.rgbppLockScriptTemplate(),
       rgbppXudtLikeClient.btcTimeLockScriptTemplate(),
       commitment
@@ -74,26 +73,46 @@ async function leapFromBtcToCkb({
 
   const ckbFinalTx =
     await ckbRgbppUnlockSinger.signTransaction(ckbPartialTxInjected);
-  logger.logCkbTx("ckbFinalTx", ckbFinalTx, true);
+  logger.logCkbTx("ckbFinalTx", ckbFinalTx);
 
   const txHash = await ckbRgbppUnlockSinger.client.sendTransaction(ckbFinalTx);
   await ckbRgbppUnlockSinger.client.waitTransaction(txHash);
   logger.add("ckbTxId", txHash, true);
 }
 
-const logger = new RgbppTxLogger({ opType: "xudt-btc-to-ckb" });
+const logger = new RgbppTxLogger({ opType: "compatible-xudt-distribution" });
 
-leapFromBtcToCkb({
+distributeSudt({
   utxoSeals: [
     {
-      txId: "5e9c4e47fdf4d435974ec7e92fef80a079d434978ba5037db50e6866947aa829",
+      txId: "7dbd0d60d2ce56cd9685035f281061fdfc306b32fea0061649e1f298441b5e34",
       index: 1,
     },
   ],
-  xudtTokenId:
-    "0x67edb00bea376a36407444081ce2a58ea3e7cd5c4ff89fd732dffd465c3e3096",
-  amount: BigInt(101) * BigInt(10 ** xudtToken.decimal),
-  ckbAddress,
+  compatibleXudtTokenId:
+    "0x0bb59f94b0fc2984fe3b1b239515fc77bc454dff9152047ced5d5d2a3a32d033",
+  receivers: [
+    {
+      address: "tb1qjkdqj8zk6gl7pwuw2d2jp9e6wgf26arjl8pcys",
+      amount: BigInt(1001) * BigInt(10 ** xudtToken.decimal),
+    },
+    {
+      address: "tb1qjkdqj8zk6gl7pwuw2d2jp9e6wgf26arjl8pcys",
+      amount: BigInt(2002) * BigInt(10 ** xudtToken.decimal),
+    },
+    {
+      address: "tb1qjkdqj8zk6gl7pwuw2d2jp9e6wgf26arjl8pcys",
+      amount: BigInt(3003) * BigInt(10 ** xudtToken.decimal),
+    },
+    {
+      address: "tb1qjkdqj8zk6gl7pwuw2d2jp9e6wgf26arjl8pcys",
+      amount: BigInt(4004) * BigInt(10 ** xudtToken.decimal),
+    },
+    {
+      address: "tb1qyyhdxmhc059rksfh9jjlkqgvs4w6mdl0z3zqj3",
+      amount: BigInt(5005) * BigInt(10 ** xudtToken.decimal),
+    },
+  ],
 })
   .then(() => {
     logger.saveOnSuccess();
@@ -106,5 +125,5 @@ leapFromBtcToCkb({
   });
 
 /* 
-pnpm tsx packages/examples/src/xUDT/3-btc-to-ckb.ts
+pnpm tsx packages/examples/src/compatible-xUDT/2-distribution.ts
 */

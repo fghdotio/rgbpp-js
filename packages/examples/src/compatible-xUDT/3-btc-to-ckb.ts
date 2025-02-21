@@ -24,7 +24,8 @@ async function leapFromBtcToCkb({
 }) {
   const { rgbppLiveCells, xudtLikeTypeScript } = await collectRgbppCells(
     utxoSeals,
-    xudtTokenId
+    xudtTokenId,
+    "sudt"
   );
   console.log(rgbppLiveCells);
 
@@ -81,18 +82,18 @@ async function leapFromBtcToCkb({
   logger.add("ckbTxId", txHash, true);
 }
 
-const logger = new RgbppTxLogger({ opType: "xudt-btc-to-ckb" });
+const logger = new RgbppTxLogger({ opType: "compatible-xudt-btc-to-ckb" });
 
 leapFromBtcToCkb({
   utxoSeals: [
     {
-      txId: "5e9c4e47fdf4d435974ec7e92fef80a079d434978ba5037db50e6866947aa829",
+      txId: "692c8b8639c9172e4479c17301c62ec18c998badfd9c23e85dbbbbcc50328872",
       index: 1,
     },
   ],
   xudtTokenId:
-    "0x67edb00bea376a36407444081ce2a58ea3e7cd5c4ff89fd732dffd465c3e3096",
-  amount: BigInt(101) * BigInt(10 ** xudtToken.decimal),
+    "0x0bb59f94b0fc2984fe3b1b239515fc77bc454dff9152047ced5d5d2a3a32d033",
+  amount: BigInt(10) * BigInt(10 ** xudtToken.decimal),
   ckbAddress,
 })
   .then(() => {
@@ -106,5 +107,5 @@ leapFromBtcToCkb({
   });
 
 /* 
-pnpm tsx packages/examples/src/xUDT/3-btc-to-ckb.ts
+pnpm tsx packages/examples/src/compatible-xUDT/3-btc-to-ckb.ts
 */

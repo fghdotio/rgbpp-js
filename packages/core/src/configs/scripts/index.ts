@@ -20,30 +20,3 @@ export const deadLock = ccc.Script.from({
   hashType: "data",
   args: "0x",
 });
-
-// const xUDTCompatibleScripts = new Map<string, Map<string, ScriptInfo>>();
-
-// getSupportedNetworks().forEach((network) => {
-//   xUDTCompatibleScripts.set(network, new Map());
-// });
-
-// export function registerXudtCompatibleScript(
-//   network: string,
-//   scriptName: string,
-//   scriptInfo: ScriptInfo,
-// ) {
-//   const scriptInfos = xUDTCompatibleScripts.get(network);
-//   if (!scriptInfos || !getSupportedNetworks().includes(network)) {
-//     throw new Error(
-//       `Network ${network} not supported, call registerNetwork() first`,
-//     );
-//   }
-
-//   scriptInfos.set(scriptName, scriptInfo);
-//   scripts[network][scriptName] = scriptInfo.script;
-//   cellDeps[network][scriptName] = scriptInfo.cellDep;
-// }
-
-// export function getXudtCompatibleScriptNames(network: string) {
-//   return Array.from(xUDTCompatibleScripts.get(network)?.keys() ?? []);
-// }

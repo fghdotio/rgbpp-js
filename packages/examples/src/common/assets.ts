@@ -1,3 +1,7 @@
+import { ccc } from "@ckb-ccc/core";
+
+import { ScriptInfo } from "@rgbpp-js/core";
+
 export const xudtToken = {
   name: "Standard xUDT",
   symbol: "stdXUDT",
@@ -5,3 +9,28 @@ export const xudtToken = {
 };
 
 export const issuanceAmount = 2100_0000n;
+
+// https://github.com/nervosnetwork/rfcs/blob/master/rfcs/0025-simple-udt/0025-simple-udt.md#notes
+export const testnetSudt = ccc.Script.from({
+  codeHash:
+    "0xc5e5dcf215925f7ef4dfaf5f4b4f105bc321c02776d6e7d52a1db3fcd9d011a4",
+  hashType: "type",
+  args: "",
+});
+
+export const testnetSudtCellDep = ccc.CellDep.from({
+  outPoint: {
+    txHash:
+      "0xe12877ebd2c3c364dc46c5c992bcfaf4fee33fa13eebdf82c591fc9825aab769",
+    index: 0,
+  },
+  depType: "code",
+});
+
+export const compatibleXudtScriptInfos: ScriptInfo[] = [
+  {
+    name: "sudt",
+    script: testnetSudt,
+    cellDep: testnetSudtCellDep,
+  },
+];

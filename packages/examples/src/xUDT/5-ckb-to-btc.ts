@@ -79,7 +79,7 @@ async function leapFromCkbToBtc({
   logger.add("ckbTxId", txHash, true);
 }
 
-const logger = new RgbppTxLogger({ opType: "ckb-to-btc" });
+const logger = new RgbppTxLogger({ opType: "xudt-ckb-to-btc" });
 
 leapFromCkbToBtc({
   utxoSeal: {
