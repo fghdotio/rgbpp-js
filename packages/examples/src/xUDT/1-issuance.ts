@@ -44,7 +44,7 @@ async function issueXudt(utxoSeal?: UtxoSeal) {
 
     utxoSeals: [utxoSeal],
     from: utxoBasedAccountAddress,
-    feeRate: 256,
+    feeRate: 512,
   });
 
   const signedBtcTx = await rgbppBtcWallet.signTx(psbt);
@@ -79,7 +79,7 @@ async function issueXudt(utxoSeal?: UtxoSeal) {
 }
 
 issueXudt({
-  txId: "a811486b6dcba20abef5a7179a5fdc53c07f1606594e35678ed5ed7a7a664c16",
+  txId: "fc74d576c4c5cbe4bd84127af63ccb0d112c80faade70fb0903a086ff41ae8de",
   index: 2,
 })
   .then(() => {

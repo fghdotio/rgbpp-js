@@ -5,7 +5,7 @@ import {
   leToU128,
   trimHexPrefix,
   u128ToLe,
-  ScriptName,
+  PredefinedScriptName,
 } from "@rgbpp-js/core";
 
 import { RgbppTxLogger } from "../common/logger.js";
@@ -67,7 +67,8 @@ async function leapFromCkbToBtc({
   }
 
   tx.cellDeps.push(
-    rgbppXudtLikeClient.getRgbppScriptsDetail()[ScriptName.XudtLike].cellDep
+    rgbppXudtLikeClient.getRgbppScriptsDetail()[PredefinedScriptName.Xudt]
+      .cellDep
   );
 
   await tx.completeFeeBy(ckbSigner);

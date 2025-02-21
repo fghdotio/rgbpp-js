@@ -8,9 +8,8 @@ import { RgbppTxLogger } from "./common/logger.js";
 
 const debug = async (fileName: string) => {
   const logger = RgbppTxLogger.createFromLogFile(fileName);
-  const ckbPartialTxRecovered = logger.getCkbTxFromLogFile(true);
+  const ckbPartialTxRecovered = logger.getCkbTxPartialFromLogFile(true);
 
-  const rawBtcTxHex = logger.getLogValue("rawBtcTxHex", true) as string;
   const btcTxId = logger.getLogValue("btcTxId", true) as string;
 
   const ckbPartialTxInjected = await rgbppXudtLikeClient.injectTxIdToRgbppCkbTx(
@@ -18,7 +17,10 @@ const debug = async (fileName: string) => {
     btcTxId
   );
 
-  await ckbPartialTxInjected.completeFeeBy(ckbRgbppUnlockSinger.feeSigner);
+  await ckbPartialTxInjected.completeFeeBy(
+    ckbRgbppUnlockSinger.feeSigner,
+    5000
+  );
   const ckbFinalTx =
     await ckbRgbppUnlockSinger.signTransaction(ckbPartialTxInjected);
 
@@ -27,7 +29,7 @@ const debug = async (fileName: string) => {
   console.log(`CKB txHash: ${txHash}`);
 };
 
-debug("issuance-1739901307259-logs.json");
+debug("issuance-1740121017115-logs.json");
 
 /* 
 pnpm tsx packages/examples/src/debug.ts

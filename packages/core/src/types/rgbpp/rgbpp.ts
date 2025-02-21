@@ -1,6 +1,6 @@
 import { ccc } from "@ckb-ccc/core";
 
-import { ScriptName } from "../../scripts/index.js";
+import { ScriptName } from "../script.js";
 
 // xUDT compatible token
 export interface RgbppXudtLikeToken {

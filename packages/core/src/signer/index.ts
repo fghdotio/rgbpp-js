@@ -14,8 +14,8 @@ import { transactionToHex } from "@rgbpp-js/bitcoin";
 
 import { SimpleBtcClient } from "../interfaces/btc.js";
 import { SpvProofProvider } from "../interfaces/spv.js";
-import { ScriptName } from "../scripts/index.js";
 import { CommittedLength } from "../types/rgbpp/rgbpp.js";
+import { PredefinedScriptName, ScriptName } from "../types/script.js";
 import { SpvProof } from "../types/spv.js";
 import { prependHexPrefix } from "../utils/encoder.js";
 import { buildRgbppUnlock, decodeCommittedLength } from "../utils/rgbpp.js";
@@ -79,7 +79,10 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
     );
 
     const cellDeps = Array.from(scriptNames).flatMap((name) => {
-      if (name === ScriptName.RgbppLock || name === ScriptName.BtcTimeLock) {
+      if (
+        name === PredefinedScriptName.RgbppLock ||
+        name === PredefinedScriptName.BtcTimeLock
+      ) {
         return [
           this.scriptsDetail[name].cellDep,
           ccc.CellDep.from({
@@ -140,8 +143,8 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
     const outputs = tx.outputs.filter((output) => output.lock);
     const rgbppOutput = outputs.find((output) =>
       isUsingOneOfScripts(output.lock, [
-        this.scriptsDetail[ScriptName.RgbppLock].script,
-        this.scriptsDetail[ScriptName.BtcTimeLock].script,
+        this.scriptsDetail[PredefinedScriptName.RgbppLock].script,
+        this.scriptsDetail[PredefinedScriptName.BtcTimeLock].script,
       ]),
     );
     if (!rgbppOutput) {

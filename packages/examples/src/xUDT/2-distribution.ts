@@ -48,7 +48,7 @@ async function distributeXudt({
 
     utxoSeals,
     from: utxoBasedAccountAddress,
-    feeRate: 256,
+    feeRate: 512,
   });
 
   const signedBtcTx = await rgbppBtcWallet.signTx(psbt);
@@ -84,12 +84,12 @@ const logger = new RgbppTxLogger({ opType: "distribute" });
 distributeXudt({
   utxoSeals: [
     {
-      txId: "b795abab3fb5fef1552dd076120b1f69aafe255e383aabb60db0bb9db442b850",
+      txId: "3bae10991e12dd2c56f37edad28f67f59c0ae2c086371fc16a86d2f7f3303584",
       index: 1,
     },
   ],
   xudtTokenId:
-    "0x4ca344db2ad7f107177a6f42ea2a0d184b54bf71ac0cab8396aacfdc32bae178",
+    "0x67edb00bea376a36407444081ce2a58ea3e7cd5c4ff89fd732dffd465c3e3096",
   receivers: [
     {
       address: "tb1qjkdqj8zk6gl7pwuw2d2jp9e6wgf26arjl8pcys",

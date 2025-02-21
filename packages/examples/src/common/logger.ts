@@ -133,7 +133,7 @@ export class RgbppTxLogger {
     return value;
   }
 
-  getCkbTxFromLogFile(doPrint = false): ccc.Transaction {
+  getCkbTxPartialFromLogFile(doPrint = false): ccc.Transaction {
     const ckbTx = this.currentLog.ckbPartialTx;
     if (!ckbTx) {
       throw new Error("ckbPartialTx not found in log file");

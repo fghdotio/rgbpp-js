@@ -50,7 +50,7 @@ async function leapFromBtcToCkb({
 
     utxoSeals,
     from: utxoBasedAccountAddress,
-    feeRate: 256,
+    feeRate: 512,
   });
 
   const signedBtcTx = await rgbppBtcWallet.signTx(psbt);
@@ -86,12 +86,12 @@ const logger = new RgbppTxLogger({ opType: "btc-to-ckb" });
 leapFromBtcToCkb({
   utxoSeals: [
     {
-      txId: "b5dac109ed4331f374ec07503d7384399b7c8744535410e5495c530bbf0f81f7",
-      index: 2,
+      txId: "5e9c4e47fdf4d435974ec7e92fef80a079d434978ba5037db50e6866947aa829",
+      index: 1,
     },
   ],
   xudtTokenId:
-    "0x4ca344db2ad7f107177a6f42ea2a0d184b54bf71ac0cab8396aacfdc32bae178",
+    "0x67edb00bea376a36407444081ce2a58ea3e7cd5c4ff89fd732dffd465c3e3096",
   amount: BigInt(101) * BigInt(10 ** xudtToken.decimal),
   ckbAddress,
 })

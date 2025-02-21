@@ -1,9 +1,10 @@
-import { ccc } from "@ckb-ccc/core";
+import { CellDepSet, ScriptSet } from "./script.js";
 
 export enum PredefinedNetwork {
-  BitcoinMainnet = "BitcoinMainnet",
   BitcoinTestnet3 = "BitcoinTestnet3",
   BitcoinSignet = "BitcoinSignet",
+
+  BitcoinMainnet = "BitcoinMainnet",
 
   DogecoinMainnet = "DogecoinMainnet",
   DogecoinTestnet = "DogecoinTestnet",
@@ -13,6 +14,12 @@ export interface NetworkConfig {
   name: string;
   isMainnet: boolean;
 
-  scripts: Record<string, ccc.Script>;
-  cellDeps: Record<string, ccc.CellDep>;
+  scripts: ScriptSet;
+  cellDeps: CellDepSet;
+}
+
+export interface NetworkConfigOverrides {
+  isMainnet?: boolean;
+  scripts?: Partial<ScriptSet>;
+  cellDeps?: Partial<CellDepSet>;
 }

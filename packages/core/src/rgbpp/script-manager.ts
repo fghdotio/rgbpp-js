@@ -1,9 +1,13 @@
 import { ccc } from "@ckb-ccc/core";
 
 import { DEFAULT_CONFIRMATIONS } from "../constants/index.js";
-import { ScriptName } from "../scripts/index.js";
-import { ScriptInfo, UtxoSeal } from "../types/rgbpp/rgbpp.js";
-import { networkConfigs } from "../utils/network.js";
+import { UtxoSeal } from "../types/rgbpp/rgbpp.js";
+import {
+  CellDepSet,
+  PredefinedScriptName,
+  ScriptName,
+  ScriptSet,
+} from "../types/script.js";
 import {
   buildBtcTimeLockArgs,
   buildRgbppLockArgs,
@@ -11,25 +15,10 @@ import {
 } from "../utils/rgbpp.js";
 
 export class ScriptManager {
-  private scripts: Record<ScriptName, ccc.Script>;
-  private cellDeps: Record<ScriptName, ccc.CellDep>;
-
-  constructor(network: string, scriptInfos?: ScriptInfo[]) {
-    this.scripts = Object.assign({}, networkConfigs[network].scripts) as Record<
-      ScriptName,
-      ccc.Script
-    >;
-    this.cellDeps = Object.assign(
-      {},
-      networkConfigs[network].cellDeps,
-    ) as Record<ScriptName, ccc.CellDep>;
-
-    // override default scripts and cellDeps
-    scriptInfos?.forEach((scriptInfo) => {
-      this.scripts[scriptInfo.name] = scriptInfo.script;
-      this.cellDeps[scriptInfo.name] = scriptInfo.cellDep;
-    });
-  }
+  constructor(
+    private scripts: ScriptSet,
+    private cellDeps: CellDepSet,
+  ) {}
 
   getScripts() {
     return this.scripts;
@@ -50,7 +39,7 @@ export class ScriptManager {
 
   buildRgbppLockScript(utxoSeal: UtxoSeal): ccc.Script {
     return ccc.Script.from({
-      ...this.scripts[ScriptName.RgbppLock],
+      ...this.scripts[PredefinedScriptName.RgbppLock],
       args: buildRgbppLockArgs({
         txId: utxoSeal.txId,
         index: utxoSeal.index,
@@ -64,14 +53,14 @@ export class ScriptManager {
     confirmations = DEFAULT_CONFIRMATIONS,
   ): ccc.Script {
     return ccc.Script.from({
-      ...this.scripts[ScriptName.BtcTimeLock],
+      ...this.scripts[PredefinedScriptName.BtcTimeLock],
       args: buildBtcTimeLockArgs(receiverLock, btcTxId, confirmations),
     });
   }
 
   buildXudtLikeTypeScript(args: string): ccc.Script {
     return ccc.Script.from({
-      ...this.scripts[ScriptName.XudtLike],
+      ...this.scripts[PredefinedScriptName.Xudt],
       args,
     });
   }
@@ -89,7 +78,7 @@ export class ScriptManager {
     outputIndex: number,
   ): ccc.Script {
     return ccc.Script.from({
-      ...this.scripts[ScriptName.UniqueType],
+      ...this.scripts[PredefinedScriptName.UniqueType],
       args: buildUniqueTypeArgs(firstInput, outputIndex),
     });
   }

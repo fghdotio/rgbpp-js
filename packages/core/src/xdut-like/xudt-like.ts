@@ -7,15 +7,15 @@ import {
   XUDT_LIKE_LEAP_FROM_BTC_OUTPUT_INDEX,
 } from "../constants/index.js";
 
+import { deadLock } from "../configs/scripts/index.js";
 import { ScriptManager } from "../rgbpp/script-manager.js";
-import { deadLock, ScriptName } from "../scripts/index.js";
-import { UtxoSeal } from "../types/index.js";
-import { ScriptInfo } from "../types/rgbpp/rgbpp.js";
+import { NetworkConfig, UtxoSeal } from "../types/index.js";
 import {
   RgbppXudtLikeDistribution,
   RgbppXudtLikeIssuance,
   RgbppXudtLikeLeapFromBtcToCkb,
 } from "../types/rgbpp/xudt-like.js";
+import { PredefinedScriptName } from "../types/script.js";
 import {
   calculateCommitment,
   encodeCommittedLength,
@@ -31,15 +31,15 @@ import { updateScriptArgsWithTxId } from "../utils/script.js";
 // TODO: rgbppLiveCells, btcTimeLockCells de-duplication
 export class RgbppXudtLikeClient {
   private scriptManager: ScriptManager;
-  private ckbClient: ccc.Client;
 
   constructor(
-    network: string,
-    ckbClient: ccc.Client,
-    scriptInfos?: ScriptInfo[],
+    private networkConfig: NetworkConfig,
+    private ckbClient: ccc.Client,
   ) {
-    this.scriptManager = new ScriptManager(network, scriptInfos);
-    this.ckbClient = ckbClient;
+    this.scriptManager = new ScriptManager(
+      networkConfig.scripts,
+      networkConfig.cellDeps,
+    );
   }
 
   getRgbppScripts() {
@@ -55,15 +55,15 @@ export class RgbppXudtLikeClient {
   }
 
   rgbppLockScriptTemplate() {
-    return this.scriptManager.getScripts()[ScriptName.RgbppLock];
+    return this.scriptManager.getScripts()[PredefinedScriptName.RgbppLock];
   }
 
   btcTimeLockScriptTemplate() {
-    return this.scriptManager.getScripts()[ScriptName.BtcTimeLock];
+    return this.scriptManager.getScripts()[PredefinedScriptName.BtcTimeLock];
   }
 
   xudtLikeTypeScriptTemplate() {
-    return this.scriptManager.getScripts()[ScriptName.XudtLike];
+    return this.scriptManager.getScripts()[PredefinedScriptName.Xudt];
   }
 
   buildRgbppLockScript(utxoSeal: UtxoSeal) {
