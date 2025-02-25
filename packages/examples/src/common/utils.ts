@@ -49,14 +49,9 @@ export async function prepareIssuanceRgbppCells(
 
 export async function collectRgbppCells(
   utxoSeals: UtxoSeal[],
-  xudtTokenId: string,
-  compatibleXudtToken?: string
+  xudtLikeTypeScript: ccc.Script
 ): Promise<{ rgbppLiveCells: ccc.Cell[]; xudtLikeTypeScript: ccc.Script }> {
   let rgbppLiveCells: ccc.Cell[] = [];
-  const xudtLikeTypeScript = ccc.Script.from({
-    ...rgbppXudtLikeClient.xudtLikeTypeScriptTemplate(compatibleXudtToken),
-    args: xudtTokenId,
-  });
 
   await Promise.all(
     utxoSeals.map(async (utxoSeal) => {
@@ -95,13 +90,10 @@ export async function collectBtcTimeLockCells(
 
 export async function collectXudtCells(
   ckbAddress: string,
-  xudtTokenId: string
+  xudtLikeTypeScript: ccc.Script
 ): Promise<{ xudtCells: ccc.Cell[]; xudtLikeTypeScript: ccc.Script }> {
   const lock = (await ccc.Address.fromString(ckbAddress, ckbClient)).script;
-  const xudtLikeTypeScript = ccc.Script.from({
-    ...rgbppXudtLikeClient.xudtLikeTypeScriptTemplate(),
-    args: xudtTokenId,
-  });
+
   const xudtCellsGen = await ckbClient.findCellsByLock(
     lock,
     xudtLikeTypeScript

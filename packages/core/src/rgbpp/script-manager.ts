@@ -58,24 +58,6 @@ export class ScriptManager {
     });
   }
 
-  buildXudtLikeTypeScript(args: string): ccc.Script {
-    return ccc.Script.from({
-      ...this.scripts[PredefinedScriptName.Xudt],
-      args,
-    });
-  }
-
-  buildCompatibleXudtScript(token: string, args: string): ccc.Script {
-    if (!this.scripts[token]) {
-      throw new Error(`Script for token ${token} not found`);
-    }
-
-    return ccc.Script.from({
-      ...this.scripts[token],
-      args,
-    });
-  }
-
   /* 
   https://github.com/nervosnetwork/rfcs/blob/master/rfcs/0022-transaction-structure/0022-transaction-structure.md#type-id
 

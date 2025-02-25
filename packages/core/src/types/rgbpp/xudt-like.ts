@@ -6,8 +6,7 @@ export interface RgbppXudtLikeIssuance {
   token: RgbppXudtLikeToken;
   amount: bigint;
   rgbppLiveCells: ccc.Cell[];
-
-  compatibleXudtToken?: string;
+  xudtLikeTypeScript: ccc.Script;
 }
 
 export interface RgbppXudtLikeDistribution {
