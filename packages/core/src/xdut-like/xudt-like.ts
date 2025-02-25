@@ -17,7 +17,6 @@ import {
 } from "../types/rgbpp/xudt-like.js";
 import { PredefinedScriptName } from "../types/script.js";
 import {
-  calculateCommitment,
   encodeCommittedLength,
   encodeRgbppXudtLikeToken,
   isUsingOneOfScripts,
@@ -48,10 +47,6 @@ export class RgbppXudtLikeClient {
 
   getRgbppScriptsDetail() {
     return this.scriptManager.getScriptsDetail();
-  }
-
-  calculateCommitment(ckbPartialTx: ccc.Transaction) {
-    return calculateCommitment(ckbPartialTx);
   }
 
   rgbppLockScriptTemplate() {

@@ -28,21 +28,18 @@ async function issueXudt(utxoSeal?: UtxoSeal) {
     ckbPartialTx.outputs[0].type!.args
   );
 
-  const commitment = rgbppXudtLikeClient.calculateCommitment(ckbPartialTx);
-
   const psbt = await rgbppBtcWallet.buildPsbt({
     rgbppOutputs: buildBtcRgbppOutputs(
       ckbPartialTx,
       utxoBasedAccountAddress,
       [utxoBasedAccountAddress],
       rgbppXudtLikeClient.rgbppLockScriptTemplate(),
-      rgbppXudtLikeClient.btcTimeLockScriptTemplate(),
-      commitment
+      rgbppXudtLikeClient.btcTimeLockScriptTemplate()
     ),
 
     utxoSeals: [utxoSeal],
     from: utxoBasedAccountAddress,
-    feeRate: 512,
+    feeRate: 256,
   });
 
   const signedBtcTx = await rgbppBtcWallet.signTx(psbt);
@@ -62,7 +59,7 @@ async function issueXudt(utxoSeal?: UtxoSeal) {
   // https://github.com/fghdotio/rgbpp/blob/main/contracts/rgbpp-lock/src/main.rs#L197-L200
   // TODO: should only select cells with null type script（witness 是否占用手续费）
   await ckbPartialTxInjected.completeFeeBy(
-    ckbRgbppUnlockSinger.feeSigner,
+    ckbRgbppUnlockSinger.feeSigner, // TODO ckbRgbppUnlockSinger
     5000
   );
   logger.logCkbTx("ckbPartialTxWithFee", ckbPartialTxInjected);
@@ -79,7 +76,7 @@ async function issueXudt(utxoSeal?: UtxoSeal) {
 const logger = new RgbppTxLogger({ opType: "xudt-issuance" });
 
 issueXudt({
-  txId: "fc74d576c4c5cbe4bd84127af63ccb0d112c80faade70fb0903a086ff41ae8de",
+  txId: "a90987a2064fe582d7923b82d406eb294198c3a93a78d86cc16206a1b867422e",
   index: 2,
 })
   .then(() => {

@@ -195,12 +195,13 @@ export const isCommitmentMatched = (
 // RGB++ related outputs
 export const buildBtcRgbppOutputs = (
   ckbPartialTx: ccc.Transaction,
-  ownerBtcAddress: string,
+  btcChangeAddress: string,
   receiverBtcAddresses: string[],
   rgbppLockScriptTemplate: ccc.Script,
   btcTimeLockScriptTemplate: ccc.Script,
-  commitment: string,
 ): TxOutput[] => {
+  const commitment = calculateCommitment(ckbPartialTx);
+
   const outputs: InitOutput[] = [];
   let lastCkbTypedOutputIndex = -1;
   ckbPartialTx.outputs.forEach((output, index) => {
@@ -221,7 +222,7 @@ export const buildBtcRgbppOutputs = (
     if (isSameScriptTemplate(output.lock, rgbppLockScriptTemplate)) {
       outputs.push({
         fixed: true,
-        address: receiverBtcAddresses[index] ?? ownerBtcAddress,
+        address: receiverBtcAddresses[index] ?? btcChangeAddress, // TODO comment
         value: 546,
         minUtxoSatoshi: 546,
       });
