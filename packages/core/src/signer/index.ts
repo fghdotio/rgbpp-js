@@ -28,9 +28,10 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
 
   constructor(
     ckbClient: ccc.Client,
-    private readonly _feeSigner: ccc.SignerCkbPrivateKey,
+    private readonly _feeSigner: ccc.Signer,
     private readonly spvProofProvider: SpvProofProvider,
     private readonly simpleBtcClient: SimpleBtcClient,
+    // TODO comment required scripts
     private readonly scriptsDetail: Record<
       ScriptName,
       { script: ccc.Script; cellDep: ccc.CellDep }
@@ -54,7 +55,7 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
     return SignerSignType.Unknown;
   }
 
-  get feeSigner(): ccc.SignerCkbPrivateKey {
+  get feeSigner(): ccc.Signer {
     return this._feeSigner;
   }
 
@@ -66,7 +67,6 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
     const scriptNames = new Set<ScriptName>(
       [
         ...tx.inputs.flatMap((input) =>
-          // ? Will cellOutput always exist?
           input.cellOutput
             ? [
                 this.getScriptName(input.cellOutput.lock),
@@ -103,7 +103,7 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
   async prepareTransaction(txLike: TransactionLike): Promise<Transaction> {
     const tx = ccc.Transaction.from(txLike);
     tx.addCellDeps(this.collectCellDeps(tx));
-    return Promise.resolve(ccc.Transaction.from(txLike));
+    return tx;
   }
 
   async signOnlyTransaction(txLike: TransactionLike): Promise<Transaction> {
