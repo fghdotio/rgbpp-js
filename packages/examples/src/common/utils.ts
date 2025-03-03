@@ -50,7 +50,7 @@ export async function prepareIssuanceRgbppCells(
 export async function collectRgbppCells(
   utxoSeals: UtxoSeal[],
   xudtLikeTypeScript: ccc.Script
-): Promise<{ rgbppLiveCells: ccc.Cell[]; xudtLikeTypeScript: ccc.Script }> {
+): Promise<ccc.Cell[]> {
   let rgbppLiveCells: ccc.Cell[] = [];
 
   await Promise.all(
@@ -71,7 +71,7 @@ export async function collectRgbppCells(
     throw new Error("No rgbpp live cells found");
   }
 
-  return { rgbppLiveCells, xudtLikeTypeScript };
+  return rgbppLiveCells;
 }
 
 export async function collectBtcTimeLockCells(
@@ -91,7 +91,7 @@ export async function collectBtcTimeLockCells(
 export async function collectXudtCells(
   ckbAddress: string,
   xudtLikeTypeScript: ccc.Script
-): Promise<{ xudtCells: ccc.Cell[]; xudtLikeTypeScript: ccc.Script }> {
+): Promise<ccc.Cell[]> {
   const lock = (await ccc.Address.fromString(ckbAddress, ckbClient)).script;
 
   const xudtCellsGen = await ckbClient.findCellsByLock(
@@ -102,5 +102,5 @@ export async function collectXudtCells(
   for await (const cell of xudtCellsGen) {
     xudtCells.push(cell);
   }
-  return { xudtCells, xudtLikeTypeScript };
+  return xudtCells;
 }

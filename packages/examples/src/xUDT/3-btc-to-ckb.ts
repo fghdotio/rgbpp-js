@@ -1,3 +1,5 @@
+import { ccc } from "@ckb-ccc/core";
+
 import { buildBtcRgbppOutputs, UtxoSeal } from "@rgbpp-js/core";
 
 import { RgbppTxLogger } from "../common/logger.js";
@@ -9,6 +11,7 @@ import {
   rgbppBtcWallet,
   utxoBasedAccountAddress,
   ckbRgbppUnlockSinger,
+  ckbClient,
 } from "../common/env.js";
 
 async function leapFromBtcToCkb({
@@ -22,10 +25,12 @@ async function leapFromBtcToCkb({
   amount: bigint;
   ckbAddress: string;
 }) {
-  const { rgbppLiveCells, xudtLikeTypeScript } = await collectRgbppCells(
-    utxoSeals,
+  const xudtLikeTypeScript = await ccc.Script.fromKnownScript(
+    ckbClient,
+    ccc.KnownScript.XUdt,
     xudtTokenId
   );
+  const rgbppLiveCells = await collectRgbppCells(utxoSeals, xudtLikeTypeScript);
   console.log(rgbppLiveCells);
 
   const ckbPartialTx = await rgbppXudtLikeClient.leapFromBtcCkbPartialTx({
@@ -37,20 +42,18 @@ async function leapFromBtcToCkb({
   });
   logger.logCkbTx("ckbPartialTx", ckbPartialTx, true);
 
-  const commitment = rgbppXudtLikeClient.calculateCommitment(ckbPartialTx);
   const psbt = await rgbppBtcWallet.buildPsbt({
     rgbppOutputs: buildBtcRgbppOutputs(
       ckbPartialTx,
       utxoBasedAccountAddress,
       [utxoBasedAccountAddress],
       rgbppXudtLikeClient.rgbppLockScriptTemplate(),
-      rgbppXudtLikeClient.btcTimeLockScriptTemplate(),
-      commitment
+      rgbppXudtLikeClient.btcTimeLockScriptTemplate()
     ),
 
     utxoSeals,
     from: utxoBasedAccountAddress,
-    feeRate: 512,
+    feeRate: 28,
   });
 
   const signedBtcTx = await rgbppBtcWallet.signTx(psbt);
@@ -66,10 +69,7 @@ async function leapFromBtcToCkb({
   );
   logger.logCkbTx("ckbPartialTxInjected", ckbPartialTxInjected);
 
-  await ckbPartialTxInjected.completeFeeBy(
-    ckbRgbppUnlockSinger.feeSigner,
-    5000
-  );
+  await ckbPartialTxInjected.completeFeeBy(ckbRgbppUnlockSinger.feeSigner);
   logger.logCkbTx("ckbPartialTxWithFee", ckbPartialTxInjected);
 
   const ckbFinalTx =
@@ -86,12 +86,12 @@ const logger = new RgbppTxLogger({ opType: "xudt-btc-to-ckb" });
 leapFromBtcToCkb({
   utxoSeals: [
     {
-      txId: "5e9c4e47fdf4d435974ec7e92fef80a079d434978ba5037db50e6866947aa829",
+      txId: "c61b7b8bc010ace294cfb6d1676e7e5ad919fef6e37b04f949cb1105a6f62946",
       index: 1,
     },
   ],
   xudtTokenId:
-    "0x67edb00bea376a36407444081ce2a58ea3e7cd5c4ff89fd732dffd465c3e3096",
+    "0x25c090ec44476bed83d78a673d76c099b802679a4a7be8503080869bb9648d26",
   amount: BigInt(101) * BigInt(10 ** xudtToken.decimal),
   ckbAddress,
 })

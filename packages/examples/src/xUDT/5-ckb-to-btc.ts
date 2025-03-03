@@ -27,10 +27,12 @@ async function leapFromCkbToBtc({
   xudtTokenId: string;
   amount: bigint;
 }) {
-  const { xudtCells, xudtLikeTypeScript } = await collectXudtCells(
-    ckbAddress,
+  const xudtLikeTypeScript = await ccc.Script.fromKnownScript(
+    ckbClient,
+    ccc.KnownScript.XUdt,
     xudtTokenId
   );
+  const xudtCells = await collectXudtCells(ckbAddress, xudtLikeTypeScript);
 
   const ownedAmount = xudtCells.reduce((acc: bigint, cell: ccc.Cell) => {
     return acc + leToU128(trimHexPrefix(cell.outputData).slice(0, 32));
@@ -87,7 +89,7 @@ leapFromCkbToBtc({
     index: 4,
   },
   xudtTokenId:
-    "0xcafc80445e16b49e9b849be4912f93970f80956d62f01fdc0238f1f694bea996",
+    "0x25c090ec44476bed83d78a673d76c099b802679a4a7be8503080869bb9648d26",
   amount: BigInt(100) * BigInt(10 ** xudtToken.decimal),
 })
   .then(() => {

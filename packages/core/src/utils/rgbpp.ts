@@ -15,6 +15,7 @@ import { convertToOutput, InitOutput, TxOutput } from "@rgbpp-js/bitcoin";
 
 import {
   DEFAULT_CONFIRMATIONS,
+  RGBPP_CKB_WITNESS_LENGTH,
   RGBPP_CKB_WITNESS_PLACEHOLDER,
   RGBPP_MAX_CELL_NUM,
 } from "../constants/index.js";
@@ -201,6 +202,7 @@ export const buildBtcRgbppOutputs = (
   btcTimeLockScriptTemplate: ccc.Script,
 ): TxOutput[] => {
   const commitment = calculateCommitment(ckbPartialTx);
+  console.log("commitment", commitment);
 
   const outputs: InitOutput[] = [];
   let lastCkbTypedOutputIndex = -1;
@@ -249,11 +251,7 @@ export const buildBtcRgbppOutputs = (
 
 export function encodeCommittedLength(cl: CommittedLength): ccc.Hex {
   const encoder = new TextEncoder();
-  const uint8Array = new Uint8Array(
-    RGBPP_CKB_WITNESS_PLACEHOLDER.length +
-      cl.inputLength.length +
-      cl.outputLength.length,
-  );
+  const uint8Array = new Uint8Array(RGBPP_CKB_WITNESS_LENGTH);
   uint8Array.set(encoder.encode(RGBPP_CKB_WITNESS_PLACEHOLDER));
   uint8Array.set(cl.inputLength, RGBPP_CKB_WITNESS_PLACEHOLDER.length);
   uint8Array.set(
