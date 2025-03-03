@@ -43,8 +43,7 @@ async function issueXudt(utxoSeal?: UtxoSeal) {
       ckbPartialTx,
       utxoBasedAccountAddress,
       [utxoBasedAccountAddress],
-      rgbppXudtLikeClient.rgbppLockScriptTemplate(),
-      rgbppXudtLikeClient.btcTimeLockScriptTemplate()
+      rgbppXudtLikeClient
     ),
 
     utxoSeals: [utxoSeal],

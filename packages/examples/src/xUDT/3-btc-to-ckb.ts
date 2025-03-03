@@ -47,8 +47,7 @@ async function leapFromBtcToCkb({
       ckbPartialTx,
       utxoBasedAccountAddress,
       [utxoBasedAccountAddress],
-      rgbppXudtLikeClient.rgbppLockScriptTemplate(),
-      rgbppXudtLikeClient.btcTimeLockScriptTemplate()
+      rgbppXudtLikeClient
     ),
 
     utxoSeals,

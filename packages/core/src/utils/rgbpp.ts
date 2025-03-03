@@ -32,6 +32,7 @@ import {
   UtxoSeal,
 } from "../types/rgbpp/rgbpp.js";
 import { isSameScriptTemplate, isUsingOneOfScripts } from "../utils/script.js";
+import { RgbppXudtLikeClient } from "../xdut-like/xudt-like.js";
 import {
   prependHexPrefix,
   reverseHexByteOrder,
@@ -198,11 +199,14 @@ export const buildBtcRgbppOutputs = (
   ckbPartialTx: ccc.Transaction,
   btcChangeAddress: string,
   receiverBtcAddresses: string[],
-  rgbppLockScriptTemplate: ccc.Script,
-  btcTimeLockScriptTemplate: ccc.Script,
+  rgbppXudtLikeClient: RgbppXudtLikeClient,
 ): TxOutput[] => {
   const commitment = calculateCommitment(ckbPartialTx);
   console.log("commitment", commitment);
+
+  const rgbppLockScriptTemplate = rgbppXudtLikeClient.rgbppLockScriptTemplate();
+  const btcTimeLockScriptTemplate =
+    rgbppXudtLikeClient.btcTimeLockScriptTemplate();
 
   const outputs: InitOutput[] = [];
   let lastCkbTypedOutputIndex = -1;

@@ -45,8 +45,7 @@ async function distributeXudt({
       ckbPartialTx,
       utxoBasedAccountAddress,
       receivers.map((receiver) => receiver.address),
-      rgbppXudtLikeClient.rgbppLockScriptTemplate(),
-      rgbppXudtLikeClient.btcTimeLockScriptTemplate()
+      rgbppXudtLikeClient
     ),
 
     utxoSeals,
