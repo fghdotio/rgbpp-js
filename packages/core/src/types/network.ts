@@ -19,7 +19,6 @@ export interface NetworkConfig {
 }
 
 export interface NetworkConfigOverrides {
-  isMainnet?: boolean;
   scripts?: Partial<ScriptSet>;
   cellDeps?: Partial<CellDepSet>;
 }

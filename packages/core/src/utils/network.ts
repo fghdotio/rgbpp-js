@@ -46,7 +46,7 @@ function mergeConfigs(
 ): NetworkConfig {
   return {
     name: base.name,
-    isMainnet: overrides.isMainnet ?? base.isMainnet,
+    isMainnet: base.isMainnet,
     scripts: Object.assign(
       {},
       base.scripts,

@@ -26,11 +26,3 @@ export const testnetSudtCellDep = ccc.CellDep.from({
   },
   depType: "code",
 });
-
-export const compatibleXudtScriptInfos: ScriptInfo[] = [
-  {
-    name: "sudt",
-    script: testnetSudt,
-    cellDep: testnetSudtCellDep,
-  },
-];

@@ -16,12 +16,19 @@ import {
   RgbppBtcWallet,
   AddressType,
 } from "@rgbpp-js/bitcoin";
+import { testnetSudt, testnetSudtCellDep } from "./assets.js";
 
 dotenv.config({ path: dirname(fileURLToPath(import.meta.url)) + "/../.env" });
 
 const utxoBasedChainName = process.env.UTXO_BASED_CHAIN_NAME!;
 
-const networkConfig = getNetworkConfig(utxoBasedChainName as PredefinedNetwork);
+const networkConfig = getNetworkConfig(
+  utxoBasedChainName as PredefinedNetwork,
+  {
+    scripts: { sUDT: testnetSudt },
+    cellDeps: { sUDT: testnetSudtCellDep },
+  }
+);
 
 export const ckbClient = networkConfig.isMainnet
   ? new ccc.ClientPublicMainnet()

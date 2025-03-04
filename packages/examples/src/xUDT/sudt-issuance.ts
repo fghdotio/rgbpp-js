@@ -10,7 +10,7 @@ import {
   ckbClient,
 } from "../common/env.js";
 import { prepareIssuanceRgbppCells } from "../common/utils.js";
-import { issuanceAmount, xudtToken } from "../common/assets.js";
+import { issuanceAmount, testnetSudt, xudtToken } from "../common/assets.js";
 import { RgbppTxLogger } from "../common/logger.js";
 
 async function issueXudt(utxoSeal?: UtxoSeal) {
@@ -24,11 +24,7 @@ async function issueXudt(utxoSeal?: UtxoSeal) {
     token: xudtToken,
     amount: issuanceAmount,
     rgbppLiveCells: rgbppIssuanceCells,
-    xudtLikeTypeScript: await ccc.Script.fromKnownScript(
-      ckbClient,
-      ccc.KnownScript.XUdt,
-      ""
-    ),
+    xudtLikeTypeScript: testnetSudt,
   });
   logger.logCkbTx("ckbPartialTx", ckbPartialTx);
   console.log(
@@ -79,7 +75,7 @@ async function issueXudt(utxoSeal?: UtxoSeal) {
   logger.add("ckbTxId", txHash, true);
 }
 
-const logger = new RgbppTxLogger({ opType: "xudt-issuance" });
+const logger = new RgbppTxLogger({ opType: "sudt-issuance" });
 
 issueXudt({
   txId: "bafe6cbc30cf83ce7a53d127322d4061c805e797d0c8ba05726a383056136fad",
@@ -96,5 +92,6 @@ issueXudt({
   });
 
 /* 
-pnpm tsx packages/examples/src/xUDT/1-issuance.ts
+pnpm tsx packages/examples/src/xUDT/sudt-issuance.ts
+https://testnet.explorer.nervos.org/transaction/0x81f29fb7d138cc27304e9667770e660deb1f64c576e111e449695d53b1468c91
 */
