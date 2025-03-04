@@ -1,6 +1,7 @@
 import { ccc } from "@ckb-ccc/core";
 
 export enum PredefinedScriptName {
+  // TODO: remove xUDT, pass its script info
   Xudt = "Xudt",
 
   RgbppLock = "RgbppLock",

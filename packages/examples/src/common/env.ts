@@ -7,27 +7,23 @@ import { dirname } from "path";
 
 import {
   RgbppXudtLikeClient,
-  isMainnet,
   CkbRgbppUnlockSinger,
-  registerCompatibleXudtScript,
+  getNetworkConfig,
+  PredefinedNetwork,
 } from "@rgbpp-js/core";
 import {
   createBtcAccount,
   RgbppBtcWallet,
   AddressType,
 } from "@rgbpp-js/bitcoin";
-import { compatibleXudtScriptInfos } from "./assets.js";
 
 dotenv.config({ path: dirname(fileURLToPath(import.meta.url)) + "/../.env" });
 
 const utxoBasedChainName = process.env.UTXO_BASED_CHAIN_NAME!;
 
-const networkConfig = registerCompatibleXudtScript(
-  utxoBasedChainName,
-  compatibleXudtScriptInfos
-);
+const networkConfig = getNetworkConfig(utxoBasedChainName as PredefinedNetwork);
 
-export const ckbClient = isMainnet(networkConfig.name)
+export const ckbClient = networkConfig.isMainnet
   ? new ccc.ClientPublicMainnet()
   : new ccc.ClientPublicTestnet();
 export const ckbSigner = new ccc.SignerCkbPrivateKey(

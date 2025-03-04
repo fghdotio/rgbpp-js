@@ -86,12 +86,12 @@ leapFromBtcToCkb({
   utxoSeals: [
     {
       txId: "c61b7b8bc010ace294cfb6d1676e7e5ad919fef6e37b04f949cb1105a6f62946",
-      index: 1,
+      index: 2,
     },
   ],
   xudtTokenId:
     "0x25c090ec44476bed83d78a673d76c099b802679a4a7be8503080869bb9648d26",
-  amount: BigInt(101) * BigInt(10 ** xudtToken.decimal),
+  amount: BigInt(202) * BigInt(10 ** xudtToken.decimal),
   ckbAddress,
 })
   .then(() => {

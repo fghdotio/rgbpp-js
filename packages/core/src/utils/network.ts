@@ -1,57 +1,61 @@
-import { NetworkRegistry } from "../rgbpp/network-registry.js";
-import { NetworkConfig, NetworkConfigOverrides } from "../types/network.js";
-import { ScriptInfo } from "../types/rgbpp/rgbpp.js";
+import {
+  predefinedCellDeps,
+  predefinedScripts,
+} from "../configs/scripts/index.js";
 
-export function registerNetwork(
-  name: string,
-  config: NetworkConfig,
+import {
+  NetworkConfig,
+  NetworkConfigOverrides,
+  PredefinedNetwork,
+} from "../types/network.js";
+import { CellDepSet, ScriptSet } from "../types/script.js";
+
+export function getNetworkConfig(
+  network: PredefinedNetwork,
+  overrides?: NetworkConfigOverrides,
 ): NetworkConfig {
-  NetworkRegistry.getInstance().register(name, config);
-  return NetworkRegistry.getInstance().getConfig(name);
+  let config: NetworkConfig;
+
+  switch (network) {
+    case PredefinedNetwork.BitcoinTestnet3:
+      config = {
+        name: PredefinedNetwork.BitcoinTestnet3,
+        isMainnet: false,
+        scripts: predefinedScripts[PredefinedNetwork.BitcoinTestnet3],
+        cellDeps: predefinedCellDeps[PredefinedNetwork.BitcoinTestnet3],
+      };
+      break;
+    case PredefinedNetwork.BitcoinSignet:
+      config = {
+        name: PredefinedNetwork.BitcoinSignet,
+        isMainnet: false,
+        scripts: predefinedScripts[PredefinedNetwork.BitcoinSignet],
+        cellDeps: predefinedCellDeps[PredefinedNetwork.BitcoinSignet],
+      };
+      break;
+    default:
+      throw new Error(`Unsupported predefined network: ${network}`);
+  }
+
+  return overrides ? mergeConfigs(config, overrides) : config;
 }
 
-export function updateNetworkConfig(
-  name: string,
-  config: NetworkConfigOverrides,
+function mergeConfigs(
+  base: NetworkConfig,
+  overrides: NetworkConfigOverrides,
 ): NetworkConfig {
-  NetworkRegistry.getInstance().update(name, config);
-  return getNetworkConfig(name);
-}
-
-export function registerCompatibleXudtScript(
-  networkName: string,
-  scriptInfos: ScriptInfo[],
-): NetworkConfig {
-  return updateNetworkConfig(networkName, {
-    scripts: scriptInfos.reduce(
-      (acc, scriptInfo) => ({
-        ...acc,
-        [scriptInfo.name]: scriptInfo.script,
-      }),
+  return {
+    name: base.name,
+    isMainnet: overrides.isMainnet ?? base.isMainnet,
+    scripts: Object.assign(
       {},
-    ),
-    cellDeps: scriptInfos.reduce(
-      (acc, scriptInfo) => ({
-        ...acc,
-        [scriptInfo.name]: scriptInfo.cellDep,
-      }),
+      base.scripts,
+      overrides.scripts || {},
+    ) as ScriptSet,
+    cellDeps: Object.assign(
       {},
-    ),
-  });
-}
-
-export function getNetworkConfig(name: string): NetworkConfig {
-  return NetworkRegistry.getInstance().getConfig(name);
-}
-
-export function getSupportedNetworks(): string[] {
-  return NetworkRegistry.getInstance().getSupportedNetworks();
-}
-
-export function isSupportedNetwork(name: string): boolean {
-  return NetworkRegistry.getInstance().isSupported(name);
-}
-
-export function isMainnet(network: string): boolean {
-  return NetworkRegistry.getInstance().isMainnet(network);
+      base.cellDeps,
+      overrides.cellDeps || {},
+    ) as CellDepSet,
+  };
 }
