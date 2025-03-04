@@ -26,6 +26,10 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
   // map of script code hash to script name
   private readonly scriptMap: Record<string, ScriptName>;
 
+  private spvProofCache = new Map<string, Promise<SpvProof>>();
+  private cacheExpiryTime = 600_000;
+  private spvPollInterval = 10_000;
+
   constructor(
     ckbClient: ccc.Client,
     private readonly _feeSigner: ccc.Signer,
@@ -103,6 +107,16 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
   async prepareTransaction(txLike: TransactionLike): Promise<Transaction> {
     const tx = ccc.Transaction.from(txLike);
     tx.addCellDeps(this.collectCellDeps(tx));
+
+    const btcTxId = this.parseBtcTxIdFromScriptArgs(tx);
+    const spvProof = await this.getSpvProof(btcTxId);
+    tx.cellDeps.push(
+      ccc.CellDep.from({
+        outPoint: spvProof.spvClientOutpoint,
+        depType: "code",
+      }),
+    );
+
     return tx;
   }
 
@@ -110,16 +124,7 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
     const tx = ccc.Transaction.from(txLike);
 
     const btcTxId = this.parseBtcTxIdFromScriptArgs(tx);
-    const spvProof = await pollForSpvProof(this.spvProofProvider, btcTxId);
-    if (!spvProof) {
-      throw new Error("Spv proof not found");
-    }
-    tx.cellDeps.push(
-      ccc.CellDep.from({
-        outPoint: spvProof.spvClientOutpoint,
-        depType: "code",
-      }),
-    );
+    const spvProof = await this.getSpvProof(btcTxId);
 
     const rawBtcTxHex = await this.getRawBtcTxHex(btcTxId);
     const txInjected = await Promise.resolve(
@@ -131,6 +136,42 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
     const signedTx = await this.feeSigner.signOnlyTransaction(preparedTx);
 
     return signedTx;
+  }
+
+  private async getSpvProof(btcTxId: string): Promise<SpvProof> {
+    let spvProof = this.spvProofCache.get(btcTxId);
+
+    if (spvProof) {
+      return spvProof;
+    }
+
+    const proofPromise = pollForSpvProof(
+      this.spvProofProvider,
+      btcTxId,
+      0,
+      this.spvPollInterval,
+    );
+    // Store the promise in cache so concurrent requests can share it
+    this.spvProofCache.set(btcTxId, proofPromise);
+    try {
+      const proof = await proofPromise;
+      if (!proof) {
+        throw new Error(`SPV proof not found for transaction ${btcTxId}`);
+      }
+
+      setTimeout(() => {
+        if (this.spvProofCache.get(btcTxId) === proofPromise) {
+          this.spvProofCache.delete(btcTxId);
+        }
+      }, this.cacheExpiryTime);
+
+      return proof;
+    } catch (error) {
+      if (this.spvProofCache.get(btcTxId) === proofPromise) {
+        this.spvProofCache.delete(btcTxId);
+      }
+      throw error;
+    }
   }
 
   async getRawBtcTxHex(txId: string): Promise<string> {

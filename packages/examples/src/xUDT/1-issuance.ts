@@ -66,7 +66,7 @@ async function issueXudt(utxoSeal?: UtxoSeal) {
   // > Commitment must cover all Inputs and Outputs where Type is not null;
   // https://github.com/utxostack/RGBPlusPlus-design/blob/main/docs/lockscript-design-prd-en.md#requirements-and-limitations-on-isomorphic-binding
   // https://github.com/fghdotio/rgbpp/blob/main/contracts/rgbpp-lock/src/main.rs#L197-L200
-  // TODO: should only select cells with null type script（witness 占用手续费）
+  // TODO: should only select cells with null type script
   await ckbPartialTxInjected.completeFeeBy(
     ckbRgbppUnlockSinger.feeSigner // TODO ckbRgbppUnlockSinger
   );
@@ -84,7 +84,7 @@ async function issueXudt(utxoSeal?: UtxoSeal) {
 const logger = new RgbppTxLogger({ opType: "xudt-issuance" });
 
 issueXudt({
-  txId: "7056f6c1f4d61b7a5486a8922af5717c7ef8eb48bb4db922b31ab7e4fbe86c21",
+  txId: "c2d216d4704536dbcbfe0f7c759858fe6c7e1d9992dc1d166c266a6a4cec3a40",
   index: 2,
 })
   .then(() => {
@@ -99,6 +99,4 @@ issueXudt({
 
 /* 
 pnpm tsx packages/examples/src/xUDT/1-issuance.ts
-
-https://testnet.explorer.nervos.org/transaction/0x8a1cdc4ab8fb08b6e113ad39e7ebd653b76c71305a3415969b1d82e2403add4e
 */
