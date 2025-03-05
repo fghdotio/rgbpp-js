@@ -1,5 +1,3 @@
-import { ccc } from "@ckb-ccc/core";
-
 import { UtxoSeal, buildBtcRgbppOutputs } from "@rgbpp-js/core";
 
 import {
@@ -7,7 +5,6 @@ import {
   rgbppBtcWallet,
   rgbppXudtLikeClient,
   utxoBasedAccountAddress,
-  ckbClient,
 } from "../common/env.js";
 import { prepareIssuanceRgbppCells } from "../common/utils.js";
 import { issuanceAmount, testnetSudt, xudtToken } from "../common/assets.js";

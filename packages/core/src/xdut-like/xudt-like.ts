@@ -144,6 +144,19 @@ export class RgbppXudtLikeClient {
     return tx;
   }
 
+  async injectRgbppWitnessPlaceholder(
+    tx: ccc.Transaction,
+  ): Promise<ccc.Transaction> {
+    const committedLength = encodeCommittedLength({
+      inputLength: new Uint8Array([tx.inputs.length]),
+      outputLength: new Uint8Array([tx.outputs.length]),
+    });
+
+    tx.witnesses.push(committedLength);
+
+    return tx;
+  }
+
   async distributionCkbPartialTx(
     params: RgbppXudtLikeDistribution,
   ): Promise<ccc.Transaction> {

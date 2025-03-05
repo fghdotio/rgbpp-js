@@ -106,6 +106,7 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
 
   async prepareTransaction(txLike: TransactionLike): Promise<Transaction> {
     const tx = ccc.Transaction.from(txLike);
+    // TODO FIX duplicate cell deps
     tx.addCellDeps(this.collectCellDeps(tx));
 
     const btcTxId = this.parseBtcTxIdFromScriptArgs(tx);
