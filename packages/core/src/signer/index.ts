@@ -82,7 +82,7 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
       ].filter((name): name is ScriptName => !!name),
     );
 
-    const cellDeps = Array.from(scriptNames).flatMap((name) => {
+    let cellDeps = Array.from(scriptNames).flatMap((name) => {
       if (
         name === PredefinedScriptName.RgbppLock ||
         name === PredefinedScriptName.BtcTimeLock
@@ -101,13 +101,22 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
       return [this.scriptsDetail[name].cellDep];
     });
 
-    return cellDeps;
+    cellDeps = [...cellDeps, ...tx.cellDeps];
+
+    const uniqueCellDepsMap = new Map<string, ccc.CellDep>();
+
+    cellDeps.forEach((cellDep) => {
+      const key = `${cellDep.outPoint.txHash}-${cellDep.outPoint.index}`;
+      uniqueCellDepsMap.set(key, cellDep);
+    });
+
+    return Array.from(uniqueCellDepsMap.values());
   }
 
   async prepareTransaction(txLike: TransactionLike): Promise<Transaction> {
     const tx = ccc.Transaction.from(txLike);
-    // TODO FIX duplicate cell deps
-    tx.addCellDeps(this.collectCellDeps(tx));
+
+    tx.cellDeps = this.collectCellDeps(tx);
 
     const btcTxId = this.parseBtcTxIdFromScriptArgs(tx);
     const spvProof = await this.getSpvProof(btcTxId);
