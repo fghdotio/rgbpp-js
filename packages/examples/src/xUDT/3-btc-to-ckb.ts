@@ -1,4 +1,4 @@
-import { ccc } from "@ckb-ccc/core";
+import { ccc } from "@ckb-ccc/shell";
 
 import { buildBtcRgbppOutputs, UtxoSeal } from "@rgbpp-js/core";
 
@@ -86,7 +86,7 @@ leapFromBtcToCkb({
   utxoSeals: [
     {
       txId: "c61b7b8bc010ace294cfb6d1676e7e5ad919fef6e37b04f949cb1105a6f62946",
-      index: 2,
+      index: 4,
     },
   ],
   xudtTokenId:

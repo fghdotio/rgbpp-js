@@ -1,4 +1,4 @@
-import { ccc } from "@ckb-ccc/core";
+import { ccc } from "@ckb-ccc/shell";
 
 export enum PredefinedScriptName {
   // TODO: remove xUDT, pass its script info

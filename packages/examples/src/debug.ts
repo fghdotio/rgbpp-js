@@ -17,10 +17,7 @@ const debug = async (fileName: string) => {
     btcTxId
   );
 
-  await ckbPartialTxInjected.completeFeeBy(
-    ckbRgbppUnlockSinger.feeSigner,
-    5000
-  );
+  await ckbPartialTxInjected.completeFeeBy(ckbRgbppUnlockSinger.feeSigner);
   const ckbFinalTx =
     await ckbRgbppUnlockSinger.signTransaction(ckbPartialTxInjected);
 
@@ -29,7 +26,7 @@ const debug = async (fileName: string) => {
   console.log(`CKB txHash: ${txHash}`);
 };
 
-debug("issuance-1740121017115-logs.json");
+debug("xudt-btc-to-ckb-1741022999813-logs.json");
 
 /* 
 pnpm tsx packages/examples/src/debug.ts

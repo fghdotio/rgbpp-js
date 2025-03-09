@@ -8,7 +8,7 @@ import {
   SignerType,
   Transaction,
   TransactionLike,
-} from "@ckb-ccc/core";
+} from "@ckb-ccc/shell";
 
 import { transactionToHex } from "@rgbpp-js/bitcoin";
 

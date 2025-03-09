@@ -1,6 +1,6 @@
 import { sha256 } from "js-sha256";
 
-import { bytesFrom, ccc, Hex, hexFrom } from "@ckb-ccc/core";
+import { bytesFrom, ccc, Hex, hexFrom } from "@ckb-ccc/shell";
 
 import { blockchain } from "@ckb-lumos/base";
 import {

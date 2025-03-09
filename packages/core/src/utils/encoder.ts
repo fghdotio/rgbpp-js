@@ -1,4 +1,5 @@
-import { Hex } from "@ckb-ccc/core";
+import { Hex } from "@ckb-ccc/shell";
+
 import { bytesToHex } from "@nervosnetwork/ckb-sdk-utils";
 
 export const trimHexPrefix = (hex: string): string =>

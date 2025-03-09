@@ -1,4 +1,4 @@
-import { ccc } from "@ckb-ccc/core";
+import { ccc } from "@ckb-ccc/shell";
 
 import { UtxoSeal, buildBtcRgbppOutputs } from "@rgbpp-js/core";
 
@@ -82,8 +82,8 @@ async function issueXudt(utxoSeal?: UtxoSeal) {
 const logger = new RgbppTxLogger({ opType: "xudt-issuance" });
 
 issueXudt({
-  txId: "bafe6cbc30cf83ce7a53d127322d4061c805e797d0c8ba05726a383056136fad",
-  index: 2,
+  txId: "5f9a113919e002b5b835c48532934fba7049ebb0d3f87352cdc31ccaa620c87b",
+  index: 7,
 })
   .then(() => {
     logger.saveOnSuccess();

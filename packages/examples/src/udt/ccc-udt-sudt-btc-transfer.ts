@@ -1,5 +1,4 @@
-import { ccc, udtBalanceFrom } from "@ckb-ccc/ccc";
-import { ccc as cccCore } from "@ckb-ccc/core";
+import { ccc, udtBalanceFrom } from "@ckb-ccc/shell";
 
 import {
   buildBtcRgbppOutputs,
@@ -88,9 +87,7 @@ async function transferUdt({
   );
 
   const txWithRgbppWitnessPlaceholder =
-    await rgbppXudtLikeClient.injectRgbppWitnessPlaceholder(
-      cccCore.Transaction.from(tx)
-    );
+    await rgbppXudtLikeClient.injectRgbppWitnessPlaceholder(tx);
 
   const psbt = await rgbppBtcWallet.buildPsbt({
     rgbppOutputs: buildBtcRgbppOutputs(
