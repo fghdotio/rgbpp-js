@@ -8,7 +8,7 @@ import { dirname } from "path";
 import {
   RgbppXudtLikeClient,
   CkbRgbppUnlockSinger,
-  getNetworkConfig,
+  buildNetworkConfig,
   PredefinedNetwork,
 } from "@rgbpp-js/core";
 import {
@@ -22,7 +22,7 @@ dotenv.config({ path: dirname(fileURLToPath(import.meta.url)) + "/../.env" });
 
 const utxoBasedChainName = process.env.UTXO_BASED_CHAIN_NAME!;
 
-const networkConfig = getNetworkConfig(
+const networkConfig = buildNetworkConfig(
   utxoBasedChainName as PredefinedNetwork,
   {
     scripts: { sUDT: testnetSudt },

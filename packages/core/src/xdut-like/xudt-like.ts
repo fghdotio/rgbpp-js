@@ -134,14 +134,7 @@ export class RgbppXudtLikeClient {
       encodeRgbppXudtLikeToken(params.token),
     );
 
-    const committedLength = encodeCommittedLength({
-      inputLength: new Uint8Array([tx.inputs.length]),
-      outputLength: new Uint8Array([tx.outputs.length]),
-    });
-
-    tx.witnesses.push(committedLength);
-
-    return tx;
+    return this.injectRgbppWitnessPlaceholder(tx);
   }
 
   async injectRgbppWitnessPlaceholder(

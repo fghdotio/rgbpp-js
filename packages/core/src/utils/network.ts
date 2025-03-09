@@ -10,7 +10,7 @@ import {
 } from "../types/network.js";
 import { CellDepSet, ScriptSet } from "../types/script.js";
 
-export function getNetworkConfig(
+export function buildNetworkConfig(
   network: PredefinedNetwork,
   overrides?: NetworkConfigOverrides,
 ): NetworkConfig {
