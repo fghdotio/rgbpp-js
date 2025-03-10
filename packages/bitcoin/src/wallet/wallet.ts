@@ -397,4 +397,12 @@ export class RgbppBtcWallet extends BtcAssetsApiBase {
     );
     return txId;
   }
+
+  async getRgbppCellOutputs(btcAddress: string) {
+    const res = await this.request<{ cellOutput: ccc.CellOutput }[]>(
+      `/rgbpp/v1/address/${btcAddress}/assets`,
+    );
+
+    return res.map((item) => item.cellOutput);
+  }
 }
