@@ -32,7 +32,7 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
 
   constructor(
     ckbClient: ccc.Client,
-    // private readonly rgbppBtcAddress: string,
+    private readonly rgbppBtcAddress: string,
     private readonly spvProofProvider: SpvProofProvider,
     private readonly simpleBtcClient: SimpleBtcClient,
     // TODO comment required scripts
@@ -268,19 +268,27 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
   }
 
   async getAddressObjs(): Promise<ccc.Address[]> {
-    return [await this.getAddressObj()];
+    const rgbppCellOutputs = await this.simpleBtcClient.getRgbppCellOutputs(
+      this.rgbppBtcAddress,
+    );
+
+    // output.type in each cell output must be present
+    if (rgbppCellOutputs.some((output) => !output.type)) {
+      throw new Error("Rgbpp cell output type not found");
+    }
+
+    // convert utxoSeals to ckb addresses
+    const ckbAddresses = rgbppCellOutputs.map((output) => {
+      return ccc.Address.from({
+        script: output.lock,
+        prefix: "",
+      });
+    });
+
+    return ckbAddresses;
   }
 
   async getAddressObj(): Promise<ccc.Address> {
-    // const rgbppCellOutputs = await this.simpleBtcClient.getRgbppCellOutputs(
-    //   this.rgbppBtcAddress,
-    // );
-    // const utxoSeals = rgbppCellOutputs.map((output) => {
-    //   if (!output.type) {
-    //     throw new Error("Rgbpp cell output type not found");
-    //   }
-    // });
-
     return await ccc.Address.fromString(
       await this.getInternalAddress(),
       this.client,
