@@ -48,11 +48,6 @@ async function transferUdt({
     xudtTypeScript
   );
 
-  console.log(
-    rgbppXudtLikeClient.getRgbppScriptsDetail()[PredefinedScriptName.Xudt]
-      .cellDep.outPoint
-  );
-
   let { res: tx } = await udt.transfer(
     ckbSigner as unknown as ccc.Signer,
     receivers.map((receiver, index) => ({
@@ -73,7 +68,7 @@ async function transferUdt({
     })
   );
 
-  console.log(inspect(txWithInputs, { depth: null, colors: true }));
+  // console.log(inspect(txWithInputs, { depth: null, colors: true }));
 
   const utxoSeals = await Promise.all(
     txWithInputs.inputs.map(async (input) => {

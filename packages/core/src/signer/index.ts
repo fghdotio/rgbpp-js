@@ -277,7 +277,6 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
       throw new Error("Rgbpp cell output type not found");
     }
 
-    // convert utxoSeals to ckb addresses
     const ckbAddresses = rgbppCellOutputs.map((output) => {
       return ccc.Address.from({
         script: output.lock,
