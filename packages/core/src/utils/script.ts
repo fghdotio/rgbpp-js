@@ -1,5 +1,6 @@
 import { ccc } from "@ckb-ccc/shell";
 
+import { UtxoSeal } from "../types/rgbpp/rgbpp.js";
 import {
   prependHexPrefix,
   reverseHexByteOrder,
@@ -41,7 +42,26 @@ export function getTxIdFromScriptArgs(args: ccc.Hex): string {
   if (args.length < 32 * 2) {
     throw new Error("Lock args length is invalid");
   }
+
   return trimHexPrefix(
     reverseHexByteOrder(args.substring(args.length - 32 * 2) as ccc.Hex),
   );
+}
+
+export function getTxIndexFromScriptArgs(args: ccc.Hex): number {
+  if (args.length < 32 * 2) {
+    throw new Error("Lock args length is invalid");
+  }
+
+  return parseInt(
+    reverseHexByteOrder(trimHexPrefix(args.substring(0, 8)) as ccc.Hex),
+    16,
+  );
+}
+
+export function parseUtxoSealFromScriptArgs(args: ccc.Hex): UtxoSeal {
+  return {
+    txId: getTxIdFromScriptArgs(args),
+    index: getTxIndexFromScriptArgs(args),
+  };
 }

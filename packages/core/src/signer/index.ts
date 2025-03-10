@@ -32,6 +32,7 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
 
   constructor(
     ckbClient: ccc.Client,
+    // private readonly rgbppBtcAddress: string,
     private readonly spvProofProvider: SpvProofProvider,
     private readonly simpleBtcClient: SimpleBtcClient,
     // TODO comment required scripts
@@ -271,6 +272,15 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
   }
 
   async getAddressObj(): Promise<ccc.Address> {
+    // const rgbppCellOutputs = await this.simpleBtcClient.getRgbppCellOutputs(
+    //   this.rgbppBtcAddress,
+    // );
+    // const utxoSeals = rgbppCellOutputs.map((output) => {
+    //   if (!output.type) {
+    //     throw new Error("Rgbpp cell output type not found");
+    //   }
+    // });
+
     return await ccc.Address.fromString(
       await this.getInternalAddress(),
       this.client,
