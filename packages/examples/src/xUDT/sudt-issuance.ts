@@ -8,10 +8,10 @@ import {
   utxoBasedAccountAddress,
 } from "../common/env.js";
 import { prepareIssuanceRgbppCells } from "../common/utils.js";
-import { issuanceAmount, testnetSudt, xudtToken } from "../common/assets.js";
+import { issuanceAmount, testnetSudt, sudtToken } from "../common/assets.js";
 import { RgbppTxLogger } from "../common/logger.js";
 
-async function issueXudt(utxoSeal?: UtxoSeal) {
+async function issueSudt(utxoSeal?: UtxoSeal) {
   if (!utxoSeal) {
     utxoSeal = await rgbppBtcWallet.prepareUtxoSeal(10);
   }
@@ -19,14 +19,14 @@ async function issueXudt(utxoSeal?: UtxoSeal) {
   const rgbppIssuanceCells = await prepareIssuanceRgbppCells(utxoSeal);
 
   const ckbPartialTx = await rgbppXudtLikeClient.issuanceCkbPartialTx({
-    token: xudtToken,
+    token: sudtToken,
     amount: issuanceAmount,
     rgbppLiveCells: rgbppIssuanceCells,
     xudtLikeTypeScript: testnetSudt,
   });
   logger.logCkbTx("ckbPartialTx", ckbPartialTx);
   console.log(
-    "Unique ID of issued xUDT token",
+    "Unique ID of issued sUDT token",
     ckbPartialTx.outputs[0].type!.args
   );
 
@@ -68,7 +68,7 @@ async function issueXudt(utxoSeal?: UtxoSeal) {
 
 const logger = new RgbppTxLogger({ opType: "sudt-issuance" });
 
-issueXudt({
+issueSudt({
   txId: "a0541fe901f1b3c343cdf7890ab02c1306fb9d049319109504d2bd13d37bc85b",
   index: 2,
 })

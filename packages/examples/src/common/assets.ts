@@ -8,6 +8,12 @@ export const xudtToken = {
   decimal: 8,
 };
 
+export const sudtToken = {
+  name: "Standard sUDT",
+  symbol: "stdSUDT",
+  decimal: 8,
+};
+
 export const issuanceAmount = 2100_0000n;
 
 // https://github.com/nervosnetwork/rfcs/blob/master/rfcs/0025-simple-udt/0025-simple-udt.md#notes
