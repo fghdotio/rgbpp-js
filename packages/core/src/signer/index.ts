@@ -32,7 +32,6 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
 
   constructor(
     ckbClient: ccc.Client,
-    private readonly _feeSigner: ccc.Signer,
     private readonly spvProofProvider: SpvProofProvider,
     private readonly simpleBtcClient: SimpleBtcClient,
     // TODO comment required scripts
@@ -57,10 +56,6 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
 
   get signType(): SignerSignType {
     return SignerSignType.Unknown;
-  }
-
-  get feeSigner(): ccc.Signer {
-    return this._feeSigner;
   }
 
   getScriptName(script?: ccc.Script): ScriptName | undefined {
@@ -137,15 +132,7 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
     const spvProof = await this.getSpvProof(btcTxId);
 
     const rawBtcTxHex = await this.getRawBtcTxHex(btcTxId);
-    const txInjected = await Promise.resolve(
-      this.injectWitnesses(tx, rawBtcTxHex, spvProof),
-    );
-
-    const preparedTx = await this.feeSigner.prepareTransaction(txInjected);
-    preparedTx.cellDeps = this.sortCellDeps(preparedTx.cellDeps);
-    const signedTx = await this.feeSigner.signOnlyTransaction(preparedTx);
-
-    return signedTx;
+    return Promise.resolve(this.injectWitnesses(tx, rawBtcTxHex, spvProof));
   }
 
   private async getSpvProof(btcTxId: string): Promise<SpvProof> {

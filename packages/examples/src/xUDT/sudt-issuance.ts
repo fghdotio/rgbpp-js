@@ -2,6 +2,7 @@ import { UtxoSeal, buildBtcRgbppOutputs } from "@rgbpp-js/core";
 
 import {
   ckbRgbppUnlockSinger,
+  ckbSigner,
   rgbppBtcWallet,
   rgbppXudtLikeClient,
   utxoBasedAccountAddress,
@@ -54,20 +55,13 @@ async function issueXudt(utxoSeal?: UtxoSeal) {
     btcTxId
   );
 
-  // > Commitment must cover all Inputs and Outputs where Type is not null;
-  // https://github.com/utxostack/RGBPlusPlus-design/blob/main/docs/lockscript-design-prd-en.md#requirements-and-limitations-on-isomorphic-binding
-  // https://github.com/fghdotio/rgbpp/blob/main/contracts/rgbpp-lock/src/main.rs#L197-L200
-  // TODO: should only select cells with null type script
-  await ckbPartialTxInjected.completeFeeBy(
-    ckbRgbppUnlockSinger.feeSigner // TODO ckbRgbppUnlockSinger
-  );
-  logger.logCkbTx("ckbPartialTxWithFee", ckbPartialTxInjected);
-
-  const ckbFinalTx =
+  const rgbppSignedCkbTx =
     await ckbRgbppUnlockSinger.signTransaction(ckbPartialTxInjected);
+  await rgbppSignedCkbTx.completeFeeBy(ckbSigner);
+  logger.logCkbTx("ckbPartialTxWithFee", rgbppSignedCkbTx);
+  const ckbFinalTx = await ckbSigner.signTransaction(rgbppSignedCkbTx);
   logger.logCkbTx("ckbFinalTx", ckbFinalTx);
-
-  const txHash = await ckbRgbppUnlockSinger.client.sendTransaction(ckbFinalTx);
+  const txHash = await ckbSigner.client.sendTransaction(ckbFinalTx);
   await ckbRgbppUnlockSinger.client.waitTransaction(txHash);
   logger.add("ckbTxId", txHash, true);
 }
@@ -75,7 +69,7 @@ async function issueXudt(utxoSeal?: UtxoSeal) {
 const logger = new RgbppTxLogger({ opType: "sudt-issuance" });
 
 issueXudt({
-  txId: "bafe6cbc30cf83ce7a53d127322d4061c805e797d0c8ba05726a383056136fad",
+  txId: "a0541fe901f1b3c343cdf7890ab02c1306fb9d049319109504d2bd13d37bc85b",
   index: 2,
 })
   .then(() => {
@@ -90,5 +84,6 @@ issueXudt({
 
 /* 
 pnpm tsx packages/examples/src/xUDT/sudt-issuance.ts
+
 https://testnet.explorer.nervos.org/transaction/0x81f29fb7d138cc27304e9667770e660deb1f64c576e111e449695d53b1468c91
 */

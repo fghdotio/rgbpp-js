@@ -115,14 +115,13 @@ async function transferUdt({
   );
   logger.logCkbTx("ckbPartialTxInjected", ckbPartialTxInjected);
 
-  await ckbPartialTxInjected.completeFeeBy(ckbRgbppUnlockSinger.feeSigner);
-  logger.logCkbTx("ckbPartialTxWithFee", ckbPartialTxInjected);
-
-  const ckbFinalTx =
+  const rgbppSignedCkbTx =
     await ckbRgbppUnlockSinger.signTransaction(ckbPartialTxInjected);
+  await rgbppSignedCkbTx.completeFeeBy(ckbSigner);
+  logger.logCkbTx("ckbPartialTxWithFee", rgbppSignedCkbTx);
+  const ckbFinalTx = await ckbSigner.signTransaction(rgbppSignedCkbTx);
   logger.logCkbTx("ckbFinalTx", ckbFinalTx);
-
-  const txHash = await ckbRgbppUnlockSinger.client.sendTransaction(ckbFinalTx);
+  const txHash = await ckbSigner.client.sendTransaction(ckbFinalTx);
   await ckbRgbppUnlockSinger.client.waitTransaction(txHash);
   logger.add("ckbTxId", txHash, true);
 }
@@ -132,11 +131,11 @@ const logger = new RgbppTxLogger({ opType: "ccc-udt-sudt" });
 transferUdt({
   utxoSeals: [
     {
-      txId: "364da29ef731ce45368e6d509ab8c6c9b558957d6dd11eeb13ed8e25d5cec6e3",
-      index: 2,
+      txId: "ac4213efbb8719fcb409ea5289749070123ad171b390139188bda41c4a7746b8",
+      index: 1,
     },
   ],
-  udtId: "0xbdc59548202fab1de28bd5c781f9f5fd24ab239cd135a971795b310a4a634fa3",
+  udtId: "0xd1819aeca38207922951973f4e47332b813186e8bd549d257f03db035147f76a",
   receivers: [
     {
       address: "tb1qjkdqj8zk6gl7pwuw2d2jp9e6wgf26arjl8pcys",

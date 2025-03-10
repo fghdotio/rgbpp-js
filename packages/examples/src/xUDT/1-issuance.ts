@@ -8,6 +8,7 @@ import {
   rgbppXudtLikeClient,
   utxoBasedAccountAddress,
   ckbClient,
+  ckbSigner,
 } from "../common/env.js";
 import { prepareIssuanceRgbppCells } from "../common/utils.js";
 import { issuanceAmount, xudtToken } from "../common/assets.js";
@@ -60,21 +61,19 @@ async function issueXudt(utxoSeal?: UtxoSeal) {
     ckbPartialTx,
     btcTxId
   );
+  const rgbppSignedCkbTx =
+    await ckbRgbppUnlockSinger.signTransaction(ckbPartialTxInjected);
 
   // > Commitment must cover all Inputs and Outputs where Type is not null;
   // https://github.com/utxostack/RGBPlusPlus-design/blob/main/docs/lockscript-design-prd-en.md#requirements-and-limitations-on-isomorphic-binding
   // https://github.com/fghdotio/rgbpp/blob/main/contracts/rgbpp-lock/src/main.rs#L197-L200
   // TODO: should only select cells with null type script
-  await ckbPartialTxInjected.completeFeeBy(
-    ckbRgbppUnlockSinger.feeSigner // TODO ckbRgbppUnlockSinger
-  );
-  logger.logCkbTx("ckbPartialTxWithFee", ckbPartialTxInjected);
 
-  const ckbFinalTx =
-    await ckbRgbppUnlockSinger.signTransaction(ckbPartialTxInjected);
+  await rgbppSignedCkbTx.completeFeeBy(ckbSigner);
+  logger.logCkbTx("ckbPartialTxWithFee", rgbppSignedCkbTx);
+  const ckbFinalTx = await ckbSigner.signTransaction(rgbppSignedCkbTx);
   logger.logCkbTx("ckbFinalTx", ckbFinalTx);
-
-  const txHash = await ckbRgbppUnlockSinger.client.sendTransaction(ckbFinalTx);
+  const txHash = await ckbSigner.client.sendTransaction(ckbFinalTx);
   await ckbRgbppUnlockSinger.client.waitTransaction(txHash);
   logger.add("ckbTxId", txHash, true);
 }
@@ -82,8 +81,8 @@ async function issueXudt(utxoSeal?: UtxoSeal) {
 const logger = new RgbppTxLogger({ opType: "xudt-issuance" });
 
 issueXudt({
-  txId: "5f9a113919e002b5b835c48532934fba7049ebb0d3f87352cdc31ccaa620c87b",
-  index: 7,
+  txId: "d1d07159f69da5afe041f3d69a4b30651e3e2125d76a644e070f3019bade62e7",
+  index: 2,
 })
   .then(() => {
     logger.saveOnSuccess();

@@ -12,6 +12,7 @@ import {
   utxoBasedAccountAddress,
   ckbRgbppUnlockSinger,
   ckbClient,
+  ckbSigner,
 } from "../common/env.js";
 
 async function leapFromBtcToCkb({
@@ -66,16 +67,14 @@ async function leapFromBtcToCkb({
     ckbPartialTx,
     btcTxId
   );
-  logger.logCkbTx("ckbPartialTxInjected", ckbPartialTxInjected);
 
-  await ckbPartialTxInjected.completeFeeBy(ckbRgbppUnlockSinger.feeSigner);
-  logger.logCkbTx("ckbPartialTxWithFee", ckbPartialTxInjected);
-
-  const ckbFinalTx =
+  const rgbppSignedCkbTx =
     await ckbRgbppUnlockSinger.signTransaction(ckbPartialTxInjected);
-  logger.logCkbTx("ckbFinalTx", ckbFinalTx, true);
-
-  const txHash = await ckbRgbppUnlockSinger.client.sendTransaction(ckbFinalTx);
+  await rgbppSignedCkbTx.completeFeeBy(ckbSigner);
+  logger.logCkbTx("ckbPartialTxWithFee", rgbppSignedCkbTx);
+  const ckbFinalTx = await ckbSigner.signTransaction(rgbppSignedCkbTx);
+  logger.logCkbTx("ckbFinalTx", ckbFinalTx);
+  const txHash = await ckbSigner.client.sendTransaction(ckbFinalTx);
   await ckbRgbppUnlockSinger.client.waitTransaction(txHash);
   logger.add("ckbTxId", txHash, true);
 }
@@ -85,12 +84,12 @@ const logger = new RgbppTxLogger({ opType: "xudt-btc-to-ckb" });
 leapFromBtcToCkb({
   utxoSeals: [
     {
-      txId: "c61b7b8bc010ace294cfb6d1676e7e5ad919fef6e37b04f949cb1105a6f62946",
-      index: 4,
+      txId: "2d0f8847b2c6f9c194ff722135b1cd36669432cbcc561e48bade5be3613b1566",
+      index: 1,
     },
   ],
   xudtTokenId:
-    "0x25c090ec44476bed83d78a673d76c099b802679a4a7be8503080869bb9648d26",
+    "0x1257e3a770e602dfddaadcfb36c8f609fd01128355b70741184e50d397e3457f",
   amount: BigInt(202) * BigInt(10 ** xudtToken.decimal),
   ckbAddress,
 })
