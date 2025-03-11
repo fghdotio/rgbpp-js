@@ -153,12 +153,12 @@ async function btcUdtToCkb({
 const logger = new RgbppTxLogger({ opType: "ccc-udt-xudt-btc-to-ckb" });
 
 btcUdtToCkb({
-  // utxoSeals: [
-  //   {
-  //     txId: "2d0f8847b2c6f9c194ff722135b1cd36669432cbcc561e48bade5be3613b1566",
-  //     index: 1,
-  //   },
-  // ],
+  utxoSeals: [
+    {
+      txId: "462b77dc530e1f12094fc49f4a9e4ee8b00cd58ad6d6e9e0e5774e8fddacd7b6",
+      index: 0,
+    },
+  ],
   udtId: "0xe5f7d179bccb3715fa554a9cce027972549fec7cbe5a75bedef3418c9196e080",
   receivers: [
     {
@@ -167,7 +167,7 @@ btcUdtToCkb({
     },
     {
       address: ckbAddress,
-      amount: ccc.fixedPointFrom(20988875),
+      amount: ccc.fixedPointFrom(10),
     },
   ],
 })
@@ -183,7 +183,4 @@ btcUdtToCkb({
 
 /* 
 pnpm tsx packages/examples/src/udt/ccc-udt-xudt-btc-to-ckb.ts
-
-Client request error TransactionFailedToVerify: Verification failed Script(TransactionScriptError { source: Inputs[1].Lock, cause: ValidationFailure: see error code 65 on page https://nervosnetwork.github.io/ckb-script-error-codes/by-type-hash/61ca7a4796a4eb19ca4f0d065cb9b10ddcf002f10f7cbb810c706cb6bb5c3248.html#65 })
-Log saved to ccc-udt-xudt-btc-to-ckb-1741657301033-logs.json
 */
