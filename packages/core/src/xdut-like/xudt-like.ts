@@ -145,7 +145,18 @@ export class RgbppXudtLikeClient {
       outputLength: new Uint8Array([tx.outputs.length]),
     });
 
-    tx.witnesses.push(committedLength);
+    // ? reuse witnesses
+    const lockArgsSet: Set<string> = new Set();
+    for (let cellInput of tx.inputs) {
+      cellInput = ccc.CellInput.from(cellInput);
+      await cellInput.completeExtraInfos(this.ckbClient);
+      if (lockArgsSet.has(cellInput.cellOutput!.lock.args)) {
+        tx.witnesses.push("0x");
+      } else {
+        lockArgsSet.add(cellInput.cellOutput!.lock.args);
+        tx.witnesses.push(committedLength);
+      }
+    }
 
     return tx;
   }

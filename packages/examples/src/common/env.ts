@@ -73,6 +73,7 @@ export const rgbppBtcWallet = new RgbppBtcWallet(
 
 export const ckbRgbppUnlockSinger = new CkbRgbppUnlockSinger(
   ckbClient,
+  utxoBasedAccountAddress,
   rgbppBtcWallet,
   rgbppBtcWallet,
   rgbppXudtLikeClient.getRgbppScriptsDetail()

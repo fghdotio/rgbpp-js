@@ -1,4 +1,4 @@
-import { ccc, udtBalanceFrom } from "@ckb-ccc/shell";
+import { ccc } from "@ckb-ccc/shell";
 
 import {
   buildBtcRgbppOutputs,
@@ -6,6 +6,7 @@ import {
   RgbppBtcReceiver,
   parseUtxoSealFromScriptArgs,
   PredefinedScriptName,
+  UtxoSeal,
 } from "@rgbpp-js/core";
 
 import { inspect } from "util";
@@ -20,11 +21,14 @@ import {
 } from "../common/env.js";
 
 import { RgbppTxLogger } from "../common/logger.js";
+import { collectRgbppCells } from "../common/utils.js";
 
 async function transferUdt({
+  utxoSeals,
   udtId,
   receivers,
 }: {
+  utxoSeals?: UtxoSeal[];
   udtId: string;
   receivers: RgbppBtcReceiver[];
 }) {
@@ -59,25 +63,59 @@ async function transferUdt({
     }))
   );
 
-  const txWithInputs = await udt.completeChangeToLock(
-    tx,
-    ckbRgbppUnlockSinger,
-    rgbppXudtLikeClient.buildRgbppLockScript({
-      txId: TX_ID_PLACEHOLDER,
-      index: receivers.length + 1,
-    })
-  );
+  let txWithInputs: ccc.Transaction;
+  if (!utxoSeals) {
+    txWithInputs = await udt.completeChangeToLock(
+      tx,
+      ckbRgbppUnlockSinger,
+      rgbppXudtLikeClient.buildRgbppLockScript({
+        txId: TX_ID_PLACEHOLDER,
+        index: receivers.length + 1,
+      })
+    );
 
-  // console.log(inspect(txWithInputs, { depth: null, colors: true }));
+    // console.log(inspect(txWithInputs, { depth: null, colors: true }));
 
-  const utxoSeals = await Promise.all(
-    txWithInputs.inputs.map(async (input) => {
-      await input.completeExtraInfos(ckbClient);
-      return parseUtxoSealFromScriptArgs(input.cellOutput!.lock.args);
-    })
-  );
+    utxoSeals = await Promise.all(
+      txWithInputs.inputs.map(async (input) => {
+        await input.completeExtraInfos(ckbClient);
+        return parseUtxoSealFromScriptArgs(input.cellOutput!.lock.args);
+      })
+    );
+    console.log(utxoSeals);
+  } else {
+    const rgbppLiveCells = await collectRgbppCells(utxoSeals, xudtTypeScript);
+    tx.inputs.push(
+      ...rgbppLiveCells.map(({ outPoint, outputData, cellOutput }) =>
+        ccc.CellInput.from({
+          previousOutput: outPoint,
+          outputData,
+          cellOutput,
+        })
+      )
+    );
 
-  console.log(utxoSeals);
+    const balanceDiff =
+      (await tx.getInputsUdtBalance(
+        ckbClient as unknown as ccc.Client,
+        xudtTypeScript
+      )) - tx.getOutputsUdtBalance(xudtTypeScript);
+    if (balanceDiff < ccc.Zero) {
+      throw new Error("Insufficient balance");
+    } else if (balanceDiff > ccc.Zero) {
+      tx.addOutput(
+        {
+          lock: rgbppXudtLikeClient.buildRgbppLockScript({
+            txId: TX_ID_PLACEHOLDER,
+            index: receivers.length + 1,
+          }),
+          type: xudtTypeScript,
+        },
+        ccc.numLeToBytes(balanceDiff, 16)
+      );
+    }
+    txWithInputs = tx;
+  }
 
   const txWithRgbppWitnessPlaceholder =
     await rgbppXudtLikeClient.injectRgbppWitnessPlaceholder(txWithInputs);
@@ -121,6 +159,12 @@ async function transferUdt({
 const logger = new RgbppTxLogger({ opType: "ccc-udt-xudt-free" });
 
 transferUdt({
+  // utxoSeals: [
+  //   {
+  //     txId: "d4d32071a8ea3b2510b9dda263e21cb416dc4e4b6dcebd80d26a28597665be62",
+  //     index: 6,
+  //   },
+  // ],
   udtId: "0x1257e3a770e602dfddaadcfb36c8f609fd01128355b70741184e50d397e3457f",
   receivers: [
     {
