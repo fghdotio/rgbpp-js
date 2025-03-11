@@ -3,10 +3,10 @@ import { ccc } from "@ckb-ccc/shell";
 import {
   buildBtcRgbppOutputs,
   TX_ID_PLACEHOLDER,
-  RgbppBtcReceiver,
   parseUtxoSealFromScriptArgs,
   PredefinedScriptName,
   UtxoSeal,
+  XUDT_LIKE_LEAP_FROM_BTC_OUTPUT_INDEX,
 } from "@rgbpp-js/core";
 
 import { inspect } from "util";
@@ -18,32 +18,26 @@ import {
   rgbppXudtLikeClient,
   utxoBasedAccountAddress,
   rgbppBtcWallet,
+  ckbAddress,
 } from "../common/env.js";
 
 import { RgbppTxLogger } from "../common/logger.js";
 import { collectRgbppCells } from "../common/utils.js";
 
-async function transferUdt({
+async function btcUdtToCkb({
   utxoSeals,
   udtId,
   receivers,
 }: {
   utxoSeals?: UtxoSeal[];
   udtId: string;
-  receivers: RgbppBtcReceiver[];
+  receivers: { address: string; amount: bigint }[];
 }) {
   const xudtTypeScript = await ccc.Script.fromKnownScript(
     ckbClient,
     ccc.KnownScript.XUdt,
     udtId
   );
-
-  // ?
-  // ckbClient.getCellDeps();
-  // const cell = await ckbClient.findSingletonCellByType(xudtTypeScript);
-  // if (!cell) {
-  //   throw new Error("XUDT cell not found");
-  // }
 
   const udt = new ccc.udt.Udt(
     rgbppXudtLikeClient.getRgbppScriptsDetail()[
@@ -54,13 +48,12 @@ async function transferUdt({
 
   let { res: tx } = await udt.transfer(
     ckbSigner as unknown as ccc.Signer,
-    receivers.map((receiver, index) => ({
-      to: rgbppXudtLikeClient.buildRgbppLockScript({
-        txId: TX_ID_PLACEHOLDER,
-        index: index + 1, // 0 is for OP_RETURN of btc
-      }),
-      amount: ccc.fixedPointFrom(receiver.amount),
-    }))
+    await Promise.all(
+      receivers.map(async (receiver) => ({
+        to: await rgbppXudtLikeClient.buildBtcTimeLockScript(receiver.address),
+        amount: ccc.fixedPointFrom(receiver.amount),
+      }))
+    )
   );
 
   let txWithInputs: ccc.Transaction;
@@ -68,9 +61,10 @@ async function transferUdt({
     txWithInputs = await udt.completeChangeToLock(
       tx,
       ckbRgbppUnlockSinger,
+      // ? merge multiple inputs to a single change output
       rgbppXudtLikeClient.buildRgbppLockScript({
         txId: TX_ID_PLACEHOLDER,
-        index: receivers.length + 1,
+        index: XUDT_LIKE_LEAP_FROM_BTC_OUTPUT_INDEX,
       })
     );
 
@@ -107,7 +101,7 @@ async function transferUdt({
         {
           lock: rgbppXudtLikeClient.buildRgbppLockScript({
             txId: TX_ID_PLACEHOLDER,
-            index: receivers.length + 1,
+            index: XUDT_LIKE_LEAP_FROM_BTC_OUTPUT_INDEX,
           }),
           type: xudtTypeScript,
         },
@@ -156,36 +150,24 @@ async function transferUdt({
   logger.add("ckbTxId", txHash, true);
 }
 
-const logger = new RgbppTxLogger({ opType: "ccc-udt-xudt-free" });
+const logger = new RgbppTxLogger({ opType: "ccc-udt-xudt-btc-to-ckb" });
 
-transferUdt({
+btcUdtToCkb({
   // utxoSeals: [
   //   {
-  //     txId: "d4d32071a8ea3b2510b9dda263e21cb416dc4e4b6dcebd80d26a28597665be62",
-  //     index: 6,
+  //     txId: "2d0f8847b2c6f9c194ff722135b1cd36669432cbcc561e48bade5be3613b1566",
+  //     index: 1,
   //   },
   // ],
-  udtId: "0x1257e3a770e602dfddaadcfb36c8f609fd01128355b70741184e50d397e3457f",
+  udtId: "0xe5f7d179bccb3715fa554a9cce027972549fec7cbe5a75bedef3418c9196e080",
   receivers: [
     {
-      address: "tb1qjkdqj8zk6gl7pwuw2d2jp9e6wgf26arjl8pcys",
+      address: ckbAddress,
       amount: ccc.fixedPointFrom(1),
     },
     {
-      address: "tb1qjkdqj8zk6gl7pwuw2d2jp9e6wgf26arjl8pcys",
+      address: ckbAddress,
       amount: ccc.fixedPointFrom(2),
-    },
-    {
-      address: "tb1qjkdqj8zk6gl7pwuw2d2jp9e6wgf26arjl8pcys",
-      amount: ccc.fixedPointFrom(3),
-    },
-    {
-      address: "tb1qjkdqj8zk6gl7pwuw2d2jp9e6wgf26arjl8pcys",
-      amount: ccc.fixedPointFrom(4),
-    },
-    {
-      address: "tb1qyyhdxmhc059rksfh9jjlkqgvs4w6mdl0z3zqj3",
-      amount: ccc.fixedPointFrom(5),
     },
   ],
 })
@@ -200,5 +182,8 @@ transferUdt({
   });
 
 /* 
-pnpm tsx packages/examples/src/udt/ccc-udt-xudt-btc-transfer-free.ts
+pnpm tsx packages/examples/src/udt/ccc-udt-xudt-btc-to-ckb.ts
+
+Client request error TransactionFailedToVerify: Verification failed Script(TransactionScriptError { source: Inputs[1].Lock, cause: ValidationFailure: see error code 65 on page https://nervosnetwork.github.io/ckb-script-error-codes/by-type-hash/61ca7a4796a4eb19ca4f0d065cb9b10ddcf002f10f7cbb810c706cb6bb5c3248.html#65 })
+Log saved to ccc-udt-xudt-btc-to-ckb-1741657301033-logs.json
 */

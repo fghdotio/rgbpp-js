@@ -61,6 +61,21 @@ export class RgbppXudtLikeClient {
     return this.scriptManager.buildRgbppLockScript(utxoSeal);
   }
 
+  async buildBtcTimeLockScript(
+    ckbAddress: string,
+    confirmations?: number,
+  ): Promise<ccc.Script> {
+    const receiverLock = (
+      await ccc.Address.fromString(ckbAddress, this.ckbClient)
+    ).script;
+
+    return this.scriptManager.buildBtcTimeLockScript(
+      receiverLock,
+      TX_ID_PLACEHOLDER,
+      confirmations,
+    );
+  }
+
   injectTxIdToRgbppCkbTx = (
     tx: ccc.Transaction,
     txId: string,

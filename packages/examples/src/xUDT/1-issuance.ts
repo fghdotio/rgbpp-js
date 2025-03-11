@@ -81,7 +81,7 @@ async function issueXudt(utxoSeal?: UtxoSeal) {
 const logger = new RgbppTxLogger({ opType: "xudt-issuance" });
 
 issueXudt({
-  txId: "d1d07159f69da5afe041f3d69a4b30651e3e2125d76a644e070f3019bade62e7",
+  txId: "453dfbd9d0040515cbece39288e99333446e421849ba7114cceeaf16ffc4dc5f",
   index: 2,
 })
   .then(() => {
