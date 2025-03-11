@@ -153,13 +153,13 @@ async function btcUdtToCkb({
 const logger = new RgbppTxLogger({ opType: "ccc-udt-xudt-btc-to-ckb" });
 
 btcUdtToCkb({
-  utxoSeals: [
-    {
-      txId: "462b77dc530e1f12094fc49f4a9e4ee8b00cd58ad6d6e9e0e5774e8fddacd7b6",
-      index: 0,
-    },
-  ],
-  udtId: "0xe5f7d179bccb3715fa554a9cce027972549fec7cbe5a75bedef3418c9196e080",
+  // utxoSeals: [
+  //   {
+  //     txId: "462b77dc530e1f12094fc49f4a9e4ee8b00cd58ad6d6e9e0e5774e8fddacd7b6",
+  //     index: 0,
+  //   },
+  // ],
+  udtId: "0x406311adf5e4ae826d89480d28b01001768ea4df3693c1e3e4d48a6752c5f3ec",
   receivers: [
     {
       address: ckbAddress,

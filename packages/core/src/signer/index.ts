@@ -272,10 +272,10 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
       this.rgbppBtcAddress,
     );
 
-    // output.type in each cell output must be present
-    if (rgbppCellOutputs.some((output) => !output.type)) {
-      throw new Error("Rgbpp cell output type not found");
-    }
+    // output.type in each cell output must be present except for issuance
+    // if (rgbppCellOutputs.some((output) => !output.type)) {
+    //   throw new Error("Rgbpp cell output type not found");
+    // }
 
     const ckbAddresses = rgbppCellOutputs.map((output) => {
       return ccc.Address.from({

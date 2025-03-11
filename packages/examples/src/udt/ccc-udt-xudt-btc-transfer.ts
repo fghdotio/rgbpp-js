@@ -165,7 +165,7 @@ transferUdt({
   //     index: 6,
   //   },
   // ],
-  udtId: "0xe5f7d179bccb3715fa554a9cce027972549fec7cbe5a75bedef3418c9196e080",
+  udtId: "0x406311adf5e4ae826d89480d28b01001768ea4df3693c1e3e4d48a6752c5f3ec",
   receivers: [
     {
       address: "tb1qjkdqj8zk6gl7pwuw2d2jp9e6wgf26arjl8pcys",

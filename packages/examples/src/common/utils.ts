@@ -4,7 +4,7 @@ import { UtxoSeal } from "@rgbpp-js/core";
 
 import { ckbClient, ckbSigner, rgbppXudtLikeClient } from "./env.js";
 
-export async function prepareIssuanceRgbppCells(
+export async function prepareRgbppCells(
   utxoSeal: UtxoSeal
 ): Promise<ccc.Cell[]> {
   const rgbppLockScript = rgbppXudtLikeClient.buildRgbppLockScript(utxoSeal);

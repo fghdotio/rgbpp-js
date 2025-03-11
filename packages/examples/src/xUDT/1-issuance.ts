@@ -10,7 +10,7 @@ import {
   ckbClient,
   ckbSigner,
 } from "../common/env.js";
-import { prepareIssuanceRgbppCells } from "../common/utils.js";
+import { prepareRgbppCells } from "../common/utils.js";
 import { issuanceAmount, xudtToken } from "../common/assets.js";
 import { RgbppTxLogger } from "../common/logger.js";
 
@@ -19,7 +19,7 @@ async function issueXudt(utxoSeal?: UtxoSeal) {
     utxoSeal = await rgbppBtcWallet.prepareUtxoSeal(10);
   }
 
-  const rgbppIssuanceCells = await prepareIssuanceRgbppCells(utxoSeal);
+  const rgbppIssuanceCells = await prepareRgbppCells(utxoSeal);
 
   const ckbPartialTx = await rgbppXudtLikeClient.issuanceCkbPartialTx({
     token: xudtToken,
@@ -80,10 +80,7 @@ async function issueXudt(utxoSeal?: UtxoSeal) {
 
 const logger = new RgbppTxLogger({ opType: "xudt-issuance" });
 
-issueXudt({
-  txId: "453dfbd9d0040515cbece39288e99333446e421849ba7114cceeaf16ffc4dc5f",
-  index: 2,
-})
+issueXudt()
   .then(() => {
     logger.saveOnSuccess();
     process.exit(0);
