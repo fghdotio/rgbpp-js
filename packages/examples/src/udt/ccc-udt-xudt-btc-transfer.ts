@@ -165,7 +165,7 @@ transferUdt({
   //     index: 6,
   //   },
   // ],
-  udtId: "0x1257e3a770e602dfddaadcfb36c8f609fd01128355b70741184e50d397e3457f",
+  udtId: "0xe5f7d179bccb3715fa554a9cce027972549fec7cbe5a75bedef3418c9196e080",
   receivers: [
     {
       address: "tb1qjkdqj8zk6gl7pwuw2d2jp9e6wgf26arjl8pcys",
@@ -200,5 +200,5 @@ transferUdt({
   });
 
 /* 
-pnpm tsx packages/examples/src/udt/ccc-udt-xudt-btc-transfer-free.ts
+pnpm tsx packages/examples/src/udt/ccc-udt-xudt-btc-transfer.ts
 */

@@ -167,7 +167,7 @@ btcUdtToCkb({
     },
     {
       address: ckbAddress,
-      amount: ccc.fixedPointFrom(2),
+      amount: ccc.fixedPointFrom(20988875),
     },
   ],
 })
