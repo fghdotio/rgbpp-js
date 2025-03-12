@@ -117,6 +117,7 @@ async function btcUdtToCkb({
     rgbppOutputs: buildBtcRgbppOutputs(
       txWithRgbppWitnessPlaceholder,
       utxoBasedAccountAddress,
+      // TODO: fix receivers
       receivers.map((receiver) => receiver.address),
       rgbppXudtLikeClient
     ),
