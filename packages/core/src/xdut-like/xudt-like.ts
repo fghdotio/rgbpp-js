@@ -174,7 +174,7 @@ export class RgbppXudtLikeClient {
         witnesses.push(committedLength);
       }
     }
-    // ? the original witnesses are not discarded, otherwise `prepareSighashAllWitness` will fail
+    // ? the original witnesses in tx (spore) are not discarded, otherwise `prepareSighashAllWitness` will fail
     // const position = await this.findInputIndexByLock(scriptLike, client);
     tx.witnesses = [...witnesses];
 
