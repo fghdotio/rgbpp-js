@@ -30,6 +30,7 @@ async function createSpore({
     rawSporeData: RawSporeData;
   };
 }) {
+  // TODO: use spore.assertCluster()
   const clusterTypeScriptInfo = spore.getClusterScriptInfo(ckbClient);
 
   const rgbppCells = await collectRgbppCells(
@@ -53,6 +54,7 @@ async function createSpore({
   tx.inputs.push(cellInput);
 
   // add new cluster cell as output since current cluster utxo seal will be consumed
+  // TODO: try transferSporeCluster
   tx.addOutput(
     {
       ...rgbppClusterCell.cellOutput,

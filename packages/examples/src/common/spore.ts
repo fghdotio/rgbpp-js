@@ -79,3 +79,30 @@ export const generateSporeCreateCoBuild = ({
   }
   return assembleCobuildWitnessLayout(sporeActions);
 };
+
+export const generateSporeTransferCoBuild = (
+  sporeCells: ccc.Cell[],
+  outputCells: ccc.CellOutput[]
+): string => {
+  if (sporeCells.length !== outputCells.length) {
+    throw new Error(
+      "The length of spore input cells and spore output cells are not same"
+    );
+  }
+  let sporeActions: UnpackResult<typeof Action>[] = [];
+  for (let index = 0; index < sporeCells.length; index++) {
+    const sporeCell = sporeCells[index];
+    const outputData = sporeCell.outputData;
+    const sporeInput = {
+      cellOutput: convertCellOutput(sporeCells[index].cellOutput),
+      data: outputData,
+    } as LumosCell;
+    const sporeOutput = {
+      cellOutput: convertCellOutput(outputCells[index]),
+      data: outputData,
+    } as LumosCell;
+    const { actions } = assembleTransferSporeAction(sporeInput, sporeOutput);
+    sporeActions = sporeActions.concat(actions);
+  }
+  return assembleCobuildWitnessLayout(sporeActions);
+};
