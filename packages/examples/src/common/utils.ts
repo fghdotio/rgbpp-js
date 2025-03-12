@@ -49,7 +49,7 @@ export async function prepareRgbppCells(
 
 export async function collectRgbppCells(
   utxoSeals: UtxoSeal[],
-  xudtLikeTypeScript: ccc.Script
+  typeScript: ccc.Script
 ): Promise<ccc.Cell[]> {
   let rgbppLiveCells: ccc.Cell[] = [];
 
@@ -59,7 +59,7 @@ export async function collectRgbppCells(
         rgbppXudtLikeClient.buildRgbppLockScript(utxoSeal);
       const rgbppCellsGen = await ckbClient.findCellsByLock(
         rgbppLockScript,
-        xudtLikeTypeScript
+        typeScript
       );
       for await (const cell of rgbppCellsGen) {
         rgbppLiveCells.push(cell);
