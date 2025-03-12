@@ -174,7 +174,9 @@ export class RgbppXudtLikeClient {
         witnesses.push(committedLength);
       }
     }
-    tx.witnesses = [...witnesses, ...tx.witnesses];
+    // ? the original witnesses are not discarded, otherwise `prepareSighashAllWitness` will fail
+    // const position = await this.findInputIndexByLock(scriptLike, client);
+    tx.witnesses = [...witnesses];
 
     return tx;
   }

@@ -1,7 +1,5 @@
 import { ccc } from "@ckb-ccc/shell";
 
-import { ScriptInfo } from "@rgbpp-js/core";
-
 export const xudtToken = {
   name: "Standard xUDT",
   symbol: "stdXUDT",
@@ -12,6 +10,11 @@ export const sudtToken = {
   name: "Standard sUDT",
   symbol: "stdSUDT",
   decimal: 8,
+};
+
+export const clusterData = {
+  name: "RGB++ Cluster real",
+  description: "Keep it real",
 };
 
 export const issuanceAmount = 2100_0000n;
