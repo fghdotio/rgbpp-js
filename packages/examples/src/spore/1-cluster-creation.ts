@@ -78,13 +78,13 @@ async function createSporeCluster(utxoSeal?: UtxoSeal) {
   logger.add("btcTxId", btcTxId, true);
 
   const ckbPartialTxInjected = await rgbppXudtLikeClient.injectTxIdToRgbppCkbTx(
-    ckbPartialTx,
+    txWithRgbppWitnessPlaceholder,
     btcTxId
   );
   const rgbppSignedCkbTx =
     await ckbRgbppUnlockSinger.signTransaction(ckbPartialTxInjected);
 
-  await rgbppSignedCkbTx.completeFeeBy(ckbSigner);
+  await rgbppSignedCkbTx.completeFeeBy(ckbSigner, 3000);
   logger.logCkbTx("ckbPartialTxWithFee", rgbppSignedCkbTx);
 
   // ? co-build witness
@@ -117,5 +117,4 @@ createSporeCluster()
 
 /* 
 pnpm tsx packages/examples/src/spore/1-cluster-creation.ts
-
 */
