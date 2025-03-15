@@ -1,15 +1,6 @@
 import { ccc } from "@ckb-ccc/shell";
 
-import {
-  buildBtcRgbppOutputs,
-  TX_ID_PLACEHOLDER,
-  parseUtxoSealFromScriptArgs,
-  PredefinedScriptName,
-  UtxoSeal,
-  XUDT_LIKE_LEAP_FROM_BTC_OUTPUT_INDEX,
-} from "@rgbpp-js/core";
-
-import { inspect } from "util";
+import { PredefinedScriptName, UtxoSeal } from "@rgbpp-js/core";
 
 import {
   ckbSigner,
@@ -55,7 +46,7 @@ async function ckbUdtToBtc({
 
   const txWithInputs = await udt.completeBy(tx, ckbSigner);
   await txWithInputs.completeFeeBy(ckbSigner);
-  const signedTx = await ckbSigner.signTransaction(tx);
+  const signedTx = await ckbSigner.signTransaction(txWithInputs);
   const txHash = await ckbSigner.client.sendTransaction(signedTx);
   await ckbSigner.client.waitTransaction(txHash);
   logger.add("ckbTxId", txHash, true);
@@ -82,5 +73,5 @@ ckbUdtToBtc({
   });
 
 /* 
-pnpm tsx packages/examples/src/udt/ccc-udt-xudt-ckb-to-btc.ts
+pnpm tsx packages/examples/src/udt/3-ccc-udt-xudt-ckb-to-btc.ts
 */
