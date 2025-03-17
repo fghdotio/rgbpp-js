@@ -45,7 +45,7 @@ async function btcSporeToCkb({
     rgbppOutputs: buildBtcRgbppOutputs(
       txWithRgbppWitnessPlaceholder,
       utxoBasedAccountAddress,
-      [utxoBasedAccountAddress],
+      [],
       rgbppXudtLikeClient
     ),
 

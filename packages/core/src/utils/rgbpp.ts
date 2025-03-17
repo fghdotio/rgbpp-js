@@ -228,7 +228,8 @@ export const buildBtcRgbppOutputs = (
     if (isSameScriptTemplate(output.lock, rgbppLockScriptTemplate)) {
       outputs.push({
         fixed: true,
-        address: receiverBtcAddresses[index] ?? btcChangeAddress, // TODO comment
+        // Out-of-range index indicates this is a RGB++ change output returning to the BTC address
+        address: receiverBtcAddresses[index] ?? btcChangeAddress,
         value: 546,
         minUtxoSatoshi: 546,
       });
