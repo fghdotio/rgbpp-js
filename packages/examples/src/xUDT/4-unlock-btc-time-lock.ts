@@ -35,7 +35,8 @@ async function unlockBtcTimeLock(btcTimeLockArgs: string) {
       {
         lock: parseBtcTimeLockArgs(cell.cellOutput.lock.args).lock,
         type: cell.cellOutput.type,
-        // *
+        // * https://github.com/utxostack/rgbpp/blob/main/contracts/btc-time-lock/src/main.rs#L97
+        // ? too many details, capacity, cell deps. Encapsulate it?
         capacity: cell.cellOutput.capacity,
       },
       cell.outputData
