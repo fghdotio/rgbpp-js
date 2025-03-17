@@ -7,7 +7,7 @@ import {
   rgbppXudtLikeClient,
   utxoBasedAccountAddress,
 } from "../common/env.js";
-import { prepareIssuanceRgbppCells } from "../common/utils.js";
+import { prepareRgbppCells } from "../common/utils.js";
 import { issuanceAmount, testnetSudt, sudtToken } from "../common/assets.js";
 import { RgbppTxLogger } from "../common/logger.js";
 
@@ -16,7 +16,7 @@ async function issueSudt(utxoSeal?: UtxoSeal) {
     utxoSeal = await rgbppBtcWallet.prepareUtxoSeal(10);
   }
 
-  const rgbppIssuanceCells = await prepareIssuanceRgbppCells(utxoSeal);
+  const rgbppIssuanceCells = await prepareRgbppCells(utxoSeal);
 
   const ckbPartialTx = await rgbppXudtLikeClient.issuanceCkbPartialTx({
     token: sudtToken,
@@ -69,8 +69,8 @@ async function issueSudt(utxoSeal?: UtxoSeal) {
 const logger = new RgbppTxLogger({ opType: "sudt-issuance" });
 
 issueSudt({
-  txId: "a0541fe901f1b3c343cdf7890ab02c1306fb9d049319109504d2bd13d37bc85b",
-  index: 2,
+  txId: "219826cc34e1d82f4b3f6aa7909e95e3a21808a205a5e04804bf5a8bd2b94c95",
+  index: 1,
 })
   .then(() => {
     logger.saveOnSuccess();
@@ -85,5 +85,6 @@ issueSudt({
 /* 
 pnpm tsx packages/examples/src/xUDT/sudt-issuance.ts
 
-https://testnet.explorer.nervos.org/transaction/0x81f29fb7d138cc27304e9667770e660deb1f64c576e111e449695d53b1468c91
+https://mempool.space/testnet/tx/bfb01d23c37c4c7b99241a6f2f343693f0b9c073c694a06bddf7a3cae2c454c2
+https://testnet.explorer.nervos.org/transaction/0x93a9d87b503748bb84163f0efcde15cb6cfd6f4f3fa2009ef518d5146faea8c1
 */
