@@ -3,10 +3,9 @@ import { ccc } from "@ckb-ccc/shell";
 import {
   buildBtcRgbppOutputs,
   TX_ID_PLACEHOLDER,
-  RgbppBtcReceiver,
   parseUtxoSealFromScriptArgs,
-  PredefinedScriptName,
   UtxoSeal,
+  XUDT_LIKE_LEAP_FROM_BTC_OUTPUT_INDEX,
 } from "@rgbpp-js/core";
 
 import {
@@ -16,62 +15,51 @@ import {
   rgbppXudtLikeClient,
   utxoBasedAccountAddress,
   rgbppBtcWallet,
+  ckbAddress,
 } from "../common/env.js";
 
 import { RgbppTxLogger } from "../common/logger.js";
 import { collectRgbppCells } from "../common/utils.js";
+import { testnetSudt, testnetSudtCellDep } from "../common/assets.js";
 
-async function transferUdt({
+async function btcUdtToCkb({
   utxoSeals,
   udtId,
   receivers,
 }: {
   utxoSeals?: UtxoSeal[];
   udtId: string;
-  receivers: RgbppBtcReceiver[];
+  receivers: { address: string; amount: bigint }[];
 }) {
-  const xudtTypeScript = await ccc.Script.fromKnownScript(
-    ckbClient,
-    ccc.KnownScript.XUdt,
-    udtId
-  );
+  const sudtTypeScript = ccc.Script.from({
+    ...testnetSudt,
+    args: udtId,
+  });
 
-  // ? How to get cell deps using ccc?
-  // ckbClient.getCellDeps();
-  // const cell = await ckbClient.findSingletonCellByType(xudtTypeScript);
-  // if (!cell) {
-  //   throw new Error("XUDT cell not found");
-  // }
-
-  const udt = new ccc.udt.Udt(
-    rgbppXudtLikeClient.getRgbppScriptsDetail()[
-      PredefinedScriptName.Xudt
-    ].cellDep.outPoint,
-    xudtTypeScript
-  );
+  const udt = new ccc.udt.Udt(testnetSudtCellDep.outPoint, sudtTypeScript);
 
   let { res: tx } = await udt.transfer(
     ckbSigner as unknown as ccc.Signer,
-    receivers.map((receiver, index) => ({
-      to: rgbppXudtLikeClient.buildRgbppLockScript({
-        txId: TX_ID_PLACEHOLDER,
-        index: index + 1, // 0 is for OP_RETURN of btc
-      }),
-      amount: ccc.fixedPointFrom(receiver.amount),
-    }))
+    await Promise.all(
+      receivers.map(async (receiver) => ({
+        to: await rgbppXudtLikeClient.buildBtcTimeLockScript(receiver.address),
+        amount: ccc.fixedPointFrom(receiver.amount),
+      }))
+    )
   );
 
   let txWithInputs: ccc.Transaction;
   if (!utxoSeals) {
-    // * collect udt inputs using ccc
     txWithInputs = await udt.completeChangeToLock(
       tx,
       ckbRgbppUnlockSinger,
       rgbppXudtLikeClient.buildRgbppLockScript({
         txId: TX_ID_PLACEHOLDER,
-        index: receivers.length + 1,
+        index: XUDT_LIKE_LEAP_FROM_BTC_OUTPUT_INDEX,
       })
     );
+
+    // console.log(inspect(txWithInputs, { depth: null, colors: true }));
 
     utxoSeals = await Promise.all(
       txWithInputs.inputs.map(async (input) => {
@@ -81,8 +69,7 @@ async function transferUdt({
     );
     console.log(utxoSeals);
   } else {
-    // * use specified rgbpp cells
-    const rgbppLiveCells = await collectRgbppCells(utxoSeals, xudtTypeScript);
+    const rgbppLiveCells = await collectRgbppCells(utxoSeals, sudtTypeScript);
     tx.inputs.push(
       ...rgbppLiveCells.map(({ outPoint, outputData, cellOutput }) =>
         ccc.CellInput.from({
@@ -96,8 +83,8 @@ async function transferUdt({
     const balanceDiff =
       (await tx.getInputsUdtBalance(
         ckbClient as unknown as ccc.Client,
-        xudtTypeScript
-      )) - tx.getOutputsUdtBalance(xudtTypeScript);
+        sudtTypeScript
+      )) - tx.getOutputsUdtBalance(sudtTypeScript);
     if (balanceDiff < ccc.Zero) {
       throw new Error("Insufficient balance");
     } else if (balanceDiff > ccc.Zero) {
@@ -105,9 +92,9 @@ async function transferUdt({
         {
           lock: rgbppXudtLikeClient.buildRgbppLockScript({
             txId: TX_ID_PLACEHOLDER,
-            index: receivers.length + 1,
+            index: XUDT_LIKE_LEAP_FROM_BTC_OUTPUT_INDEX,
           }),
-          type: xudtTypeScript,
+          type: sudtTypeScript,
         },
         ccc.numLeToBytes(balanceDiff, 16)
       );
@@ -121,7 +108,7 @@ async function transferUdt({
     rgbppOutputs: buildBtcRgbppOutputs(
       txWithRgbppWitnessPlaceholder,
       utxoBasedAccountAddress,
-      receivers.map((receiver) => receiver.address),
+      [],
       rgbppXudtLikeClient
     ),
 
@@ -154,36 +141,24 @@ async function transferUdt({
   logger.add("ckbTxId", txHash, true);
 }
 
-const logger = new RgbppTxLogger({ opType: "ccc-udt-xudt-btc-transfer" });
+const logger = new RgbppTxLogger({ opType: "ccc-udt-sudt-btc-to-ckb" });
 
-transferUdt({
-  // utxoSeals: [
-  //   {
-  //     txId: "d4d32071a8ea3b2510b9dda263e21cb416dc4e4b6dcebd80d26a28597665be62",
-  //     index: 6,
-  //   },
-  // ],
-  udtId: "0x406311adf5e4ae826d89480d28b01001768ea4df3693c1e3e4d48a6752c5f3ec",
+btcUdtToCkb({
+  utxoSeals: [
+    {
+      txId: "19b23725452ef195b91e204a3cec0277d2e0ff607fce8cb5e7be9540384e209d",
+      index: 1,
+    },
+  ],
+  udtId: "0x93bdbdb7027bfde1d01ebc10e33f522fdeb504cc975b69802b60e4f49090792b",
   receivers: [
     {
-      address: "tb1qjkdqj8zk6gl7pwuw2d2jp9e6wgf26arjl8pcys",
+      address: ckbAddress,
       amount: ccc.fixedPointFrom(1),
     },
     {
-      address: "tb1qjkdqj8zk6gl7pwuw2d2jp9e6wgf26arjl8pcys",
-      amount: ccc.fixedPointFrom(2),
-    },
-    {
-      address: "tb1qjkdqj8zk6gl7pwuw2d2jp9e6wgf26arjl8pcys",
-      amount: ccc.fixedPointFrom(3),
-    },
-    {
-      address: "tb1qjkdqj8zk6gl7pwuw2d2jp9e6wgf26arjl8pcys",
-      amount: ccc.fixedPointFrom(4),
-    },
-    {
-      address: "tb1qyyhdxmhc059rksfh9jjlkqgvs4w6mdl0z3zqj3",
-      amount: ccc.fixedPointFrom(5),
+      address: ckbAddress,
+      amount: ccc.fixedPointFrom(10),
     },
   ],
 })
@@ -198,5 +173,11 @@ transferUdt({
   });
 
 /* 
-pnpm tsx packages/examples/src/udt/ccc-udt-xudt-btc-transfer.ts
+pnpm tsx packages/examples/src/udt/ccc-udt-sudt-btc-to-ckb.ts
+
+https://mempool.space/testnet/tx/19b23725452ef195b91e204a3cec0277d2e0ff607fce8cb5e7be9540384e209d
+https://testnet.explorer.nervos.org/transaction/0x3c73eea5d92f427ce99a9b44671889093d354872edecfb16800d085dfff19f0a
+
+https://mempool.space/testnet/tx/f67edadf903b7558a4e77fe5e2855effe169372a795c9092225556e2d4f9567d
+https://testnet.explorer.nervos.org/transaction/0xa0a184e8dd359d8a14f7acd4c40774b8ea01d77f45dc2e14f6584c90f4e8e85c
 */

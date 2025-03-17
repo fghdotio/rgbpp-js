@@ -10,7 +10,7 @@ export const UNIQUE_TYPE_OUTPUT_INDEX = 1;
 export const DEFAULT_CONFIRMATIONS = 6;
 
 export const RGBPP_CKB_WITNESS_PLACEHOLDER = "RGBPP_CKB_WITNESS_PLACEHOLDER";
-// ? extra is needed to cover spore co-build witness; check this out, in most cases, this value does not matter
+// TODO ? extra is needed to cover spore co-build witness; check this out, in most cases, this value does not matter since fee signer is independent now
 export const RGBPP_CKB_WITNESS_LENGTH = 2000;
 
 export const RGBPP_MAX_CELL_NUM = 255;
