@@ -67,9 +67,11 @@ async function issueXudt(utxoSeal?: UtxoSeal) {
   // > Commitment must cover all Inputs and Outputs where Type is not null;
   // https://github.com/utxostack/RGBPlusPlus-design/blob/main/docs/lockscript-design-prd-en.md#requirements-and-limitations-on-isomorphic-binding
   // https://github.com/fghdotio/rgbpp/blob/main/contracts/rgbpp-lock/src/main.rs#L197-L200
-  // TODO: should only select cells with null type script
-
-  await rgbppSignedCkbTx.completeFeeBy(ckbSigner);
+  await rgbppSignedCkbTx.completeFeeBy(
+    ckbSigner,
+    await ckbClient.getFeeRate(),
+    { scriptLenRange: [0, 1] }
+  );
   logger.logCkbTx("ckbPartialTxWithFee", rgbppSignedCkbTx);
   const ckbFinalTx = await ckbSigner.signTransaction(rgbppSignedCkbTx);
   logger.logCkbTx("ckbFinalTx", ckbFinalTx);
