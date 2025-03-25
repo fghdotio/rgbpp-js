@@ -112,7 +112,7 @@ async function btcUdtToCkb({
   }
 
   const txWithRgbppWitnessPlaceholder =
-    await rgbppXudtLikeClient.injectRgbppWitnessPlaceholder(txWithInputs);
+    await rgbppXudtLikeClient.insertRgbppWitnessPlaceholder(txWithInputs);
   const psbt = await rgbppBtcWallet.buildPsbt({
     rgbppOutputs: buildBtcRgbppOutputs(
       txWithRgbppWitnessPlaceholder,

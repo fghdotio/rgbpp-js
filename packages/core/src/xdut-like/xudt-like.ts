@@ -157,10 +157,10 @@ export class RgbppXudtLikeClient {
       encodeRgbppXudtLikeToken(params.token),
     );
 
-    return this.injectRgbppWitnessPlaceholder(tx);
+    return this.insertRgbppWitnessPlaceholder(tx);
   }
 
-  async injectRgbppWitnessPlaceholder(
+  async insertRgbppWitnessPlaceholder(
     tx: ccc.Transaction,
   ): Promise<ccc.Transaction> {
     const committedLength = encodeCommittedLength({

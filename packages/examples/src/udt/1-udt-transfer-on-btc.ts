@@ -57,7 +57,7 @@ async function transferUdt({
   console.log(utxoSeals);
 
   const txWithRgbppWitnessPlaceholder =
-    await rgbppXudtLikeClient.injectRgbppWitnessPlaceholder(txWithInputs);
+    await rgbppXudtLikeClient.insertRgbppWitnessPlaceholder(txWithInputs);
   const psbt = await rgbppBtcWallet.buildPsbt({
     rgbppOutputs: buildBtcRgbppOutputs(
       txWithRgbppWitnessPlaceholder,

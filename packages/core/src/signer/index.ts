@@ -133,7 +133,7 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
     const spvProof = await this.getSpvProof(btcTxId);
 
     const rawBtcTxHex = await this.getRawBtcTxHex(btcTxId);
-    return Promise.resolve(this.injectWitnesses(tx, rawBtcTxHex, spvProof));
+    return Promise.resolve(this.insertWitnesses(tx, rawBtcTxHex, spvProof));
   }
 
   private async getSpvProof(btcTxId: string): Promise<SpvProof> {
@@ -205,7 +205,7 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
     });
   }
 
-  async injectWitnesses(
+  async insertWitnesses(
     partialTx: ccc.Transaction,
     btcLikeTxBytes: string,
     spvClient: SpvProof,

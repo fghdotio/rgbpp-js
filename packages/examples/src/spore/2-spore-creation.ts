@@ -52,7 +52,7 @@ async function createSpore({
   });
 
   const txWithRgbppWitnessPlaceholder =
-    await rgbppXudtLikeClient.injectRgbppWitnessPlaceholder(ckbPartialTx);
+    await rgbppXudtLikeClient.insertRgbppWitnessPlaceholder(ckbPartialTx);
 
   logger.add("spore id", id, true);
   logger.logCkbTx(

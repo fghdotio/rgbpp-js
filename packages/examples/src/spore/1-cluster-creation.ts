@@ -43,7 +43,7 @@ async function createSporeCluster(utxoSeal?: UtxoSeal) {
   console.log(inspect(ckbPartialTx, { showHidden: true, depth: null }));
 
   const txWithRgbppWitnessPlaceholder =
-    await rgbppXudtLikeClient.injectRgbppWitnessPlaceholder(ckbPartialTx);
+    await rgbppXudtLikeClient.insertRgbppWitnessPlaceholder(ckbPartialTx);
 
   logger.add("clusterId", id, true);
   logger.logCkbTx(

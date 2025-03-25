@@ -40,7 +40,7 @@ async function transferSpore({
   console.log(inspect(ckbPartialTx, { showHidden: true, depth: null }));
 
   const txWithRgbppWitnessPlaceholder =
-    await rgbppXudtLikeClient.injectRgbppWitnessPlaceholder(ckbPartialTx);
+    await rgbppXudtLikeClient.insertRgbppWitnessPlaceholder(ckbPartialTx);
 
   logger.logCkbTx(
     "txWithRgbppWitnessPlaceholder",
