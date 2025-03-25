@@ -61,10 +61,11 @@ export class RgbppXudtLikeClient {
     return this.scriptManager.buildRgbppLockScript(utxoSeal);
   }
 
+  // receiverIndex: index in ckb tx output
   buildPseudoRgbppLockScript(receiverIndex: number) {
     return this.scriptManager.buildRgbppLockScript({
       txId: TX_ID_PLACEHOLDER,
-      index: receiverIndex + 1, // 0 is for OP_RETURN
+      index: receiverIndex + 1, // 0 is for OP_RETURN in btc tx
     });
   }
 

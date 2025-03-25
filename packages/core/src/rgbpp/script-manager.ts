@@ -42,7 +42,7 @@ export class ScriptManager {
       ...this.scripts[PredefinedScriptName.RgbppLock],
       args: buildRgbppLockArgs({
         txId: utxoSeal.txId,
-        index: utxoSeal.index,
+        index: utxoSeal.index, // index in btc tx output
       }),
     });
   }

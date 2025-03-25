@@ -1,32 +1,28 @@
 import { ccc, spore } from "@ckb-ccc/shell";
 
-import {
-  TX_ID_PLACEHOLDER,
-  UtxoSeal,
-  buildBtcRgbppOutputs,
-} from "@rgbpp-js/core";
+import { UtxoSeal, buildBtcRgbppOutputs } from "@rgbpp-js/core";
 
-import {
-  ckbRgbppUnlockSinger,
-  rgbppBtcWallet,
-  rgbppXudtLikeClient,
-  utxoBasedAccountAddress,
-  ckbClient,
-  ckbSigner,
-} from "../common/env.js";
+import { ckbClient, ckbSigner, initializeRgbppEnv } from "../common/env.js";
 import { prepareRgbppCells } from "../common/utils.js";
 import { clusterData } from "../common/assets.js";
 import { RgbppTxLogger } from "../common/logger.js";
 import { generateClusterCreateCoBuild } from "../common/spore.js";
 
 async function createSporeCluster(utxoSeal?: UtxoSeal) {
+  const {
+    rgbppBtcWallet,
+    rgbppXudtLikeClient,
+    utxoBasedAccountAddress,
+    ckbRgbppUnlockSinger,
+  } = initializeRgbppEnv();
+
   if (!utxoSeal) {
     utxoSeal = await rgbppBtcWallet.prepareUtxoSeal(28);
   }
 
-  const rgbppCells = await prepareRgbppCells(utxoSeal);
+  const rgbppCells = await prepareRgbppCells(utxoSeal, rgbppXudtLikeClient);
   const tx = ccc.Transaction.default();
-  // ? manually add specified inputs
+  // manually add specified inputs
   rgbppCells.forEach((cell) => {
     const cellInput = ccc.CellInput.from({
       previousOutput: cell.outPoint,
@@ -39,10 +35,7 @@ async function createSporeCluster(utxoSeal?: UtxoSeal) {
   const { tx: ckbPartialTx, id } = await spore.createSporeCluster({
     signer: ckbSigner,
     data: clusterData,
-    to: rgbppXudtLikeClient.buildRgbppLockScript({
-      txId: TX_ID_PLACEHOLDER,
-      index: 1,
-    }),
+    to: rgbppXudtLikeClient.buildPseudoRgbppLockScript(0),
     tx,
   });
 
@@ -107,7 +100,10 @@ async function createSporeCluster(utxoSeal?: UtxoSeal) {
 
 const logger = new RgbppTxLogger({ opType: "cluster-creation" });
 
-createSporeCluster()
+createSporeCluster({
+  txId: "9243145d323312899a7c7c4e526d6f075301d5e0745e2dfc135c8b9b0f1fa13f",
+  index: 3,
+})
   .then(() => {
     logger.saveOnSuccess();
     process.exit(0);
@@ -120,4 +116,9 @@ createSporeCluster()
 
 /* 
 pnpm tsx packages/examples/src/spore/1-cluster-creation.ts
+
+
+clusterId: 0x7c9157efd21445b601e429e9cb0871a772f7531fcbf362dd2333c8c759d82b19
+btcTxId: fd79774ebf7b5cd641de47b708fb4f6a9fb417490df0be055eaf7915dcb3db28
+ckbTxId: 0xa6a62b6ad2e1c3a2929cf40f34d2082068f816d3cc5d5ee8820f8ad42bdbb4a4
 */

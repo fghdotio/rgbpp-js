@@ -6,77 +6,65 @@ import {
   TX_ID_PLACEHOLDER,
   UtxoSeal,
   buildBtcRgbppOutputs,
+  parseUtxoSealFromScriptArgs,
 } from "@rgbpp-js/core";
 
-import {
-  ckbRgbppUnlockSinger,
-  rgbppBtcWallet,
-  rgbppXudtLikeClient,
-  utxoBasedAccountAddress,
-  ckbClient,
-  ckbSigner,
-} from "../common/env.js";
+import { ckbClient, ckbSigner, initializeRgbppEnv } from "../common/env.js";
 import { collectRgbppCells } from "../common/utils.js";
 import { RgbppTxLogger } from "../common/logger.js";
 import { generateSporeCreateCoBuild } from "../common/spore.js";
 
 async function createSpore({
-  utxoSeal,
   receiverInfo,
 }: {
-  utxoSeal: UtxoSeal;
   receiverInfo: {
     btcAddress: string;
     rawSporeData: RawSporeData;
   };
 }) {
-  // TODO: use spore.assertCluster()
-  const clusterTypeScriptInfo = spore.getClusterScriptInfo(ckbClient);
+  const {
+    rgbppBtcWallet,
+    rgbppXudtLikeClient,
+    utxoBasedAccountAddress,
+    ckbRgbppUnlockSinger,
+  } = initializeRgbppEnv();
 
-  const rgbppCells = await collectRgbppCells(
-    [utxoSeal],
-    ccc.Script.from({
-      codeHash: clusterTypeScriptInfo.codeHash,
-      hashType: clusterTypeScriptInfo.hashType,
-      args: receiverInfo.rawSporeData.clusterId!,
-    })
+  const { cell: rgbppClusterCell } = await spore.assertCluster(
+    ckbClient,
+    receiverInfo.rawSporeData.clusterId!
   );
-  // * assume a 1 to 1 relationship between utxoSeal and rgbppCell
-  const rgbppClusterCell = rgbppCells[0];
+  const utxoSeal = parseUtxoSealFromScriptArgs(
+    rgbppClusterCell.cellOutput.lock.args
+  );
 
-  const tx = ccc.Transaction.default();
-
-  // ? manually add specified inputs
+  const transferClusterTx = ccc.Transaction.default();
   const cellInput = ccc.CellInput.from({
     previousOutput: rgbppClusterCell.outPoint,
   });
   cellInput.completeExtraInfos(ckbClient);
-  tx.inputs.push(cellInput);
-
-  // add new cluster cell as output since current cluster utxo seal will be consumed
-  // TODO: try transferSporeCluster
-  tx.addOutput(
+  transferClusterTx.inputs.push(cellInput);
+  transferClusterTx.addOutput(
     {
       ...rgbppClusterCell.cellOutput,
-      lock: rgbppXudtLikeClient.buildRgbppLockScript({
-        txId: TX_ID_PLACEHOLDER,
-        index: 1, // 0 is for OP_RETURN
-      }),
+      lock: rgbppXudtLikeClient.buildPseudoRgbppLockScript(0), // new cluster output
     },
     rgbppClusterCell.outputData
   );
+
+  // const { tx: transferClusterTx } = await spore.transferSporeCluster({
+  //   signer: ckbSigner,
+  //   id: receiverInfo.rawSporeData.clusterId!,
+  //   to: rgbppXudtLikeClient.buildPseudoRgbppLockScript(0), // new cluster output
+  // });
 
   // ? API for creating multiple spores
   const { tx: ckbPartialTx, id } = await spore.createSpore({
     signer: ckbSigner,
     data: receiverInfo.rawSporeData,
-    to: rgbppXudtLikeClient.buildRgbppLockScript({
-      txId: TX_ID_PLACEHOLDER,
-      index: 2,
-    }),
-    // ? cannot use cluster mode here
+    to: rgbppXudtLikeClient.buildPseudoRgbppLockScript(0 + 1), // offset by 1 as it's for new cluster output
+    // cannot use cluster mode here as cluster's lock needs to be updated
     clusterMode: "skip",
-    tx,
+    tx: transferClusterTx,
   });
 
   const txWithRgbppWitnessPlaceholder =
@@ -133,6 +121,8 @@ async function createSpore({
       clusterOutputCell: rgbppSignedCkbTx.outputs[0],
     }) as ccc.Hex
   );
+
+  const clusterTypeScriptInfo = spore.getClusterScriptInfo(ckbClient);
   rgbppSignedCkbTx.cellDeps.push(
     ccc.CellDep.from(clusterTypeScriptInfo.cellDeps[0].cellDep),
     ccc.CellDep.from({
@@ -151,18 +141,13 @@ async function createSpore({
 const logger = new RgbppTxLogger({ opType: "spore-creation" });
 
 createSpore({
-  utxoSeal: {
-    txId: "f5417fdb977583bfec0262e9e41c0dda56f9bb84d7da71f0d7425c1b48587204",
-    index: 1,
-  },
   receiverInfo: {
     btcAddress: "tb1qjkdqj8zk6gl7pwuw2d2jp9e6wgf26arjl8pcys",
     rawSporeData: {
       contentType: "text/plain",
       content: ccc.bytesFrom("First Spore Live", "utf8"),
-      // The cluster id is from 2-create-cluster.ts
       clusterId:
-        "0x27564728f7f6127f8f37bd94f31e97a2eab147897abd446c6bbcf72d11ee2294",
+        "0x7c9157efd21445b601e429e9cb0871a772f7531fcbf362dd2333c8c759d82b19",
     },
   },
 })
@@ -179,7 +164,7 @@ createSpore({
 /* 
 pnpm tsx packages/examples/src/spore/2-spore-creation.ts
 
-0x27564728f7f6127f8f37bd94f31e97a2eab147897abd446c6bbcf72d11ee2294
-https://testnet.explorer.nervos.org/transaction/0xa3920986f892f8ee7ab199c198a09ba4570a7f345a4ce86220760d03c5973332
-https://testnet.explorer.nervos.org/transaction/0x2a268b875a880f2147a1f6192efced85e1b5c524b90b16840bc17b014525deb8
+
+btcTxId: 3dcb4d6829b4ed019eaadceeab21f3cf87d4ef3c086f4006c9d01003ee961710
+ckbTxId: 0x41a91e02781f22c229edb3e0b9fc2ada67ef828c59cca3988a68d36999404bd6
 */
