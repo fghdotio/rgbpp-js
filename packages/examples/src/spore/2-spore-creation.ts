@@ -3,14 +3,12 @@ import { ccc, spore } from "@ckb-ccc/shell";
 import { RawSporeData } from "@spore-sdk/core";
 
 import {
-  TX_ID_PLACEHOLDER,
-  UtxoSeal,
   buildBtcRgbppOutputs,
   parseUtxoSealFromScriptArgs,
 } from "@rgbpp-js/core";
 
 import { ckbClient, ckbSigner, initializeRgbppEnv } from "../common/env.js";
-import { collectRgbppCells } from "../common/utils.js";
+
 import { RgbppTxLogger } from "../common/logger.js";
 import { generateSporeCreateCoBuild } from "../common/spore.js";
 
@@ -37,25 +35,11 @@ async function createSpore({
     rgbppClusterCell.cellOutput.lock.args
   );
 
-  const transferClusterTx = ccc.Transaction.default();
-  const cellInput = ccc.CellInput.from({
-    previousOutput: rgbppClusterCell.outPoint,
+  const { tx: transferClusterTx } = await spore.transferSporeCluster({
+    signer: ckbSigner,
+    id: receiverInfo.rawSporeData.clusterId!,
+    to: rgbppXudtLikeClient.buildPseudoRgbppLockScript(0), // new cluster output
   });
-  cellInput.completeExtraInfos(ckbClient);
-  transferClusterTx.inputs.push(cellInput);
-  transferClusterTx.addOutput(
-    {
-      ...rgbppClusterCell.cellOutput,
-      lock: rgbppXudtLikeClient.buildPseudoRgbppLockScript(0), // new cluster output
-    },
-    rgbppClusterCell.outputData
-  );
-
-  // const { tx: transferClusterTx } = await spore.transferSporeCluster({
-  //   signer: ckbSigner,
-  //   id: receiverInfo.rawSporeData.clusterId!,
-  //   to: rgbppXudtLikeClient.buildPseudoRgbppLockScript(0), // new cluster output
-  // });
 
   // ? API for creating multiple spores
   const { tx: ckbPartialTx, id } = await spore.createSpore({
@@ -121,10 +105,7 @@ async function createSpore({
       clusterOutputCell: rgbppSignedCkbTx.outputs[0],
     }) as ccc.Hex
   );
-
-  const clusterTypeScriptInfo = spore.getClusterScriptInfo(ckbClient);
   rgbppSignedCkbTx.cellDeps.push(
-    ccc.CellDep.from(clusterTypeScriptInfo.cellDeps[0].cellDep),
     ccc.CellDep.from({
       outPoint: rgbppClusterCell.outPoint,
       depType: "code",
@@ -165,6 +146,6 @@ createSpore({
 pnpm tsx packages/examples/src/spore/2-spore-creation.ts
 
 
-btcTxId: 3dcb4d6829b4ed019eaadceeab21f3cf87d4ef3c086f4006c9d01003ee961710
-ckbTxId: 0x41a91e02781f22c229edb3e0b9fc2ada67ef828c59cca3988a68d36999404bd6
+btcTxId: 366aa063338d2857adab368216e49c86ec86c1602a64b220bebf768a68a005c6
+ckbTxId: 0xe73adff53935c506c0b3e94e1c13405f28657ea0727c3687a92186b222752baa
 */
