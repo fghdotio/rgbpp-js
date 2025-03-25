@@ -2,7 +2,6 @@ import { ccc } from "@ckb-ccc/shell";
 
 import {
   buildBtcRgbppOutputs,
-  TX_ID_PLACEHOLDER,
   RgbppBtcReceiver,
   parseUtxoSealFromScriptArgs,
   ScriptInfo,
@@ -35,10 +34,7 @@ async function transferUdt({
   let { res: tx } = await udt.transfer(
     ckbSigner as unknown as ccc.Signer,
     receivers.map((receiver, index) => ({
-      to: rgbppXudtLikeClient.buildRgbppLockScript({
-        txId: TX_ID_PLACEHOLDER,
-        index: index + 1, // 0 is for OP_RETURN of btc
-      }),
+      to: rgbppXudtLikeClient.buildPseudoRgbppLockScript(index),
       amount: ccc.fixedPointFrom(receiver.amount),
     }))
   );
@@ -49,10 +45,7 @@ async function transferUdt({
   txWithInputs = await udt.completeChangeToLock(
     tx,
     ckbRgbppUnlockSinger,
-    rgbppXudtLikeClient.buildRgbppLockScript({
-      txId: TX_ID_PLACEHOLDER,
-      index: receivers.length + 1,
-    })
+    rgbppXudtLikeClient.buildPseudoRgbppLockScript(receivers.length)
   );
 
   const utxoSeals = await Promise.all(
@@ -105,24 +98,24 @@ async function transferUdt({
 const logger = new RgbppTxLogger({ opType: "ccc-udt-xudt-btc-transfer" });
 
 transferUdt({
-  // udtScriptInfo: {
-  //   name: ccc.KnownScript.XUdt,
-  //   script: await ccc.Script.fromKnownScript(
-  //     ckbClient,
-  //     ccc.KnownScript.XUdt,
-  //     "0x868c505051f06bb41646bd1b442dbed8035d91abd9ac7acc4bda3bab267e6ac7"
-  //   ),
-  //   cellDep: (await ckbClient.getKnownScript(ccc.KnownScript.XUdt)).cellDeps[0]
-  //     .cellDep,
-  // },
-
   udtScriptInfo: {
-    ...testnetSudtInfo,
-    script: await ccc.Script.from({
-      ...testnetSudtInfo.script,
-      args: "0x07bccc105cdd747019a843d8bd0b5424efc33beb20b4f0db0f925e97f30c465f",
-    }),
+    name: ccc.KnownScript.XUdt,
+    script: await ccc.Script.fromKnownScript(
+      ckbClient,
+      ccc.KnownScript.XUdt,
+      "0x868c505051f06bb41646bd1b442dbed8035d91abd9ac7acc4bda3bab267e6ac7"
+    ),
+    cellDep: (await ckbClient.getKnownScript(ccc.KnownScript.XUdt)).cellDeps[0]
+      .cellDep,
   },
+
+  // udtScriptInfo: {
+  //   ...testnetSudtInfo,
+  //   script: await ccc.Script.from({
+  //     ...testnetSudtInfo.script,
+  //     args: "0x07bccc105cdd747019a843d8bd0b5424efc33beb20b4f0db0f925e97f30c465f",
+  //   }),
+  // },
 
   receivers: [
     {
@@ -161,10 +154,12 @@ transferUdt({
 pnpm tsx packages/examples/src/udt/1-udt-transfer-on-btc.ts
 
 
-btcTxId: cefdc47c51e5a48576a25c50ea3249a5b3d4029c01f6712424c78bd8bd449e76
-ckbTxId: 0x9d236f0698ad0f742027db3d58c9de77e734f9fbc8fa9213805ffc9ea5673b4e
+xUDT:
+btcTxId: 65ef87fa75c3122e718d50112defffb92010808759947a48f1b11ecb48c76c02
+ckbTxId: 0x2d9b4866fb8a1ce10a66ef37fc741b6f77fba580513ca45ae30bbddd68d51fe5
 
 
+sUDT:
 btcTxId: 7f6c43de47becbafe4954e3b1cc917f41aa6919a8ef040a188b481ec74972acc
 ckbTxId: 0x817dfd20228df3294e511336908dd6ed2252f8cb2ea27a22b5e27d029a8e5129
 */

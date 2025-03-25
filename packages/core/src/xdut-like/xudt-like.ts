@@ -61,6 +61,13 @@ export class RgbppXudtLikeClient {
     return this.scriptManager.buildRgbppLockScript(utxoSeal);
   }
 
+  buildPseudoRgbppLockScript(receiverIndex: number) {
+    return this.scriptManager.buildRgbppLockScript({
+      txId: TX_ID_PLACEHOLDER,
+      index: receiverIndex + 1, // 0 is for OP_RETURN
+    });
+  }
+
   async buildBtcTimeLockScript(
     ckbAddress: string,
     confirmations?: number,
@@ -174,7 +181,7 @@ export class RgbppXudtLikeClient {
         witnesses.push(committedLength);
       }
     }
-    // ? the original witnesses in tx (spore) are not discarded, otherwise `prepareSighashAllWitness` will fail
+    // ? the original witnesses in tx (spore) are discarded, otherwise `prepareSighashAllWitness` will fail
     // const position = await this.findInputIndexByLock(scriptLike, client);
     tx.witnesses = [...witnesses];
 
