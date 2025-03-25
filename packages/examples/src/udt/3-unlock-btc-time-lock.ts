@@ -10,15 +10,15 @@ import {
 import { RgbppTxLogger } from "../common/logger.js";
 import { testnetSudtCellDep } from "../common/assets.js";
 import { collectBtcTimeLockCells } from "../common/utils.js";
-import {
-  rgbppXudtLikeClient,
-  rgbppBtcWallet,
-  ckbClient,
-  ckbSigner,
-} from "../common/env.js";
+import { ckbClient, ckbSigner, initializeRgbppEnv } from "../common/env.js";
 
 async function unlockBtcTimeLock(btcTimeLockArgs: string) {
-  const btcTimeLockCells = await collectBtcTimeLockCells(btcTimeLockArgs);
+  const { rgbppBtcWallet, rgbppXudtLikeClient } = initializeRgbppEnv();
+
+  const btcTimeLockCells = await collectBtcTimeLockCells(
+    btcTimeLockArgs,
+    rgbppXudtLikeClient
+  );
 
   const tx = ccc.Transaction.default();
 
