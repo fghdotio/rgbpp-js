@@ -5,49 +5,31 @@ import {
   TX_ID_PLACEHOLDER,
   RgbppBtcReceiver,
   parseUtxoSealFromScriptArgs,
-  PredefinedScriptName,
-  UtxoSeal,
+  ScriptInfo,
 } from "@rgbpp-js/core";
 
-import {
-  ckbSigner,
-  ckbClient,
-  ckbRgbppUnlockSinger,
-  rgbppXudtLikeClient,
-  utxoBasedAccountAddress,
-  rgbppBtcWallet,
-} from "../common/env.js";
+import { ckbSigner, ckbClient, initializeRgbppEnv } from "../common/env.js";
 
+import { testnetSudtInfo } from "../common/assets.js";
 import { RgbppTxLogger } from "../common/logger.js";
-import { collectRgbppCells } from "../common/utils.js";
 
 async function transferUdt({
-  utxoSeals,
-  udtId,
+  udtScriptInfo,
   receivers,
 }: {
-  utxoSeals?: UtxoSeal[];
-  udtId: string;
+  udtScriptInfo: ScriptInfo;
   receivers: RgbppBtcReceiver[];
 }) {
-  const xudtTypeScript = await ccc.Script.fromKnownScript(
-    ckbClient,
-    ccc.KnownScript.XUdt,
-    udtId
-  );
-
-  // ? How to get cell deps using ccc?
-  // ckbClient.getCellDeps();
-  // const cell = await ckbClient.findSingletonCellByType(xudtTypeScript);
-  // if (!cell) {
-  //   throw new Error("XUDT cell not found");
-  // }
+  const {
+    rgbppBtcWallet,
+    rgbppXudtLikeClient,
+    utxoBasedAccountAddress,
+    ckbRgbppUnlockSinger,
+  } = initializeRgbppEnv([udtScriptInfo]);
 
   const udt = new ccc.udt.Udt(
-    rgbppXudtLikeClient.getRgbppScriptsDetail()[
-      PredefinedScriptName.Xudt
-    ].cellDep.outPoint,
-    xudtTypeScript
+    udtScriptInfo.cellDep.outPoint,
+    udtScriptInfo.script
   );
 
   let { res: tx } = await udt.transfer(
@@ -62,58 +44,24 @@ async function transferUdt({
   );
 
   let txWithInputs: ccc.Transaction;
-  if (!utxoSeals) {
-    // * collect udt inputs using ccc
-    txWithInputs = await udt.completeChangeToLock(
-      tx,
-      ckbRgbppUnlockSinger,
-      rgbppXudtLikeClient.buildRgbppLockScript({
-        txId: TX_ID_PLACEHOLDER,
-        index: receivers.length + 1,
-      })
-    );
 
-    utxoSeals = await Promise.all(
-      txWithInputs.inputs.map(async (input) => {
-        await input.completeExtraInfos(ckbClient);
-        return parseUtxoSealFromScriptArgs(input.cellOutput!.lock.args);
-      })
-    );
-    console.log(utxoSeals);
-  } else {
-    // * use specified rgbpp cells
-    const rgbppLiveCells = await collectRgbppCells(utxoSeals, xudtTypeScript);
-    tx.inputs.push(
-      ...rgbppLiveCells.map(({ outPoint, outputData, cellOutput }) =>
-        ccc.CellInput.from({
-          previousOutput: outPoint,
-          outputData,
-          cellOutput,
-        })
-      )
-    );
+  // * collect udt inputs using ccc
+  txWithInputs = await udt.completeChangeToLock(
+    tx,
+    ckbRgbppUnlockSinger,
+    rgbppXudtLikeClient.buildRgbppLockScript({
+      txId: TX_ID_PLACEHOLDER,
+      index: receivers.length + 1,
+    })
+  );
 
-    const balanceDiff =
-      (await tx.getInputsUdtBalance(
-        ckbClient as unknown as ccc.Client,
-        xudtTypeScript
-      )) - tx.getOutputsUdtBalance(xudtTypeScript);
-    if (balanceDiff < ccc.Zero) {
-      throw new Error("Insufficient balance");
-    } else if (balanceDiff > ccc.Zero) {
-      tx.addOutput(
-        {
-          lock: rgbppXudtLikeClient.buildRgbppLockScript({
-            txId: TX_ID_PLACEHOLDER,
-            index: receivers.length + 1,
-          }),
-          type: xudtTypeScript,
-        },
-        ccc.numLeToBytes(balanceDiff, 16)
-      );
-    }
-    txWithInputs = tx;
-  }
+  const utxoSeals = await Promise.all(
+    txWithInputs.inputs.map(async (input) => {
+      await input.completeExtraInfos(ckbClient);
+      return parseUtxoSealFromScriptArgs(input.cellOutput!.lock.args);
+    })
+  );
+  console.log(utxoSeals);
 
   const txWithRgbppWitnessPlaceholder =
     await rgbppXudtLikeClient.injectRgbppWitnessPlaceholder(txWithInputs);
@@ -157,13 +105,25 @@ async function transferUdt({
 const logger = new RgbppTxLogger({ opType: "ccc-udt-xudt-btc-transfer" });
 
 transferUdt({
-  // utxoSeals: [
-  //   {
-  //     txId: "d4d32071a8ea3b2510b9dda263e21cb416dc4e4b6dcebd80d26a28597665be62",
-  //     index: 6,
-  //   },
-  // ],
-  udtId: "0x406311adf5e4ae826d89480d28b01001768ea4df3693c1e3e4d48a6752c5f3ec",
+  // udtScriptInfo: {
+  //   name: ccc.KnownScript.XUdt,
+  //   script: await ccc.Script.fromKnownScript(
+  //     ckbClient,
+  //     ccc.KnownScript.XUdt,
+  //     "0x868c505051f06bb41646bd1b442dbed8035d91abd9ac7acc4bda3bab267e6ac7"
+  //   ),
+  //   cellDep: (await ckbClient.getKnownScript(ccc.KnownScript.XUdt)).cellDeps[0]
+  //     .cellDep,
+  // },
+
+  udtScriptInfo: {
+    ...testnetSudtInfo,
+    script: await ccc.Script.from({
+      ...testnetSudtInfo.script,
+      args: "0x07bccc105cdd747019a843d8bd0b5424efc33beb20b4f0db0f925e97f30c465f",
+    }),
+  },
+
   receivers: [
     {
       address: "tb1qjkdqj8zk6gl7pwuw2d2jp9e6wgf26arjl8pcys",
@@ -198,5 +158,13 @@ transferUdt({
   });
 
 /* 
-pnpm tsx packages/examples/src/udt/ccc-udt-xudt-btc-transfer.ts
+pnpm tsx packages/examples/src/udt/1-udt-transfer-on-btc.ts
+
+
+btcTxId: cefdc47c51e5a48576a25c50ea3249a5b3d4029c01f6712424c78bd8bd449e76
+ckbTxId: 0x9d236f0698ad0f742027db3d58c9de77e734f9fbc8fa9213805ffc9ea5673b4e
+
+
+btcTxId: 7f6c43de47becbafe4954e3b1cc917f41aa6919a8ef040a188b481ec74972acc
+ckbTxId: 0x817dfd20228df3294e511336908dd6ed2252f8cb2ea27a22b5e27d029a8e5129
 */

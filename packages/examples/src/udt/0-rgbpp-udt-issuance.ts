@@ -14,13 +14,12 @@ async function issueUdt({
   udtScriptInfo: ScriptInfo;
   utxoSeal?: UtxoSeal;
 }) {
-  const env = initializeRgbppEnv([udtScriptInfo]);
   const {
     rgbppBtcWallet,
     rgbppXudtLikeClient,
     utxoBasedAccountAddress,
     ckbRgbppUnlockSinger,
-  } = env;
+  } = initializeRgbppEnv([udtScriptInfo]);
 
   if (!utxoSeal) {
     utxoSeal = await rgbppBtcWallet.prepareUtxoSeal(10);
