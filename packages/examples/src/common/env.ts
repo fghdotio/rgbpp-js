@@ -10,71 +10,90 @@ import {
   CkbRgbppUnlockSinger,
   buildNetworkConfig,
   PredefinedNetwork,
+  isMainnet,
+  ScriptInfo,
+  NetworkConfig,
 } from "@rgbpp-js/core";
 import {
   createBtcAccount,
   RgbppBtcWallet,
   AddressType,
+  BtcAccount,
 } from "@rgbpp-js/bitcoin";
-import { testnetSudt, testnetSudtCellDep } from "./assets.js";
 
 dotenv.config({ path: dirname(fileURLToPath(import.meta.url)) + "/../.env" });
 
 const utxoBasedChainName = process.env.UTXO_BASED_CHAIN_NAME!;
-
-const networkConfig = buildNetworkConfig(
-  utxoBasedChainName as PredefinedNetwork,
-  {
-    scripts: { sUDT: testnetSudt },
-    cellDeps: { sUDT: testnetSudtCellDep },
-  }
-);
-
-export const ckbClient = networkConfig.isMainnet
-  ? new ccc.ClientPublicMainnet()
-  : new ccc.ClientPublicTestnet();
-export const ckbSigner = new ccc.SignerCkbPrivateKey(
-  ckbClient,
-  process.env.CKB_SECP256K1_PRIVATE_KEY!
-);
-export const ckbAddress = await ckbSigner.getRecommendedAddress();
-
+const ckbPrivateKey = process.env.CKB_SECP256K1_PRIVATE_KEY!;
 const utxoBasedChainPrivateKey = process.env.UTXO_BASED_CHAIN_PRIVATE_KEY!;
 const utxoBasedChainAddressType = process.env.UTXO_BASED_CHAIN_ADDRESS_TYPE!;
 const btcAssetsApiUrl = process.env.BTC_ASSETS_API_URL!;
 const btcAssetsApiToken = process.env.BTC_ASSETS_API_TOKEN!;
 const btcAssetsApiOrigin = process.env.BTC_ASSETS_API_ORIGIN!;
 
+export const ckbClient = isMainnet(utxoBasedChainName)
+  ? new ccc.ClientPublicMainnet()
+  : new ccc.ClientPublicTestnet();
+
 const addressType =
   utxoBasedChainAddressType === "P2TR" ? AddressType.P2TR : AddressType.P2WPKH;
 
-const utxoBasedAccount = createBtcAccount(
-  utxoBasedChainPrivateKey,
-  addressType,
-  networkConfig.name
-);
-export const utxoBasedAccountAddress = utxoBasedAccount.from;
+export const ckbSigner = new ccc.SignerCkbPrivateKey(ckbClient, ckbPrivateKey);
+// export const ckbAddress = await ckbSigner.getRecommendedAddress();
 
-export const rgbppXudtLikeClient = new RgbppXudtLikeClient(
-  networkConfig,
-  ckbClient
-);
+export function initializeRgbppEnv(scriptInfos?: ScriptInfo[]): {
+  networkConfig: NetworkConfig;
+  utxoBasedAccount: BtcAccount;
+  utxoBasedAccountAddress: string;
+  rgbppXudtLikeClient: RgbppXudtLikeClient;
+  rgbppBtcWallet: RgbppBtcWallet;
+  ckbRgbppUnlockSinger: CkbRgbppUnlockSinger;
+} {
+  const scripts = scriptInfos?.reduce(
+    (acc: Record<string, any>, { name, script, cellDep }) => {
+      acc.scripts[name] = script;
+      acc.cellDeps[name] = cellDep;
+      return acc;
+    },
+    { scripts: {}, cellDeps: {} }
+  );
 
-export const rgbppBtcWallet = new RgbppBtcWallet(
-  utxoBasedChainPrivateKey,
-  addressType,
-  networkConfig.name,
-  {
-    url: btcAssetsApiUrl,
-    token: btcAssetsApiToken,
-    origin: btcAssetsApiOrigin,
-  }
-);
+  const networkConfig = buildNetworkConfig(
+    utxoBasedChainName as PredefinedNetwork,
+    scripts
+  );
 
-export const ckbRgbppUnlockSinger = new CkbRgbppUnlockSinger(
-  ckbClient,
-  utxoBasedAccountAddress,
-  rgbppBtcWallet,
-  rgbppBtcWallet,
-  rgbppXudtLikeClient.getRgbppScriptsDetail()
-);
+  const utxoBasedAccount = createBtcAccount(
+    utxoBasedChainPrivateKey,
+    addressType,
+    networkConfig.name
+  );
+
+  const rgbppXudtLikeClient = new RgbppXudtLikeClient(networkConfig, ckbClient);
+
+  const rgbppBtcWallet = new RgbppBtcWallet(
+    utxoBasedChainPrivateKey,
+    addressType,
+    networkConfig.name,
+    {
+      url: btcAssetsApiUrl,
+      token: btcAssetsApiToken,
+      origin: btcAssetsApiOrigin,
+    }
+  );
+
+  return {
+    networkConfig,
+    utxoBasedAccount,
+    utxoBasedAccountAddress: utxoBasedAccount.from,
+    rgbppXudtLikeClient,
+    rgbppBtcWallet,
+    ckbRgbppUnlockSinger: new CkbRgbppUnlockSinger(
+      ckbClient,
+      utxoBasedAccount.from,
+      rgbppBtcWallet,
+      rgbppBtcWallet,
+      rgbppXudtLikeClient.getRgbppScriptsDetail()
+    ),
+  };
+}

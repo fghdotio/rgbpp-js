@@ -1,14 +1,9 @@
 import { ccc } from "@ckb-ccc/shell";
+import { ScriptInfo } from "@rgbpp-js/core";
 
-export const xudtToken = {
-  name: "Standard xUDT",
-  symbol: "stdXUDT",
-  decimal: 8,
-};
-
-export const sudtToken = {
-  name: "Standard sUDT",
-  symbol: "stdSUDT",
+export const udtToken = {
+  name: "Just UDT",
+  symbol: "jUDT",
   decimal: 8,
 };
 
@@ -35,3 +30,9 @@ export const testnetSudtCellDep = ccc.CellDep.from({
   },
   depType: "code",
 });
+
+export const testnetSudtInfo: ScriptInfo = {
+  name: "sUDT",
+  script: testnetSudt,
+  cellDep: testnetSudtCellDep,
+};

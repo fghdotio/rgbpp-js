@@ -1,39 +1,47 @@
 import { ccc } from "@ckb-ccc/shell";
 
-import { UtxoSeal, buildBtcRgbppOutputs } from "@rgbpp-js/core";
+import { UtxoSeal, buildBtcRgbppOutputs, ScriptInfo } from "@rgbpp-js/core";
 
-import {
-  ckbRgbppUnlockSinger,
-  rgbppBtcWallet,
-  rgbppXudtLikeClient,
-  utxoBasedAccountAddress,
-  ckbClient,
-  ckbSigner,
-} from "../common/env.js";
+import { ckbClient, ckbSigner, initializeRgbppEnv } from "../common/env.js";
 import { prepareRgbppCells } from "../common/utils.js";
-import { issuanceAmount, xudtToken } from "../common/assets.js";
+import { issuanceAmount, udtToken, testnetSudtInfo } from "../common/assets.js";
 import { RgbppTxLogger } from "../common/logger.js";
 
-async function issueXudt(utxoSeal?: UtxoSeal) {
+async function issueUdt({
+  udtScriptInfo,
+  utxoSeal,
+}: {
+  udtScriptInfo: ScriptInfo;
+  utxoSeal?: UtxoSeal;
+}) {
+  const env = initializeRgbppEnv([udtScriptInfo]);
+  const {
+    rgbppBtcWallet,
+    rgbppXudtLikeClient,
+    utxoBasedAccountAddress,
+    ckbRgbppUnlockSinger,
+  } = env;
+
   if (!utxoSeal) {
     utxoSeal = await rgbppBtcWallet.prepareUtxoSeal(10);
   }
 
-  const rgbppIssuanceCells = await prepareRgbppCells(utxoSeal);
+  const rgbppIssuanceCells = await prepareRgbppCells(
+    utxoSeal,
+    rgbppXudtLikeClient
+  );
 
   const ckbPartialTx = await rgbppXudtLikeClient.issuanceCkbPartialTx({
-    token: xudtToken,
+    token: udtToken,
     amount: issuanceAmount,
     rgbppLiveCells: rgbppIssuanceCells,
-    xudtLikeTypeScript: await ccc.Script.fromKnownScript(
-      ckbClient,
-      ccc.KnownScript.XUdt,
-      ""
-    ),
+    xudtLikeTypeScript: ccc.Script.from({
+      ...udtScriptInfo.script,
+    }),
   });
   logger.logCkbTx("ckbPartialTx", ckbPartialTx);
   console.log(
-    "Unique ID of issued xUDT token",
+    "Unique ID of issued udt token",
     ckbPartialTx.outputs[0].type!.args
   );
 
@@ -67,11 +75,7 @@ async function issueXudt(utxoSeal?: UtxoSeal) {
   // > Commitment must cover all Inputs and Outputs where Type is not null;
   // https://github.com/utxostack/RGBPlusPlus-design/blob/main/docs/lockscript-design-prd-en.md#requirements-and-limitations-on-isomorphic-binding
   // https://github.com/fghdotio/rgbpp/blob/main/contracts/rgbpp-lock/src/main.rs#L197-L200
-  await rgbppSignedCkbTx.completeFeeBy(
-    ckbSigner,
-    await ckbClient.getFeeRate(),
-    { scriptLenRange: [0, 1] }
-  );
+  await rgbppSignedCkbTx.completeFeeBy(ckbSigner);
   logger.logCkbTx("ckbPartialTxWithFee", rgbppSignedCkbTx);
   const ckbFinalTx = await ckbSigner.signTransaction(rgbppSignedCkbTx);
   logger.logCkbTx("ckbFinalTx", ckbFinalTx);
@@ -80,9 +84,27 @@ async function issueXudt(utxoSeal?: UtxoSeal) {
   logger.add("ckbTxId", txHash, true);
 }
 
-const logger = new RgbppTxLogger({ opType: "xudt-issuance" });
+const logger = new RgbppTxLogger({ opType: "udt-issuance" });
 
-issueXudt()
+issueUdt({
+  udtScriptInfo: {
+    name: ccc.KnownScript.XUdt,
+    script: await ccc.Script.fromKnownScript(
+      ckbClient,
+      ccc.KnownScript.XUdt,
+      ""
+    ),
+    cellDep: (await ckbClient.getKnownScript(ccc.KnownScript.XUdt)).cellDeps[0]
+      .cellDep,
+  },
+
+  // udtScriptInfo: testnetSudtInfo,
+
+  utxoSeal: {
+    txId: "5b92a0997ec6b516fa53b1c7521541cd83e0d9697ac40a84dde7b9a8dda5fef7",
+    index: 2,
+  },
+})
   .then(() => {
     logger.saveOnSuccess();
     process.exit(0);
@@ -94,5 +116,15 @@ issueXudt()
   });
 
 /* 
-pnpm tsx packages/examples/src/xUDT/1-issuance.ts
+pnpm tsx packages/examples/src/udt/0-rgbpp-udt-issuance.ts
+
+
+Unique ID of issued udt token 0x868c505051f06bb41646bd1b442dbed8035d91abd9ac7acc4bda3bab267e6ac7
+btcTxId: 176780899da293f23590f0ddfbf0f8a483b4fdd9938b7a96b9c87b9db9cd2edc
+ckbTxId: 0x339509cf2b50c8315324152db9cb239c4b206acd4f7087014f31fd2c61d235f2
+
+
+Unique ID of issued udt token 0x07bccc105cdd747019a843d8bd0b5424efc33beb20b4f0db0f925e97f30c465f
+btcTxId: 5b92a0997ec6b516fa53b1c7521541cd83e0d9697ac40a84dde7b9a8dda5fef7
+ckbTxId: 0x9b348bcd77e91219e0d8d69bd06d0e524e58bf261958e41817f1a09d5bae029a
 */

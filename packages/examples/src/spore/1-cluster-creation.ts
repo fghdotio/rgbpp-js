@@ -87,7 +87,10 @@ async function createSporeCluster(utxoSeal?: UtxoSeal) {
   await rgbppSignedCkbTx.completeFeeBy(ckbSigner, 3000);
   logger.logCkbTx("ckbPartialTxWithFee", rgbppSignedCkbTx);
 
-  // ? co-build witness
+  // ? 无法前置
+  // `prepareSighashAllWitness` will fail
+  // const position = await this.findInputIndexByLock(scriptLike, client);
+  // fee input unshift(0)?
   rgbppSignedCkbTx.witnesses.push(
     generateClusterCreateCoBuild(
       rgbppSignedCkbTx.outputs[0],

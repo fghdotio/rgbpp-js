@@ -22,3 +22,5 @@ export interface NetworkConfigOverrides {
   scripts?: Partial<ScriptSet>;
   cellDeps?: Partial<CellDepSet>;
 }
+
+export type Network = PredefinedNetwork | string;

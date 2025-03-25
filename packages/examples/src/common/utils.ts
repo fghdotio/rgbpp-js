@@ -1,11 +1,12 @@
 import { ccc } from "@ckb-ccc/shell";
 
-import { UtxoSeal } from "@rgbpp-js/core";
+import { RgbppXudtLikeClient, UtxoSeal } from "@rgbpp-js/core";
 
-import { ckbClient, ckbSigner, rgbppXudtLikeClient } from "./env.js";
+import { ckbClient, ckbSigner } from "./env.js";
 
 export async function prepareRgbppCells(
-  utxoSeal: UtxoSeal
+  utxoSeal: UtxoSeal,
+  rgbppXudtLikeClient: RgbppXudtLikeClient
 ): Promise<ccc.Cell[]> {
   const rgbppLockScript = rgbppXudtLikeClient.buildRgbppLockScript(utxoSeal);
 
@@ -49,7 +50,8 @@ export async function prepareRgbppCells(
 
 export async function collectRgbppCells(
   utxoSeals: UtxoSeal[],
-  typeScript: ccc.Script
+  typeScript: ccc.Script,
+  rgbppXudtLikeClient: RgbppXudtLikeClient
 ): Promise<ccc.Cell[]> {
   let rgbppLiveCells: ccc.Cell[] = [];
 
@@ -75,7 +77,8 @@ export async function collectRgbppCells(
 }
 
 export async function collectBtcTimeLockCells(
-  btcTimeLockArgs: string
+  btcTimeLockArgs: string,
+  rgbppXudtLikeClient: RgbppXudtLikeClient
 ): Promise<ccc.Cell[]> {
   const btcTimeLockCellsGen = await ckbClient.findCellsByLock({
     ...rgbppXudtLikeClient.btcTimeLockScriptTemplate(),
