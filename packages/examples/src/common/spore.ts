@@ -107,7 +107,7 @@ export const generateSporeTransferCoBuild = (
   return assembleCobuildWitnessLayout(sporeActions);
 };
 
-export const injectClusterCreationWitness = async (
+export const insertClusterCreationWitness = async (
   tx_: ccc.Transaction,
   client: ccc.Client
 ): Promise<ccc.Transaction> => {
@@ -117,6 +117,26 @@ export const injectClusterCreationWitness = async (
     tx.outputs[0],
     tx.outputsData[0]
   ) as ccc.Hex;
+  tx.witnesses.push(cobuild);
+
+  await prepareFeeWitness(tx, client);
+
+  return tx;
+};
+
+export const insertSporeCreationWitness = async (
+  tx_: ccc.Transaction,
+  clusterCell: ccc.Cell,
+  client: ccc.Client
+): Promise<ccc.Transaction> => {
+  const tx = tx_.clone();
+
+  const cobuild = generateSporeCreateCoBuild({
+    sporeOutputs: tx.outputs.slice(1, tx.outputs.length),
+    sporeOutputsData: tx.outputsData.slice(1, tx.outputsData.length),
+    clusterCell,
+    clusterOutputCell: tx.outputs[0],
+  }) as ccc.Hex;
   tx.witnesses.push(cobuild);
 
   await prepareFeeWitness(tx, client);

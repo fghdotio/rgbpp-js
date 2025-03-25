@@ -150,7 +150,7 @@ export class RgbppBtcWallet extends BtcAssetsApiBase {
       // TODO: verify if any of the required extra inputs are already present in the inputs array
       const { inputs: extraInputs, changeValue: newChangeValue } =
         await this.collectUtxos(-changeValue, {
-          only_non_rgbpp_utxos: true,
+          only_non_rgbpp_utxos: false,
           min_satoshi: 1000,
         });
       inputs.push(...extraInputs);
@@ -231,11 +231,16 @@ export class RgbppBtcWallet extends BtcAssetsApiBase {
       const { inputs: extraInputs } = await this.collectUtxos(
         totalOutputValue - totalInputValue,
         {
-          only_non_rgbpp_utxos: true,
+          only_non_rgbpp_utxos: false,
           min_satoshi: 1000,
         },
       );
       extraInputs.forEach((input) => psbt.addInput(input));
+      // console.log(
+      //   "totalInputValue",
+      //   totalInputValue +
+      //     extraInputs.reduce((acc, input) => acc + input.witnessUtxo.value, 0),
+      // );
     }
 
     const tx = await this.signTx(psbt);

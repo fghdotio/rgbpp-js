@@ -10,7 +10,7 @@ import {
 import { ckbClient, ckbSigner, initializeRgbppEnv } from "../common/env.js";
 
 import { RgbppTxLogger } from "../common/logger.js";
-import { generateSporeCreateCoBuild } from "../common/spore.js";
+import { insertSporeCreationWitness } from "../common/spore.js";
 
 async function createSpore({
   receiverInfo,
@@ -88,31 +88,26 @@ async function createSpore({
   const rgbppSignedCkbTx =
     await ckbRgbppUnlockSinger.signTransaction(ckbPartialTxInjected);
 
-  await rgbppSignedCkbTx.completeFeeBy(ckbSigner, 3000);
-  logger.logCkbTx("ckbPartialTxWithFee", rgbppSignedCkbTx);
-
-  rgbppSignedCkbTx.witnesses.push(
-    generateSporeCreateCoBuild({
-      sporeOutputs: rgbppSignedCkbTx.outputs.slice(
-        1,
-        rgbppSignedCkbTx.outputs.length - 1
-      ),
-      sporeOutputsData: rgbppSignedCkbTx.outputsData.slice(
-        1,
-        rgbppSignedCkbTx.outputsData.length - 1
-      ),
-      clusterCell: rgbppClusterCell,
-      clusterOutputCell: rgbppSignedCkbTx.outputs[0],
-    }) as ccc.Hex
+  const rgbppSignedCkbTxWithCobuild = await insertSporeCreationWitness(
+    rgbppSignedCkbTx,
+    rgbppClusterCell,
+    ckbClient
   );
-  rgbppSignedCkbTx.cellDeps.push(
+
+  // because of not being able to use cluster mode
+  rgbppSignedCkbTxWithCobuild.cellDeps.push(
     ccc.CellDep.from({
       outPoint: rgbppClusterCell.outPoint,
       depType: "code",
     })
   );
 
-  const ckbFinalTx = await ckbSigner.signTransaction(rgbppSignedCkbTx);
+  await rgbppSignedCkbTxWithCobuild.completeFeeBy(ckbSigner);
+  logger.logCkbTx("ckbFinalTxToSign", rgbppSignedCkbTx);
+
+  const ckbFinalTx = await ckbSigner.signTransaction(
+    rgbppSignedCkbTxWithCobuild
+  );
   logger.logCkbTx("ckbFinalTx", ckbFinalTx);
   const txHash = await ckbSigner.client.sendTransaction(ckbFinalTx);
   await ckbRgbppUnlockSinger.client.waitTransaction(txHash);

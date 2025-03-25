@@ -6,7 +6,7 @@ import { ckbClient, ckbSigner, initializeRgbppEnv } from "../common/env.js";
 import { prepareRgbppCells } from "../common/utils.js";
 import { clusterData } from "../common/assets.js";
 import { RgbppTxLogger } from "../common/logger.js";
-import { injectClusterCreationWitness } from "../common/spore.js";
+import { insertClusterCreationWitness } from "../common/spore.js";
 import { inspect } from "util";
 
 async function createSporeCluster(utxoSeal?: UtxoSeal) {
@@ -79,7 +79,7 @@ async function createSporeCluster(utxoSeal?: UtxoSeal) {
   const rgbppSignedCkbTx =
     await ckbRgbppUnlockSinger.signTransaction(ckbPartialTxInjected);
 
-  const rgbppSignedCkbTxWithCobuild = await injectClusterCreationWitness(
+  const rgbppSignedCkbTxWithCobuild = await insertClusterCreationWitness(
     rgbppSignedCkbTx,
     ckbSigner.client
   );
