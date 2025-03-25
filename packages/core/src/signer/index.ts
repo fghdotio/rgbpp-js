@@ -205,12 +205,23 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
     });
   }
 
-  injectWitnesses(
+  async injectWitnesses(
     partialTx: ccc.Transaction,
     btcLikeTxBytes: string,
     spvClient: SpvProof,
-  ): ccc.Transaction {
+  ): Promise<ccc.Transaction> {
     const tx = partialTx.clone();
+    console.log(
+      `==== input length: ${tx.inputs.length}, witness length: ${tx.witnesses.length} ====`,
+    );
+
+    // let sporeWitness: ccc.Hex | undefined;
+    // if (
+    //   tx.witnesses.length > tx.inputs.length &&
+    //   hasSporeRelatedType(tx, this.client)
+    // ) {
+    //   sporeWitness = tx.witnesses.pop();
+    // }
 
     let committedLength: CommittedLength | undefined;
     const rgbppWitnessIndices = tx.witnesses
@@ -254,6 +265,20 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
       tx.witnesses[index] = rgbppWitness;
     });
 
+    // if (sporeWitness) {
+    //   // TODO replace with real spore witness
+    //   tx.witnesses.push(sporeWitness);
+
+    //   const minFee = tx.estimateFee(1000);
+    //   const inputCapacity = await tx.getInputsCapacity(this.client);
+    //   const outputCapacity = tx.getOutputsCapacity();
+    //   if (inputCapacity - outputCapacity - minFee < 0) {
+    //     console.log("has spore witness, extra fee input is needed");
+    //     // insert a 0x witness at the last but one position
+    //     tx.witnesses.splice(tx.witnesses.length - 1, 0, "0x");
+    //   }
+    // }
+
     return tx;
   }
 
@@ -280,7 +305,7 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
     const ckbAddresses = rgbppCellOutputs.map((output) => {
       return ccc.Address.from({
         script: output.lock,
-        prefix: "",
+        prefix: "", // TODO 填充 prefix
       });
     });
 

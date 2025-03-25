@@ -106,3 +106,35 @@ export const generateSporeTransferCoBuild = (
   }
   return assembleCobuildWitnessLayout(sporeActions);
 };
+
+export const injectClusterCreationWitness = async (
+  tx_: ccc.Transaction,
+  client: ccc.Client
+): Promise<ccc.Transaction> => {
+  const tx = tx_.clone();
+
+  const cobuild = generateClusterCreateCoBuild(
+    tx.outputs[0],
+    tx.outputsData[0]
+  ) as ccc.Hex;
+  tx.witnesses.push(cobuild);
+
+  await prepareFeeWitness(tx, client);
+
+  return tx;
+};
+
+export async function prepareFeeWitness(
+  tx: ccc.Transaction,
+  client: ccc.Client
+): Promise<void> {
+  const minFee = tx.estimateFee(1000);
+  const inputCapacity = await tx.getInputsCapacity(client);
+  const outputCapacity = tx.getOutputsCapacity();
+
+  if (inputCapacity - outputCapacity - minFee < 0) {
+    console.log("has cobuild witness, extra fee input is needed");
+    // insert a 0x witness at the last but one position
+    tx.witnesses.splice(tx.witnesses.length - 1, 0, "0x");
+  }
+}

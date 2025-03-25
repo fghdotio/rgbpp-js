@@ -65,3 +65,10 @@ export function parseUtxoSealFromScriptArgs(args: ccc.Hex): UtxoSeal {
     index: getTxIndexFromScriptArgs(args),
   };
 }
+
+export function hasSporeRelatedType(
+  tx: ccc.Transaction,
+  client: ccc.Client,
+): boolean {
+  return true;
+}

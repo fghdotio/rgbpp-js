@@ -6,7 +6,8 @@ import { ckbClient, ckbSigner, initializeRgbppEnv } from "../common/env.js";
 import { prepareRgbppCells } from "../common/utils.js";
 import { clusterData } from "../common/assets.js";
 import { RgbppTxLogger } from "../common/logger.js";
-import { generateClusterCreateCoBuild } from "../common/spore.js";
+import { injectClusterCreationWitness } from "../common/spore.js";
+import { inspect } from "util";
 
 async function createSporeCluster(utxoSeal?: UtxoSeal) {
   const {
@@ -39,7 +40,8 @@ async function createSporeCluster(utxoSeal?: UtxoSeal) {
     tx,
   });
 
-  // ? see `injectRgbppWitnessPlaceholder`
+  console.log(inspect(ckbPartialTx, { showHidden: true, depth: null }));
+
   const txWithRgbppWitnessPlaceholder =
     await rgbppXudtLikeClient.injectRgbppWitnessPlaceholder(ckbPartialTx);
 
@@ -77,21 +79,17 @@ async function createSporeCluster(utxoSeal?: UtxoSeal) {
   const rgbppSignedCkbTx =
     await ckbRgbppUnlockSinger.signTransaction(ckbPartialTxInjected);
 
-  await rgbppSignedCkbTx.completeFeeBy(ckbSigner, 3000);
-  logger.logCkbTx("ckbPartialTxWithFee", rgbppSignedCkbTx);
-
-  // ? 无法前置
-  // `prepareSighashAllWitness` will fail
-  // const position = await this.findInputIndexByLock(scriptLike, client);
-  // fee input unshift(0)?
-  rgbppSignedCkbTx.witnesses.push(
-    generateClusterCreateCoBuild(
-      rgbppSignedCkbTx.outputs[0],
-      rgbppSignedCkbTx.outputsData[0]
-    ) as ccc.Hex
+  const rgbppSignedCkbTxWithCobuild = await injectClusterCreationWitness(
+    rgbppSignedCkbTx,
+    ckbSigner.client
   );
 
-  const ckbFinalTx = await ckbSigner.signTransaction(rgbppSignedCkbTx);
+  await rgbppSignedCkbTxWithCobuild.completeFeeBy(ckbSigner);
+  logger.logCkbTx("ckbFinalTxToSign", rgbppSignedCkbTxWithCobuild);
+
+  const ckbFinalTx = await ckbSigner.signTransaction(
+    rgbppSignedCkbTxWithCobuild
+  );
   logger.logCkbTx("ckbFinalTx", ckbFinalTx);
   const txHash = await ckbSigner.client.sendTransaction(ckbFinalTx);
   await ckbRgbppUnlockSinger.client.waitTransaction(txHash);
@@ -101,8 +99,8 @@ async function createSporeCluster(utxoSeal?: UtxoSeal) {
 const logger = new RgbppTxLogger({ opType: "cluster-creation" });
 
 createSporeCluster({
-  txId: "9243145d323312899a7c7c4e526d6f075301d5e0745e2dfc135c8b9b0f1fa13f",
-  index: 3,
+  txId: "0a57071711f3d8dabed23227a31f00a2d7130108a2bec13bca36deeccd669755",
+  index: 2,
 })
   .then(() => {
     logger.saveOnSuccess();
@@ -121,4 +119,14 @@ pnpm tsx packages/examples/src/spore/1-cluster-creation.ts
 clusterId: 0x7c9157efd21445b601e429e9cb0871a772f7531fcbf362dd2333c8c759d82b19
 btcTxId: fd79774ebf7b5cd641de47b708fb4f6a9fb417490df0be055eaf7915dcb3db28
 ckbTxId: 0xa6a62b6ad2e1c3a2929cf40f34d2082068f816d3cc5d5ee8820f8ad42bdbb4a4
+
+
+clusterId: 0x90b36a07945592686ad38ac0af5132785794cb9910702e4a2872183aba4b6ca0
+btcTxId: 0a57071711f3d8dabed23227a31f00a2d7130108a2bec13bca36deeccd669755
+ckbTxId: 0x9001d61481368ff9d5889949d0376fa1211e88c6993447907e30b73c03b36ea0
+
+
+clusterId: 0x341b804c60f6e62d63b309ad4005e0da06cf786224f89ee061acba4849e0b04d
+btcTxId: f9ab101251e59f776f6f9fe22ad075ccfb6dbabe9f1b6f0a4ff1ff2f9dc781c0
+ckbTxId: 0xd4d1f24811ebf542ccd8a9d0fb08f2c51b69d91ef464f00f5e2a953bdb7951ca
 */

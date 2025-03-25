@@ -182,8 +182,8 @@ export class RgbppXudtLikeClient {
         witnesses.push(committedLength);
       }
     }
-    // ? the original witnesses in tx (spore) are discarded, otherwise `prepareSighashAllWitness` will fail
-    // const position = await this.findInputIndexByLock(scriptLike, client);
+
+    // the potential partial cobuild witness in spore tx is discarded, otherwise `prepareSighashAllWitness` will fail
     tx.witnesses = [...witnesses];
 
     return tx;
