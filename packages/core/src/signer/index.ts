@@ -305,7 +305,7 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
     const ckbAddresses = rgbppCellOutputs.map((output) => {
       return ccc.Address.from({
         script: output.lock,
-        prefix: "", // TODO 填充 prefix
+        prefix: this.client.addressPrefix,
       });
     });
 
