@@ -2,6 +2,8 @@ import { ccc, spore } from "@ckb-ccc/shell";
 
 import { RawSporeData } from "@spore-sdk/core";
 
+import { inspect } from "util";
+
 import {
   buildBtcRgbppOutputs,
   parseUtxoSealFromScriptArgs,
@@ -40,6 +42,8 @@ async function createSpore({
     id: receiverInfo.rawSporeData.clusterId!,
     to: rgbppXudtLikeClient.buildPseudoRgbppLockScript(0), // new cluster output
   });
+
+  console.log(inspect(transferClusterTx, { showHidden: true, depth: null }));
 
   // ? API for creating multiple spores
   const { tx: ckbPartialTx, id } = await spore.createSpore({
@@ -90,10 +94,11 @@ async function createSpore({
 
   const rgbppSignedCkbTxWithCobuild = await insertSporeCreationWitness(
     rgbppSignedCkbTx,
-    rgbppClusterCell,
+    receiverInfo.rawSporeData.clusterId!,
     ckbClient
   );
 
+  // TODO: move to prepareTransaction
   // because of not being able to use cluster mode
   rgbppSignedCkbTxWithCobuild.cellDeps.push(
     ccc.CellDep.from({
@@ -141,6 +146,6 @@ createSpore({
 pnpm tsx packages/examples/src/spore/2-spore-creation.ts
 
 
-btcTxId: 366aa063338d2857adab368216e49c86ec86c1602a64b220bebf768a68a005c6
-ckbTxId: 0xe73adff53935c506c0b3e94e1c13405f28657ea0727c3687a92186b222752baa
+btcTxId: 0e611f8425cf0e9b32c17e690e62bcf00d4164351572f5afb42d94b850442491
+ckbTxId: 0x034e22c55d2be9cff68c130a7dde47301cb35d27c035ffb194e258c18ab0b8d9
 */

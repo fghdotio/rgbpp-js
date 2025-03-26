@@ -5,10 +5,7 @@ import { UtxoSeal, buildBtcRgbppOutputs } from "@rgbpp-js/core";
 import { ckbClient, ckbSigner, initializeRgbppEnv } from "../common/env.js";
 
 import { RgbppTxLogger } from "../common/logger.js";
-import {
-  generateSporeTransferCoBuild,
-  insertSporeTransferWitness,
-} from "../common/spore.js";
+import { insertSporeTransferWitness } from "../common/spore.js";
 import { inspect } from "util";
 
 async function transferSpore({
