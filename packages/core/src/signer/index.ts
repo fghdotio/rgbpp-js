@@ -20,6 +20,11 @@ import { SpvProof } from "../types/spv.js";
 import { prependHexPrefix } from "../utils/encoder.js";
 import { buildRgbppUnlock, decodeCommittedLength } from "../utils/rgbpp.js";
 import { getTxIdFromScriptArgs, isUsingOneOfScripts } from "../utils/script.js";
+import {
+  insertClusterCreationWitness,
+  insertSporeCreationWitness,
+  insertSporeTransferWitness,
+} from "../utils/spore.js";
 import { pollForSpvProof } from "../utils/spv.js";
 
 export class CkbRgbppUnlockSinger extends ccc.Signer {
@@ -215,14 +220,6 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
       `==== input length: ${tx.inputs.length}, witness length: ${tx.witnesses.length} ====`,
     );
 
-    // let sporeWitness: ccc.Hex | undefined;
-    // if (
-    //   tx.witnesses.length > tx.inputs.length &&
-    //   hasSporeRelatedType(tx, this.client)
-    // ) {
-    //   sporeWitness = tx.witnesses.pop();
-    // }
-
     let committedLength: CommittedLength | undefined;
     const rgbppWitnessIndices = tx.witnesses
       .map((witness, index) => ({ witness, index }))
@@ -265,21 +262,120 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
       tx.witnesses[index] = rgbppWitness;
     });
 
-    // if (sporeWitness) {
-    //   // TODO replace with real spore witness
-    //   tx.witnesses.push(sporeWitness);
-
-    //   const minFee = tx.estimateFee(1000);
-    //   const inputCapacity = await tx.getInputsCapacity(this.client);
-    //   const outputCapacity = tx.getOutputsCapacity();
-    //   if (inputCapacity - outputCapacity - minFee < 0) {
-    //     console.log("has spore witness, extra fee input is needed");
-    //     // insert a 0x witness at the last but one position
-    //     tx.witnesses.splice(tx.witnesses.length - 1, 0, "0x");
-    //   }
-    // }
+    await this.handleSporeWitness(tx);
 
     return tx;
+  }
+
+  async handleSporeWitness(tx: ccc.Transaction): Promise<void> {
+    const clusterScriptInfos = Object.values(
+      ccc.spore.getClusterScriptInfos(this.client),
+    );
+    const sporeScriptInfos = Object.values(
+      ccc.spore.getSporeScriptInfos(this.client),
+    );
+
+    const clusterIndicesInInputs: number[] = [];
+    const sporeIndicesInInputs: number[] = [];
+    const clusterIndicesInOutputs: number[] = [];
+    const sporeIndicesInOutputs: number[] = [];
+
+    await Promise.all(
+      tx.inputs.map(async (input, index) => {
+        await input.completeExtraInfos(this.client);
+        if (input.cellOutput?.type) {
+          sporeScriptInfos.forEach((si) => {
+            if (si && si.codeHash === input.cellOutput?.type?.codeHash) {
+              sporeIndicesInInputs.push(index);
+            }
+          });
+          clusterScriptInfos.forEach((si) => {
+            if (si && si.codeHash === input.cellOutput?.type?.codeHash) {
+              clusterIndicesInInputs.push(index);
+            }
+          });
+        }
+      }),
+    );
+
+    tx.outputs.forEach((output, index) => {
+      clusterScriptInfos.forEach((si) => {
+        if (si && si.codeHash === output.type?.codeHash) {
+          clusterIndicesInOutputs.push(index);
+        }
+      });
+      const sporeScriptInfos = Object.values(
+        ccc.spore.getSporeScriptInfos(this.client),
+      );
+      sporeScriptInfos.forEach((si) => {
+        if (si && si.codeHash === output.type?.codeHash) {
+          sporeIndicesInOutputs.push(index);
+        }
+      });
+    });
+
+    // print all the indices length
+    console.log(
+      "clusterIndicesInInputs",
+      clusterIndicesInInputs.length,
+      "clusterIndicesInOutputs",
+      clusterIndicesInOutputs.length,
+      "sporeIndicesInInputs",
+      sporeIndicesInInputs.length,
+      "sporeIndicesInOutputs",
+      sporeIndicesInOutputs.length,
+    );
+
+    if (
+      clusterIndicesInInputs.length === 0 &&
+      clusterIndicesInOutputs.length === 1 &&
+      sporeIndicesInInputs.length === 0 &&
+      sporeIndicesInOutputs.length === 0
+    ) {
+      console.log("cluster creation");
+      await insertClusterCreationWitness(
+        tx,
+        clusterIndicesInOutputs[0],
+        this.client,
+      );
+      return;
+    }
+
+    if (
+      clusterIndicesInInputs.length === 1 &&
+      clusterIndicesInOutputs.length === 1 &&
+      sporeIndicesInInputs.length === 0 &&
+      sporeIndicesInOutputs.length > 0
+    ) {
+      console.log("spore creation");
+      await insertSporeCreationWitness(
+        tx,
+        clusterIndicesInInputs[0],
+        clusterIndicesInOutputs[0],
+        sporeIndicesInOutputs,
+        this.client,
+      );
+      return;
+    }
+
+    // ? multiple spore transfer in one transaction
+    if (
+      clusterIndicesInInputs.length === 0 &&
+      clusterIndicesInOutputs.length === 0 &&
+      sporeIndicesInInputs.length === 1 &&
+      sporeIndicesInOutputs.length === 1
+    ) {
+      console.log("spore transfer");
+      await insertSporeTransferWitness(
+        tx,
+        sporeIndicesInInputs[0],
+        sporeIndicesInOutputs[0],
+        this.client,
+      );
+      return;
+    }
+
+    throw new Error("Unsupported transaction");
   }
 
   async connect(): Promise<void> {}

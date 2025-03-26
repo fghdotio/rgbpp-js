@@ -2,8 +2,6 @@ import { ccc, spore } from "@ckb-ccc/shell";
 
 import { RawSporeData } from "@spore-sdk/core";
 
-import { inspect } from "util";
-
 import {
   buildBtcRgbppOutputs,
   parseUtxoSealFromScriptArgs,
@@ -12,7 +10,6 @@ import {
 import { ckbClient, ckbSigner, initializeRgbppEnv } from "../common/env.js";
 
 import { RgbppTxLogger } from "../common/logger.js";
-import { insertSporeCreationWitness } from "../common/spore.js";
 
 async function createSpore({
   receiverInfo,
@@ -42,8 +39,6 @@ async function createSpore({
     id: receiverInfo.rawSporeData.clusterId!,
     to: rgbppXudtLikeClient.buildPseudoRgbppLockScript(0), // new cluster output
   });
-
-  console.log(inspect(transferClusterTx, { showHidden: true, depth: null }));
 
   // ? API for creating multiple spores
   const { tx: ckbPartialTx, id } = await spore.createSpore({
@@ -92,27 +87,19 @@ async function createSpore({
   const rgbppSignedCkbTx =
     await ckbRgbppUnlockSinger.signTransaction(ckbPartialTxInjected);
 
-  const rgbppSignedCkbTxWithCobuild = await insertSporeCreationWitness(
-    rgbppSignedCkbTx,
-    receiverInfo.rawSporeData.clusterId!,
-    ckbClient
-  );
-
   // TODO: move to prepareTransaction
   // because of not being able to use cluster mode
-  rgbppSignedCkbTxWithCobuild.cellDeps.push(
+  rgbppSignedCkbTx.cellDeps.push(
     ccc.CellDep.from({
       outPoint: rgbppClusterCell.outPoint,
       depType: "code",
     })
   );
 
-  await rgbppSignedCkbTxWithCobuild.completeFeeBy(ckbSigner);
+  await rgbppSignedCkbTx.completeFeeBy(ckbSigner);
   logger.logCkbTx("ckbFinalTxToSign", rgbppSignedCkbTx);
 
-  const ckbFinalTx = await ckbSigner.signTransaction(
-    rgbppSignedCkbTxWithCobuild
-  );
+  const ckbFinalTx = await ckbSigner.signTransaction(rgbppSignedCkbTx);
   logger.logCkbTx("ckbFinalTx", ckbFinalTx);
   const txHash = await ckbSigner.client.sendTransaction(ckbFinalTx);
   await ckbRgbppUnlockSinger.client.waitTransaction(txHash);
@@ -148,4 +135,8 @@ pnpm tsx packages/examples/src/spore/2-spore-creation.ts
 
 btcTxId: 0e611f8425cf0e9b32c17e690e62bcf00d4164351572f5afb42d94b850442491
 ckbTxId: 0x034e22c55d2be9cff68c130a7dde47301cb35d27c035ffb194e258c18ab0b8d9
+
+
+btcTxId: 25569146a3478fe16726ef3a8c5382a611830c9b90b8736c88cea1a9f8631d02
+ckbTxId: 0xeb2bd9e149982f70ad3898f1922cb61ec1838d662f7a294dceeee8a0ef89629d
 */

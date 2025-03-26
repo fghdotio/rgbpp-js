@@ -90,6 +90,12 @@ importers:
       '@nervosnetwork/ckb-sdk-utils':
         specifier: ^0.109.4
         version: 0.109.4
+      '@nervosnetwork/ckb-types':
+        specifier: 0.109.5
+        version: 0.109.5
+      '@spore-sdk/core':
+        specifier: ^0.2.0-beta.6
+        version: 0.2.1(@ckb-lumos/lumos@0.21.1)(lodash@4.17.21)
       bitcoinjs-lib:
         specifier: 6.1.6
         version: 6.1.6
