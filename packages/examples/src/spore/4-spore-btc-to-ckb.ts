@@ -2,17 +2,13 @@ import { ccc, spore } from "@ckb-ccc/shell";
 
 import { UtxoSeal, buildBtcRgbppOutputs } from "@rgbpp-js/core";
 
-import {
-  ckbRgbppUnlockSinger,
-  rgbppBtcWallet,
-  rgbppXudtLikeClient,
-  utxoBasedAccountAddress,
-  ckbClient,
-  ckbSigner,
-} from "../common/env.js";
+import { ckbClient, ckbSigner, initializeRgbppEnv } from "../common/env.js";
 
 import { RgbppTxLogger } from "../common/logger.js";
-import { generateSporeTransferCoBuild } from "../common/spore.js";
+import {
+  generateSporeTransferCoBuild,
+  insertSporeTransferWitness,
+} from "../common/spore.js";
 import { inspect } from "util";
 
 async function btcSporeToCkb({
@@ -24,6 +20,13 @@ async function btcSporeToCkb({
   ckbAddress: string;
   sporeTypeArgs: string;
 }) {
+  const {
+    rgbppBtcWallet,
+    rgbppXudtLikeClient,
+    utxoBasedAccountAddress,
+    ckbRgbppUnlockSinger,
+  } = initializeRgbppEnv();
+
   const { tx: ckbPartialTx } = await spore.transferSpore({
     signer: ckbSigner,
     id: sporeTypeArgs,
@@ -68,17 +71,18 @@ async function btcSporeToCkb({
   const rgbppSignedCkbTx =
     await ckbRgbppUnlockSinger.signTransaction(ckbPartialTxInjected);
 
-  await rgbppSignedCkbTx.completeFeeBy(ckbSigner, 3000);
-  logger.logCkbTx("ckbPartialTxWithFee", rgbppSignedCkbTx);
-
-  rgbppSignedCkbTx.witnesses.push(
-    generateSporeTransferCoBuild(
-      [(await spore.assertSpore(ckbClient, sporeTypeArgs)).cell],
-      rgbppSignedCkbTx.outputs.slice(0, 1)
-    ) as ccc.Hex
+  const rgbppSignedCkbTxWithCobuild = await insertSporeTransferWitness(
+    rgbppSignedCkbTx,
+    sporeTypeArgs,
+    ckbClient
   );
 
-  const ckbFinalTx = await ckbSigner.signTransaction(rgbppSignedCkbTx);
+  await rgbppSignedCkbTxWithCobuild.completeFeeBy(ckbSigner);
+  logger.logCkbTx("ckbPartialTxWithFee", rgbppSignedCkbTxWithCobuild);
+
+  const ckbFinalTx = await ckbSigner.signTransaction(
+    rgbppSignedCkbTxWithCobuild
+  );
   logger.logCkbTx("ckbFinalTx", ckbFinalTx);
   const txHash = await ckbSigner.client.sendTransaction(ckbFinalTx);
   await ckbRgbppUnlockSinger.client.waitTransaction(txHash);
@@ -89,13 +93,13 @@ const logger = new RgbppTxLogger({ opType: "spore-btc-to-ckb" });
 
 btcSporeToCkb({
   utxoSeal: {
-    txId: "f5417fdb977583bfec0262e9e41c0dda56f9bb84d7da71f0d7425c1b48587204",
-    index: 2,
+    txId: "459d62a172ef5d311354c1f544599396cb4291c36e5bacbe6a08b301d3015f72",
+    index: 1,
   },
   ckbAddress:
     "ckt1qzda0cr08m85hc8jlnfp3zer7xulejywt49kt2rr0vthywaa50xwsqfpu7pwavwf3yang8khrsklumayj6nyxhqpmh7fq",
   sporeTypeArgs:
-    "0xb1bf3620fa9caf55bd5e6ca05a99013cb48ba5cbf522efc34cc098da4a1cb1fe",
+    "0x8c2f6d23f1132aeec63a9c923ec82d5ccefe9e33aeb33bfd6125f063b597c7a9",
 })
   .then(() => {
     logger.saveOnSuccess();
@@ -110,5 +114,7 @@ btcSporeToCkb({
 /* 
 pnpm tsx packages/examples/src/spore/4-spore-btc-to-ckb.ts
 
-https://testnet.explorer.nervos.org/transaction/0xb168baa2e402832a6223f29b22ea7e14192cf319e2e26f6e60d69ef6ec10fd5b
+
+https://mempool.space/testnet/tx/2f3c6f0f580f654850ab9c1dce5519fc0c07d6c64b17d4207a8b16e39ce919b9
+https://testnet.explorer.nervos.org/transaction/0x34991e0eba85cda5fef82819c676d39eaeee4d813bb78c7c7a951c9dd426bdda
 */

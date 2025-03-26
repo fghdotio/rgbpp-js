@@ -144,6 +144,24 @@ export const insertSporeCreationWitness = async (
   return tx;
 };
 
+export const insertSporeTransferWitness = async (
+  tx_: ccc.Transaction,
+  sporeTypeArgs: string,
+  client: ccc.Client
+): Promise<ccc.Transaction> => {
+  const tx = tx_.clone();
+
+  const cobuild = generateSporeTransferCoBuild(
+    [(await ccc.spore.assertSpore(client, sporeTypeArgs)).cell],
+    tx.outputs.slice(0, 1)
+  ) as ccc.Hex;
+  tx.witnesses.push(cobuild);
+
+  await prepareFeeWitness(tx, client);
+
+  return tx;
+};
+
 export async function prepareFeeWitness(
   tx: ccc.Transaction,
   client: ccc.Client
