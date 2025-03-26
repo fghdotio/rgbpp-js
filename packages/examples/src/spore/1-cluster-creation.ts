@@ -87,10 +87,7 @@ async function createSporeCluster(utxoSeal?: UtxoSeal) {
 
 const logger = new RgbppTxLogger({ opType: "cluster-creation" });
 
-createSporeCluster({
-  txId: "0e611f8425cf0e9b32c17e690e62bcf00d4164351572f5afb42d94b850442491",
-  index: 3,
-})
+createSporeCluster()
   .then(() => {
     logger.saveOnSuccess();
     process.exit(0);
@@ -119,7 +116,18 @@ clusterId: 0x341b804c60f6e62d63b309ad4005e0da06cf786224f89ee061acba4849e0b04d
 btcTxId: f9ab101251e59f776f6f9fe22ad075ccfb6dbabe9f1b6f0a4ff1ff2f9dc781c0
 ckbTxId: 0xd4d1f24811ebf542ccd8a9d0fb08f2c51b69d91ef464f00f5e2a953bdb7951ca
 
+
 clusterId: 0x4147d017d7a13ce731ac0a6dd33ed056b641e2a8b02d9a722ea4aa77f2c36cd8
 btcTxId: 0f9f2ed86847642f475f0997fe4721c940497471dd9ae8b12b56e59c1f3a8857
 ckbTxId: 0x00f56d7c7dcc65ef3d1e132c8ceb70e6b6defd48684887c9e0b270af005e8f56
+
+
+clusterId: 0x9f57129a53e80349320f72395e1b72e64498518097956b1393c2a7b5ff4bd9ea
+btcTxId: f4ce852afafc0727938a5b075f62b146cf1e00bb7899690e8f9c4a4da9348a1a
+ckbTxId: 0x11d348698faff249ae5067a4d3a3e70d98a87c40dc1e6b283494619b5f58cf81
+
+
+clusterId: 0x526bf88c3061548cc2656fd0702f9fb91d7164a01b9fb1422923c43015f66d44
+btcTxId: a9fe267b8a944d9409ffac61965cb0c1afa41a56992b84a97aef104d30ef4e36
+ckbTxId: 0x344bbdafb30bd3de5df8518b7b8e1e06e2e233fe66967b556be507311a2348c8
 */

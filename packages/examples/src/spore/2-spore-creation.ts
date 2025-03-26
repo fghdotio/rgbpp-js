@@ -57,7 +57,7 @@ async function createSpore({
   logger.logCkbTx(
     "txWithRgbppWitnessPlaceholder",
     txWithRgbppWitnessPlaceholder,
-    true
+    false
   );
 
   const psbt = await rgbppBtcWallet.buildPsbt({
@@ -87,15 +87,6 @@ async function createSpore({
   const rgbppSignedCkbTx =
     await ckbRgbppUnlockSinger.signTransaction(ckbPartialTxInjected);
 
-  // TODO: move to prepareTransaction
-  // because of not being able to use cluster mode
-  rgbppSignedCkbTx.cellDeps.push(
-    ccc.CellDep.from({
-      outPoint: rgbppClusterCell.outPoint,
-      depType: "code",
-    })
-  );
-
   await rgbppSignedCkbTx.completeFeeBy(ckbSigner);
   logger.logCkbTx("ckbFinalTxToSign", rgbppSignedCkbTx);
 
@@ -115,7 +106,7 @@ createSpore({
       contentType: "text/plain",
       content: ccc.bytesFrom("First Spore Live", "utf8"),
       clusterId:
-        "0x7c9157efd21445b601e429e9cb0871a772f7531fcbf362dd2333c8c759d82b19",
+        "0x9f57129a53e80349320f72395e1b72e64498518097956b1393c2a7b5ff4bd9ea",
     },
   },
 })

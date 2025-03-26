@@ -41,7 +41,7 @@ async function btcSporeToCkb({
   logger.logCkbTx(
     "txWithRgbppWitnessPlaceholder",
     txWithRgbppWitnessPlaceholder,
-    true
+    false
   );
 
   const psbt = await rgbppBtcWallet.buildPsbt({
@@ -87,7 +87,7 @@ btcSporeToCkb({
   ckbAddress:
     "ckt1qzda0cr08m85hc8jlnfp3zer7xulejywt49kt2rr0vthywaa50xwsqfpu7pwavwf3yang8khrsklumayj6nyxhqpmh7fq",
   sporeTypeArgs:
-    "0x1ce69c40f01f412128aadc4acaf2af4292b12efdf7bbec11824c708cf4ab70d8",
+    "0x02e7ba8f4a846774c8715b78bf14244e33a92fd1c23538fd072d8f006bd2cc57",
 })
   .then(() => {
     logger.saveOnSuccess();

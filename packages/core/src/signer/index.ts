@@ -68,7 +68,7 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
     return script && this.scriptMap[script.codeHash];
   }
 
-  collectCellDeps(tx: Transaction): ccc.CellDep[] {
+  async collectCellDeps(tx: Transaction): Promise<ccc.CellDep[]> {
     const scriptNames = new Set<ScriptName>(
       [
         ...tx.inputs.flatMap((input) =>
@@ -102,6 +102,59 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
       return [this.scriptsDetail[name].cellDep];
     });
 
+    // TODO: extract into a method
+    // * handle cluster transfer in spore transfer because of not being able to use cluster mode
+    const clusterScriptInfos = Object.values(
+      ccc.spore.getClusterScriptInfos(this.client),
+    );
+    const clusterIndicesInInputs: number[] = [];
+    const clusterIndicesInOutputs: number[] = [];
+    await Promise.all(
+      tx.inputs.map(async (input, index) => {
+        await input.completeExtraInfos(this.client);
+        if (input.cellOutput?.type) {
+          clusterScriptInfos.forEach((si) => {
+            if (si && si.codeHash === input.cellOutput?.type?.codeHash) {
+              clusterIndicesInInputs.push(index);
+            }
+          });
+        }
+      }),
+    );
+
+    tx.outputs.forEach((output, index) => {
+      clusterScriptInfos.forEach((si) => {
+        if (si && si.codeHash === output.type?.codeHash) {
+          clusterIndicesInOutputs.push(index);
+        }
+      });
+    });
+
+    if (
+      clusterIndicesInInputs.length > 0 &&
+      clusterIndicesInOutputs.length > 0
+    ) {
+      if (
+        clusterIndicesInInputs.length !== 1 ||
+        clusterIndicesInOutputs.length !== 1
+      ) {
+        throw new Error("Invalid cluster indices");
+      }
+      const inputCluster = tx.inputs[clusterIndicesInInputs[0]];
+      await inputCluster.completeExtraInfos(this.client);
+      const inputClusterId = inputCluster.cellOutput!.type!.args;
+      const { cell: inputClusterCell } = await ccc.spore.assertCluster(
+        this.client,
+        inputClusterId,
+      );
+      cellDeps.push(
+        ccc.CellDep.from({
+          outPoint: inputClusterCell.outPoint,
+          depType: "code",
+        }),
+      );
+    }
+
     cellDeps = [...cellDeps, ...tx.cellDeps];
 
     const uniqueCellDepsMap = new Map<string, ccc.CellDep>();
@@ -117,7 +170,7 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
   async prepareTransaction(txLike: TransactionLike): Promise<Transaction> {
     const tx = ccc.Transaction.from(txLike);
 
-    tx.cellDeps = this.collectCellDeps(tx);
+    tx.cellDeps = await this.collectCellDeps(tx);
 
     const btcTxId = this.parseBtcTxIdFromScriptArgs(tx);
     const spvProof = await this.getSpvProof(btcTxId);
@@ -289,6 +342,7 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
               sporeIndicesInInputs.push(index);
             }
           });
+
           clusterScriptInfos.forEach((si) => {
             if (si && si.codeHash === input.cellOutput?.type?.codeHash) {
               clusterIndicesInInputs.push(index);
@@ -304,9 +358,7 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
           clusterIndicesInOutputs.push(index);
         }
       });
-      const sporeScriptInfos = Object.values(
-        ccc.spore.getSporeScriptInfos(this.client),
-      );
+
       sporeScriptInfos.forEach((si) => {
         if (si && si.codeHash === output.type?.codeHash) {
           sporeIndicesInOutputs.push(index);
