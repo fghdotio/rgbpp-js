@@ -3,7 +3,7 @@
   "type": "module",
   "private": true,
   "devDependencies": {
-    "@ckb-ccc/shell": "^1.1.6",
+    "@ckb-ccc/shell": "^1.1.8",
     "@ckb-lumos/base": "^0.22.2",
     "@ckb-lumos/codec": "^0.22.2",
     "@nervosnetwork/ckb-sdk-core": "0.109.5",

@@ -28,7 +28,7 @@
     "typescript": "^5.7.3"
   },
   "dependencies": {
-    "@ckb-ccc/shell": "^1.1.6",
+    "@ckb-ccc/shell": "^1.1.8",
     "@ckb-lumos/base": "^0.23.0",
     "@ckb-lumos/bi": "^0.23.0",
     "@ckb-lumos/codec": "^0.23.0",
