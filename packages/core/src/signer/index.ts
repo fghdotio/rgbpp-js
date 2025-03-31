@@ -40,6 +40,7 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
     private readonly rgbppBtcAddress: string,
     private readonly spvProofProvider: SpvProofProvider,
     private readonly simpleBtcClient: SimpleBtcClient,
+
     // TODO comment required scripts
     private readonly scriptsDetail: Record<
       ScriptName,
@@ -103,7 +104,7 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
     });
 
     // TODO: extract into a method
-    // * handle cluster transfer in spore transfer because of not being able to use cluster mode
+    // ? * handle cluster transfer in spore transfer because of not being able to use cluster mode
     const clusterScriptInfos = Object.values(
       ccc.spore.getClusterScriptInfos(this.client),
     );
@@ -377,6 +378,16 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
       "sporeIndicesInOutputs",
       sporeIndicesInOutputs.length,
     );
+
+    if (
+      clusterIndicesInInputs.length === 0 &&
+      clusterIndicesInOutputs.length === 0 &&
+      sporeIndicesInInputs.length === 0 &&
+      sporeIndicesInOutputs.length === 0
+    ) {
+      console.log("Not spore related transaction");
+      return;
+    }
 
     if (
       clusterIndicesInInputs.length === 0 &&

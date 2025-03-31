@@ -71,7 +71,7 @@ export class ScriptManager {
     outputIndex: number,
   ): ccc.Script {
     return ccc.Script.from({
-      ...this.scripts[PredefinedScriptName.UniqueType],
+      ...this.scripts[ccc.KnownScript.UniqueType],
       args: buildUniqueTypeArgs(firstInput, outputIndex),
     });
   }

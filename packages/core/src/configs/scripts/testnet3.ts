@@ -20,7 +20,7 @@ export const testnet3Scripts: ScriptSet = {
     args: "",
   }),
 
-  [PredefinedScriptName.UniqueType]: ccc.Script.from({
+  [ccc.KnownScript.UniqueType]: ccc.Script.from({
     codeHash:
       "0x8e341bcfec6393dcd41e635733ff2dca00a6af546949f70c57a706c0f344df8b",
     hashType: "type",
@@ -46,7 +46,7 @@ export const testnet3CellDeps: CellDepSet = {
     depType: "code",
   }),
 
-  [PredefinedScriptName.UniqueType]: ccc.CellDep.from({
+  [ccc.KnownScript.UniqueType]: ccc.CellDep.from({
     outPoint: {
       txHash:
         "0xff91b063c78ed06f10a1ed436122bd7d671f9a72ef5f5fa28d05252c17cf4cef",
