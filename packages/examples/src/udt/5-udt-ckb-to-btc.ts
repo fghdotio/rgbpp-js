@@ -82,5 +82,5 @@ ckbUdtToBtc({
   });
 
 /* 
-pnpm tsx packages/examples/src/udt/4-udt-ckb-to-btc.ts
+pnpm tsx packages/examples/src/udt/5-udt-ckb-to-btc.ts
 */

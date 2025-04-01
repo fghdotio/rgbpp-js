@@ -10,16 +10,15 @@ import {
 import { RgbppTxLogger } from "../common/logger.js";
 import { testnetSudtCellDep } from "../common/assets.js";
 import { collectBtcTimeLockCells } from "../common/utils.js";
-import {
-  rgbppXudtLikeClient,
-  rgbppBtcWallet,
-  ckbClient,
-  ckbSigner,
-} from "../common/env.js";
+import { ckbClient, ckbSigner, initializeRgbppEnv } from "../common/env.js";
 
-// ? move to CkbRgbppUnlockSinger
 async function unlockBtcTimeLock(btcTimeLockArgs: string) {
-  const btcTimeLockCells = await collectBtcTimeLockCells(btcTimeLockArgs);
+  const { rgbppBtcWallet, rgbppXudtLikeClient } = initializeRgbppEnv();
+
+  const btcTimeLockCells = await collectBtcTimeLockCells(
+    btcTimeLockArgs,
+    rgbppXudtLikeClient
+  );
 
   const tx = ccc.Transaction.default();
 
@@ -36,7 +35,7 @@ async function unlockBtcTimeLock(btcTimeLockArgs: string) {
         lock: parseBtcTimeLockArgs(cell.cellOutput.lock.args).lock,
         type: cell.cellOutput.type,
         // * https://github.com/utxostack/rgbpp/blob/main/contracts/btc-time-lock/src/main.rs#L97
-        // ? too many details, capacity, cell deps. Encapsulate it?
+        // ? Too many details, capacity, cell deps. Encapsulate it in `rgbppXudtLikeClient`?
         capacity: cell.cellOutput.capacity,
       },
       cell.outputData
@@ -45,9 +44,8 @@ async function unlockBtcTimeLock(btcTimeLockArgs: string) {
 
   const lockArgs: Set<string> = new Set();
   const btcTimeLockCellDep =
-    rgbppXudtLikeClient.getRgbppScriptsDetail()[
-      PredefinedScriptName.BtcTimeLock
-    ].cellDep;
+    rgbppXudtLikeClient.getRgbppScriptInfos()[PredefinedScriptName.BtcTimeLock]
+      .cellDep;
   tx.cellDeps.push(
     testnetSudtCellDep,
     btcTimeLockCellDep,
@@ -114,7 +112,7 @@ unlockBtcTimeLock(
   });
 
 /* 
-pnpm tsx packages/examples/src/xUDT/4-unlock-btc-time-lock.ts
+pnpm tsx packages/examples/src/udt/4-unlock-btc-time-lock.ts
 
 https://testnet.explorer.nervos.org/transaction/0xa68872500e321e13599df970e7b08d2eb92fdc01f2344610b350636d18c571cb
 

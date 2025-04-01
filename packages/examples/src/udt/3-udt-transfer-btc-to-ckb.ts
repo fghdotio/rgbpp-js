@@ -141,5 +141,5 @@ btcUdtToCkb({
   });
 
 /* 
-pnpm tsx packages/examples/src/udt/2-udt-transfer-btc-to-ckb.ts
+pnpm tsx packages/examples/src/udt/3-udt-transfer-btc-to-ckb.ts
 */

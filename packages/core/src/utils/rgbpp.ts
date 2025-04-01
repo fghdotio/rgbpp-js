@@ -53,20 +53,6 @@ export const encodeRgbppXudtLikeToken = (token: RgbppXudtLikeToken): string => {
   return `${decimal}${nameSize}${name}${symbolSize}${symbol}`;
 };
 
-// ? not necessary
-export const calculateRgbppXudtLikeTokenCellCapacity = (
-  token: RgbppXudtLikeToken,
-): bigint => {
-  return BigInt(25200000000n);
-};
-
-// ? not necessary
-export const calculateRgbppXudtLikeTokenInfoCellCapacity = (
-  token: RgbppXudtLikeToken,
-): bigint => {
-  return BigInt(22200000000n);
-};
-
 /**
  * https://learnmeabitcoin.com/technical/general/byte-order/
  * Whenever you're working with transaction/block hashes internally (e.g. inside raw bitcoin data), you use the natural byte order.

@@ -151,7 +151,7 @@ transferUdt({
   });
 
 /* 
-pnpm tsx packages/examples/src/udt/1-udt-transfer-on-btc.ts
+pnpm tsx packages/examples/src/udt/2-udt-transfer-on-btc.ts
 
 
 xUDT:

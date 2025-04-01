@@ -4,24 +4,17 @@ import {
   TX_ID_PLACEHOLDER,
   UNIQUE_TYPE_OUTPUT_INDEX,
   XUDT_LIKE_ISSUANCE_OUTPUT_INDEX,
-  XUDT_LIKE_LEAP_FROM_BTC_OUTPUT_INDEX,
 } from "../constants/index.js";
 
 import { deadLock } from "../configs/scripts/index.js";
 import { ScriptManager } from "../rgbpp/script-manager.js";
 import { NetworkConfig, UtxoSeal } from "../types/index.js";
-import {
-  RgbppUdtIssuance,
-  RgbppXudtLikeDistribution,
-  RgbppXudtLikeLeapFromBtcToCkb,
-} from "../types/rgbpp/xudt-like.js";
+import { RgbppUdtIssuance } from "../types/rgbpp/xudt-like.js";
 import { PredefinedScriptName } from "../types/script.js";
 import {
   encodeCommittedLength,
   encodeRgbppXudtLikeToken,
   isUsingOneOfScripts,
-  leToU128,
-  trimHexPrefix,
   u128ToLe,
 } from "../utils/index.js";
 
@@ -190,166 +183,6 @@ export class RgbppXudtLikeClient {
 
     // the potential partial cobuild witness in spore tx is discarded, otherwise `prepareSighashAllWitness` will fail
     tx.witnesses = [...witnesses];
-
-    return tx;
-  }
-
-  async distributionCkbPartialTx(
-    params: RgbppXudtLikeDistribution,
-  ): Promise<ccc.Transaction> {
-    const { rgbppLiveCells, receivers, xudtLikeTypeScript } = params;
-    const totalAmount = receivers.reduce((acc, receiver) => {
-      return acc + receiver.amount;
-    }, BigInt(0));
-
-    // XUDT cell.data = <amount: uint128> <xudt data (optional)>
-    // https://blog.cryptape.com/enhance-sudts-programmability-with-xudt#heading-xudt-cell
-    const sealedAmount = rgbppLiveCells.reduce(
-      (acc: bigint, cell: ccc.Cell) => {
-        return acc + leToU128(trimHexPrefix(cell.outputData).slice(0, 32));
-      },
-      BigInt(0),
-    );
-    if (sealedAmount < totalAmount) {
-      throw new Error("Not enough xUDT-like token to distribute");
-    }
-    console.log(sealedAmount, totalAmount);
-
-    const tx = ccc.Transaction.default();
-
-    rgbppLiveCells.forEach((cell) => {
-      const cellInput = ccc.CellInput.from({
-        previousOutput: cell.outPoint,
-      });
-      cellInput.completeExtraInfos(this.ckbClient);
-
-      tx.inputs.push(cellInput);
-    });
-
-    receivers.forEach((receiver, index) => {
-      tx.addOutput(
-        {
-          lock: this.scriptManager.buildRgbppLockScript({
-            txId: TX_ID_PLACEHOLDER,
-            index: index + 1, // 0 is for OP_RETURN
-          }),
-          type: xudtLikeTypeScript,
-        },
-        u128ToLe(receiver.amount),
-      );
-    });
-
-    if (sealedAmount > totalAmount) {
-      tx.addOutput(
-        {
-          lock: this.scriptManager.buildRgbppLockScript({
-            txId: TX_ID_PLACEHOLDER,
-            index: receivers.length + 1,
-          }),
-          type: xudtLikeTypeScript,
-        },
-        u128ToLe(sealedAmount - totalAmount),
-      );
-    }
-
-    const committedLength = encodeCommittedLength({
-      inputLength: new Uint8Array([tx.inputs.length]),
-      outputLength: new Uint8Array([tx.outputs.length]),
-    });
-
-    // ? push("0x")
-    const lockArgsSet: Set<string> = new Set();
-    for (const cell of rgbppLiveCells) {
-      if (lockArgsSet.has(cell.cellOutput.lock.args)) {
-        tx.witnesses.push("0x");
-      } else {
-        lockArgsSet.add(cell.cellOutput.lock.args);
-        tx.witnesses.push(committedLength);
-      }
-    }
-
-    return tx;
-  }
-
-  async leapFromBtcCkbPartialTx(
-    params: RgbppXudtLikeLeapFromBtcToCkb,
-  ): Promise<ccc.Transaction> {
-    const {
-      xudtLikeTypeScript,
-      address: ckbAddress,
-      amount,
-      rgbppLiveCells,
-      confirmations,
-    } = params;
-
-    // XUDT cell.data = <amount: uint128> <xudt data (optional)>
-    // https://blog.cryptape.com/enhance-sudts-programmability-with-xudt#heading-xudt-cell
-    const sealedAmount = rgbppLiveCells.reduce(
-      (acc: bigint, cell: ccc.Cell) => {
-        return acc + leToU128(trimHexPrefix(cell.outputData).slice(0, 32));
-      },
-      BigInt(0),
-    );
-    if (sealedAmount < amount) {
-      throw new Error("Not enough xUDT-like token to leap from BTC to CKB");
-    }
-    console.log(sealedAmount, amount);
-
-    const tx = ccc.Transaction.default();
-
-    rgbppLiveCells.forEach((cell) => {
-      const cellInput = ccc.CellInput.from({
-        previousOutput: cell.outPoint,
-      });
-      cellInput.completeExtraInfos(this.ckbClient);
-
-      tx.inputs.push(cellInput);
-    });
-
-    const receiverLock = (
-      await ccc.Address.fromString(ckbAddress, this.ckbClient)
-    ).script;
-
-    tx.addOutput(
-      {
-        lock: this.scriptManager.buildBtcTimeLockScript(
-          receiverLock,
-          TX_ID_PLACEHOLDER,
-          confirmations,
-        ),
-        type: xudtLikeTypeScript,
-      },
-      u128ToLe(amount),
-    );
-
-    if (sealedAmount > amount) {
-      tx.addOutput(
-        {
-          lock: this.scriptManager.buildRgbppLockScript({
-            txId: TX_ID_PLACEHOLDER,
-            index: XUDT_LIKE_LEAP_FROM_BTC_OUTPUT_INDEX,
-          }),
-          type: xudtLikeTypeScript,
-        },
-        u128ToLe(sealedAmount - amount),
-      );
-    }
-
-    const committedLength = encodeCommittedLength({
-      inputLength: new Uint8Array([tx.inputs.length]),
-      outputLength: new Uint8Array([tx.outputs.length]),
-    });
-
-    // ? push("0x")
-    const lockArgsSet: Set<string> = new Set();
-    for (const cell of rgbppLiveCells) {
-      if (lockArgsSet.has(cell.cellOutput.lock.args)) {
-        tx.witnesses.push("0x");
-      } else {
-        lockArgsSet.add(cell.cellOutput.lock.args);
-        tx.witnesses.push(committedLength);
-      }
-    }
 
     return tx;
   }
