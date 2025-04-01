@@ -6,8 +6,6 @@ export enum PredefinedScriptName {
   UniqueType = ccc.KnownScript.UniqueType,
 }
 
-export type ScriptName = PredefinedScriptName | string;
-
 export interface ScriptSet {
   [PredefinedScriptName.RgbppLock]: ccc.Script;
   [PredefinedScriptName.BtcTimeLock]: ccc.Script;

@@ -1,7 +1,5 @@
 import { ccc } from "@ckb-ccc/shell";
 
-import { ScriptName } from "../script.js";
-
 // xUDT compatible token
 export interface RgbppXudtLikeToken {
   decimal: number;
@@ -15,7 +13,7 @@ export interface UtxoSeal {
 }
 
 export interface ScriptInfo {
-  name: ScriptName;
+  name: string;
   script: ccc.Script;
   cellDep: ccc.CellDep;
 }

@@ -46,11 +46,15 @@ export class RgbppXudtLikeClient {
   }
 
   rgbppLockScriptTemplate() {
-    return this.scriptManager.getScripts()[PredefinedScriptName.RgbppLock];
+    return this.scriptManager.getScriptInfoByName(
+      PredefinedScriptName.RgbppLock,
+    ).script;
   }
 
   btcTimeLockScriptTemplate() {
-    return this.scriptManager.getScripts()[PredefinedScriptName.BtcTimeLock];
+    return this.scriptManager.getScriptInfoByName(
+      PredefinedScriptName.BtcTimeLock,
+    ).script;
   }
 
   buildRgbppLockScript(utxoSeal: UtxoSeal) {
@@ -155,7 +159,8 @@ export class RgbppXudtLikeClient {
 
     tx.addCellDeps(
       params.udtScriptInfo.cellDep,
-      this.getRgbppScriptInfos()[PredefinedScriptName.UniqueType].cellDep,
+      this.scriptManager.getScriptInfoByName(PredefinedScriptName.UniqueType)
+        .cellDep,
     );
 
     return this.insertRgbppWitnessPlaceholder(tx);

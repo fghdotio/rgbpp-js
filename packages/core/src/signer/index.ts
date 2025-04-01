@@ -15,7 +15,7 @@ import { transactionToHex } from "@rgbpp-js/bitcoin";
 import { SimpleBtcClient } from "../interfaces/btc.js";
 import { SpvProofProvider } from "../interfaces/spv.js";
 import { CommittedLength } from "../types/rgbpp/rgbpp.js";
-import { PredefinedScriptName, ScriptName } from "../types/script.js";
+import { PredefinedScriptName } from "../types/script.js";
 import { SpvProof } from "../types/spv.js";
 import { prependHexPrefix } from "../utils/encoder.js";
 import { buildRgbppUnlock, decodeCommittedLength } from "../utils/rgbpp.js";
@@ -29,7 +29,7 @@ import { pollForSpvProof } from "../utils/spv.js";
 
 export class CkbRgbppUnlockSinger extends ccc.Signer {
   // map of script code hash to script name
-  private readonly scriptMap: Record<string, ScriptName>;
+  private readonly scriptMap: Record<string, PredefinedScriptName>;
   private readonly rgbppScriptInfos: {
     [PredefinedScriptName.RgbppLock]: {
       script: ccc.Script;
@@ -51,7 +51,7 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
     private readonly spvProofProvider: SpvProofProvider,
     private readonly simpleBtcClient: SimpleBtcClient,
     scriptInfos: Record<
-      ScriptName,
+      PredefinedScriptName,
       { script: ccc.Script; cellDep: ccc.CellDep }
     >,
   ) {
@@ -59,7 +59,7 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
     this.scriptMap = Object.fromEntries(
       Object.entries(scriptInfos).map(([key, value]) => [
         value.script.codeHash,
-        key as ScriptName,
+        key as PredefinedScriptName,
       ]),
     );
     this.rgbppScriptInfos = {
@@ -78,12 +78,12 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
     return SignerSignType.Unknown;
   }
 
-  getScriptName(script?: ccc.Script): ScriptName | undefined {
-    return script && this.scriptMap[script.codeHash];
+  getScriptName(script?: ccc.Script): PredefinedScriptName | undefined {
+    return script ? this.scriptMap[script.codeHash] : undefined;
   }
 
   async collectCellDeps(tx: Transaction): Promise<ccc.CellDep[]> {
-    const scriptNames = new Set<ScriptName>(
+    const scriptNames = new Set<PredefinedScriptName>(
       [
         ...tx.inputs.flatMap((input) =>
           input.cellOutput
@@ -94,7 +94,7 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
             : [],
         ),
         ...tx.outputs.map((output) => this.getScriptName(output.type)),
-      ].filter((name): name is ScriptName => !!name),
+      ].filter((name): name is PredefinedScriptName => !!name),
     );
 
     let cellDeps = Array.from(scriptNames).flatMap((name) => {

@@ -5,7 +5,6 @@ import { UtxoSeal } from "../types/rgbpp/rgbpp.js";
 import {
   CellDepSet,
   PredefinedScriptName,
-  ScriptName,
   ScriptSet,
 } from "../types/script.js";
 import {
@@ -21,7 +20,7 @@ export class ScriptManager {
   ) {}
 
   getScripts() {
-    return this.scripts;
+    return JSON.parse(JSON.stringify(this.scripts));
   }
 
   getScriptInfos() {
@@ -33,8 +32,21 @@ export class ScriptManager {
           cellDep: this.cellDeps[name as PredefinedScriptName],
         },
       }),
-      {} as Record<ScriptName, { script: ccc.Script; cellDep: ccc.CellDep }>,
+      {} as Record<
+        PredefinedScriptName,
+        { script: ccc.Script; cellDep: ccc.CellDep }
+      >,
     );
+  }
+
+  getScriptInfoByName(name: PredefinedScriptName): {
+    script: ccc.Script;
+    cellDep: ccc.CellDep;
+  } {
+    return {
+      script: this.scripts[name],
+      cellDep: this.cellDeps[name],
+    };
   }
 
   buildRgbppLockScript(utxoSeal: UtxoSeal): ccc.Script {
