@@ -30,6 +30,16 @@ import { pollForSpvProof } from "../utils/spv.js";
 export class CkbRgbppUnlockSinger extends ccc.Signer {
   // map of script code hash to script name
   private readonly scriptMap: Record<string, ScriptName>;
+  private readonly rgbppScriptInfos: {
+    [PredefinedScriptName.RgbppLock]: {
+      script: ccc.Script;
+      cellDep: ccc.CellDep;
+    };
+    [PredefinedScriptName.BtcTimeLock]: {
+      script: ccc.Script;
+      cellDep: ccc.CellDep;
+    };
+  };
 
   private spvProofCache = new Map<string, Promise<SpvProof>>();
   private cacheExpiryTime = 600_000;
@@ -40,21 +50,24 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
     private readonly rgbppBtcAddress: string,
     private readonly spvProofProvider: SpvProofProvider,
     private readonly simpleBtcClient: SimpleBtcClient,
-
-    // TODO comment required scripts
-    private readonly scriptsDetail: Record<
+    scriptInfos: Record<
       ScriptName,
       { script: ccc.Script; cellDep: ccc.CellDep }
     >,
   ) {
     super(ckbClient);
-
     this.scriptMap = Object.fromEntries(
-      Object.entries(this.scriptsDetail).map(([key, value]) => [
+      Object.entries(scriptInfos).map(([key, value]) => [
         value.script.codeHash,
         key as ScriptName,
       ]),
     );
+    this.rgbppScriptInfos = {
+      [PredefinedScriptName.RgbppLock]:
+        scriptInfos[PredefinedScriptName.RgbppLock],
+      [PredefinedScriptName.BtcTimeLock]:
+        scriptInfos[PredefinedScriptName.BtcTimeLock],
+    };
   }
 
   get type(): SignerType {
@@ -90,17 +103,17 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
         name === PredefinedScriptName.BtcTimeLock
       ) {
         return [
-          this.scriptsDetail[name].cellDep,
+          this.rgbppScriptInfos[name].cellDep,
           ccc.CellDep.from({
             outPoint: {
-              ...this.scriptsDetail[name].cellDep.outPoint,
+              ...this.rgbppScriptInfos[name].cellDep.outPoint,
               index: "0x1",
             },
-            depType: this.scriptsDetail[name].cellDep.depType,
+            depType: this.rgbppScriptInfos[name].cellDep.depType,
           }),
         ];
       }
-      return [this.scriptsDetail[name].cellDep];
+      return [];
     });
 
     // TODO: extract into a method
@@ -241,8 +254,8 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
     const outputs = tx.outputs.filter((output) => output.lock);
     const rgbppOutput = outputs.find((output) =>
       isUsingOneOfScripts(output.lock, [
-        this.scriptsDetail[PredefinedScriptName.RgbppLock].script,
-        this.scriptsDetail[PredefinedScriptName.BtcTimeLock].script,
+        this.rgbppScriptInfos[PredefinedScriptName.RgbppLock].script,
+        this.rgbppScriptInfos[PredefinedScriptName.BtcTimeLock].script,
       ]),
     );
     if (!rgbppOutput) {

@@ -44,9 +44,8 @@ async function unlockBtcTimeLock(btcTimeLockArgs: string) {
 
   const lockArgs: Set<string> = new Set();
   const btcTimeLockCellDep =
-    rgbppXudtLikeClient.getRgbppScriptsDetail()[
-      PredefinedScriptName.BtcTimeLock
-    ].cellDep;
+    rgbppXudtLikeClient.getRgbppScriptInfos()[PredefinedScriptName.BtcTimeLock]
+      .cellDep;
   tx.cellDeps.push(
     testnetSudtCellDep,
     btcTimeLockCellDep,

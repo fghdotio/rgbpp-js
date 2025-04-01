@@ -24,13 +24,13 @@ export class ScriptManager {
     return this.scripts;
   }
 
-  getScriptsDetail() {
+  getScriptInfos() {
     return Object.entries(this.scripts).reduce(
       (acc, [name, script]) => ({
         ...acc,
         [name]: {
           script,
-          cellDep: this.cellDeps[name as ScriptName],
+          cellDep: this.cellDeps[name as PredefinedScriptName],
         },
       }),
       {} as Record<ScriptName, { script: ccc.Script; cellDep: ccc.CellDep }>,
@@ -71,7 +71,7 @@ export class ScriptManager {
     outputIndex: number,
   ): ccc.Script {
     return ccc.Script.from({
-      ...this.scripts[ccc.KnownScript.UniqueType],
+      ...this.scripts[PredefinedScriptName.UniqueType],
       args: buildUniqueTypeArgs(firstInput, outputIndex),
     });
   }

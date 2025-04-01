@@ -41,12 +41,8 @@ export class RgbppXudtLikeClient {
     );
   }
 
-  getRgbppScripts() {
-    return this.scriptManager.getScripts();
-  }
-
-  getRgbppScriptsDetail() {
-    return this.scriptManager.getScriptsDetail();
+  getRgbppScriptInfos() {
+    return this.scriptManager.getScriptInfos();
   }
 
   rgbppLockScriptTemplate() {
@@ -157,7 +153,10 @@ export class RgbppXudtLikeClient {
       encodeRgbppXudtLikeToken(params.token),
     );
 
-    tx.addCellDeps(params.udtScriptInfo.cellDep);
+    tx.addCellDeps(
+      params.udtScriptInfo.cellDep,
+      this.getRgbppScriptInfos()[PredefinedScriptName.UniqueType].cellDep,
+    );
 
     return this.insertRgbppWitnessPlaceholder(tx);
   }

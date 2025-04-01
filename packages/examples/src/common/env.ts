@@ -93,7 +93,7 @@ export function initializeRgbppEnv(scriptInfos?: ScriptInfo[]): {
       utxoBasedAccount.from,
       rgbppBtcWallet,
       rgbppBtcWallet,
-      rgbppXudtLikeClient.getRgbppScriptsDetail()
+      rgbppXudtLikeClient.getRgbppScriptInfos()
     ),
   };
 }
