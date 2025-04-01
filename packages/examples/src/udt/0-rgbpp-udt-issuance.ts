@@ -19,7 +19,7 @@ async function issueUdt({
     rgbppXudtLikeClient,
     utxoBasedAccountAddress,
     ckbRgbppUnlockSinger,
-  } = initializeRgbppEnv([udtScriptInfo]);
+  } = initializeRgbppEnv();
 
   if (!utxoSeal) {
     utxoSeal = await rgbppBtcWallet.prepareUtxoSeal(10);
@@ -34,9 +34,7 @@ async function issueUdt({
     token: udtToken,
     amount: issuanceAmount,
     rgbppLiveCells: rgbppIssuanceCells,
-    xudtLikeTypeScript: ccc.Script.from({
-      ...udtScriptInfo.script,
-    }),
+    udtScriptInfo,
   });
   logger.logCkbTx("ckbPartialTx", ckbPartialTx);
   console.log(
@@ -100,7 +98,7 @@ issueUdt({
   // udtScriptInfo: testnetSudtInfo,
 
   utxoSeal: {
-    txId: "5b92a0997ec6b516fa53b1c7521541cd83e0d9697ac40a84dde7b9a8dda5fef7",
+    txId: "e660f7eb7b1559b5a2cffb22285c75e11e8da777766cbba01749b61aa10da181",
     index: 2,
   },
 })

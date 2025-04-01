@@ -103,7 +103,7 @@ transferUdt({
     script: await ccc.Script.fromKnownScript(
       ckbClient,
       ccc.KnownScript.XUdt,
-      "0x868c505051f06bb41646bd1b442dbed8035d91abd9ac7acc4bda3bab267e6ac7"
+      "0x56c6d23b3990f2eb00e5a9783dc286d10a65239d468c761bf4f80fdba767df2b"
     ),
     cellDep: (await ckbClient.getKnownScript(ccc.KnownScript.XUdt)).cellDeps[0]
       .cellDep,

@@ -11,8 +11,8 @@ import { deadLock } from "../configs/scripts/index.js";
 import { ScriptManager } from "../rgbpp/script-manager.js";
 import { NetworkConfig, UtxoSeal } from "../types/index.js";
 import {
+  RgbppUdtIssuance,
   RgbppXudtLikeDistribution,
-  RgbppXudtLikeIssuance,
   RgbppXudtLikeLeapFromBtcToCkb,
 } from "../types/rgbpp/xudt-like.js";
 import { PredefinedScriptName } from "../types/script.js";
@@ -113,7 +113,7 @@ export class RgbppXudtLikeClient {
   };
 
   async issuanceCkbPartialTx(
-    params: RgbppXudtLikeIssuance,
+    params: RgbppUdtIssuance,
   ): Promise<ccc.Transaction> {
     if (params.rgbppLiveCells.length === 0) {
       throw new Error("rgbppLiveCells is empty");
@@ -136,7 +136,7 @@ export class RgbppXudtLikeClient {
           index: XUDT_LIKE_ISSUANCE_OUTPUT_INDEX,
         }),
         type: ccc.Script.from({
-          ...params.xudtLikeTypeScript,
+          ...params.udtScriptInfo.script,
           args: params.rgbppLiveCells[0].cellOutput.lock.hash(), // unique ID of xUDT-like token
         }),
       },
@@ -157,6 +157,8 @@ export class RgbppXudtLikeClient {
       encodeRgbppXudtLikeToken(params.token),
     );
 
+    tx.addCellDeps(params.udtScriptInfo.cellDep);
+
     return this.insertRgbppWitnessPlaceholder(tx);
   }
 
@@ -170,7 +172,6 @@ export class RgbppXudtLikeClient {
 
     let witnesses: ccc.Hex[] = [];
 
-    // ? reuse witnesses
     const lockArgsSet: Set<string> = new Set();
     for (let cellInput of tx.inputs) {
       cellInput = ccc.CellInput.from(cellInput);

@@ -1,12 +1,12 @@
 import { ccc } from "@ckb-ccc/shell";
 
-import { RgbppXudtLikeToken } from "./rgbpp.js";
+import { RgbppXudtLikeToken, ScriptInfo } from "./rgbpp.js";
 
-export interface RgbppXudtLikeIssuance {
+export interface RgbppUdtIssuance {
   token: RgbppXudtLikeToken;
   amount: bigint;
   rgbppLiveCells: ccc.Cell[];
-  xudtLikeTypeScript: ccc.Script;
+  udtScriptInfo: ScriptInfo;
 }
 
 export interface RgbppXudtLikeDistribution {
