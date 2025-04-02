@@ -48,7 +48,7 @@ async function transferUdt({
     rgbppXudtLikeClient.buildPseudoRgbppLockScript()
   );
 
-  const { psbt: psbt2, indexedCkbPartialTx } = await rgbppBtcWallet.buildPsbt({
+  const { psbt, indexedCkbPartialTx } = await rgbppBtcWallet.buildPsbt({
     ckbPartialTx: txWithInputs,
     ckbClient,
     rgbppXudtLikeClient,
@@ -58,7 +58,7 @@ async function transferUdt({
   });
   logger.logCkbTx("indexedCkbPartialTx", indexedCkbPartialTx);
 
-  const signedBtcTx = await rgbppBtcWallet.signTx(psbt2);
+  const signedBtcTx = await rgbppBtcWallet.signTx(psbt);
   const rawBtcTxHex = rgbppBtcWallet.rawTxHex(signedBtcTx);
   logger.add("rawBtcTxHex", rawBtcTxHex);
 

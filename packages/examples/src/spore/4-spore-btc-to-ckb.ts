@@ -1,10 +1,5 @@
 import { spore } from "@ckb-ccc/shell";
 
-import {
-  buildBtcRgbppOutputs,
-  parseUtxoSealFromScriptArgs,
-} from "@rgbpp-js/core";
-
 import { ckbClient, ckbSigner, initializeRgbppEnv } from "../common/env.js";
 
 import { RgbppTxLogger } from "../common/logger.js";
@@ -29,33 +24,15 @@ async function btcSporeToCkb({
     to: await rgbppXudtLikeClient.buildBtcTimeLockScript(ckbAddress),
   });
 
-  const inputSpore = ckbPartialTx.inputs[0];
-  await inputSpore.completeExtraInfos(ckbClient);
-  const utxoSeal = parseUtxoSealFromScriptArgs(
-    inputSpore.cellOutput!.lock.args
-  );
-
-  const txWithRgbppWitnessPlaceholder =
-    await rgbppXudtLikeClient.insertRgbppWitnessPlaceholder(ckbPartialTx);
-
-  logger.logCkbTx(
-    "txWithRgbppWitnessPlaceholder",
-    txWithRgbppWitnessPlaceholder,
-    false
-  );
-
-  const psbt = await rgbppBtcWallet.buildPsbt({
-    rgbppOutputs: buildBtcRgbppOutputs(
-      txWithRgbppWitnessPlaceholder,
-      utxoBasedAccountAddress,
-      [],
-      rgbppXudtLikeClient
-    ),
-
-    utxoSeals: [utxoSeal],
-    from: utxoBasedAccountAddress,
+  const { psbt, indexedCkbPartialTx } = await rgbppBtcWallet.buildPsbt({
+    ckbPartialTx,
+    ckbClient,
+    rgbppXudtLikeClient,
+    btcChangeAddress: utxoBasedAccountAddress,
+    receiverBtcAddresses: [],
     feeRate: 28,
   });
+  logger.logCkbTx("indexedCkbPartialTx", indexedCkbPartialTx);
 
   const signedBtcTx = await rgbppBtcWallet.signTx(psbt);
   const rawBtcTxHex = rgbppBtcWallet.rawTxHex(signedBtcTx);
@@ -65,7 +42,7 @@ async function btcSporeToCkb({
   logger.add("btcTxId", btcTxId, true);
 
   const ckbPartialTxInjected = await rgbppXudtLikeClient.injectTxIdToRgbppCkbTx(
-    txWithRgbppWitnessPlaceholder,
+    indexedCkbPartialTx,
     btcTxId
   );
   const rgbppSignedCkbTx =
@@ -87,7 +64,7 @@ btcSporeToCkb({
   ckbAddress:
     "ckt1qzda0cr08m85hc8jlnfp3zer7xulejywt49kt2rr0vthywaa50xwsqfpu7pwavwf3yang8khrsklumayj6nyxhqpmh7fq",
   sporeTypeArgs:
-    "0x02e7ba8f4a846774c8715b78bf14244e33a92fd1c23538fd072d8f006bd2cc57",
+    "0x3b0a06b5b4cb5cf2f751af8748b8dd55ece6dc6d5523b22a29ba903f73ad3aa4",
 })
   .then(() => {
     logger.saveOnSuccess();

@@ -1,10 +1,5 @@
 import { spore } from "@ckb-ccc/shell";
 
-import {
-  buildBtcRgbppOutputs,
-  parseUtxoSealFromScriptArgs,
-} from "@rgbpp-js/core";
-
 import { ckbClient, ckbSigner, initializeRgbppEnv } from "../common/env.js";
 
 import { RgbppTxLogger } from "../common/logger.js";
@@ -26,37 +21,22 @@ async function transferSpore({
   const { tx: ckbPartialTx } = await spore.transferSpore({
     signer: ckbSigner,
     id: sporeTypeArgs,
-    to: rgbppXudtLikeClient.buildPseudoRgbppLockScript(0),
+    // TODO: buildPseudoRgbppLockScript 不用 index 参数和 txid placeholder，在 build psbt 中推断
+    to: rgbppXudtLikeClient.buildPseudoRgbppLockScript(),
   });
 
-  const inputSpore = ckbPartialTx.inputs[0];
-  await inputSpore.completeExtraInfos(ckbClient);
-  const utxoSeal = parseUtxoSealFromScriptArgs(
-    inputSpore.cellOutput!.lock.args
-  );
-
-  const txWithRgbppWitnessPlaceholder =
-    await rgbppXudtLikeClient.insertRgbppWitnessPlaceholder(ckbPartialTx);
-
-  logger.logCkbTx(
-    "txWithRgbppWitnessPlaceholder",
-    txWithRgbppWitnessPlaceholder,
-    false
-  );
-
-  const psbt = await rgbppBtcWallet.buildPsbt({
-    rgbppOutputs: buildBtcRgbppOutputs(
-      txWithRgbppWitnessPlaceholder,
-      utxoBasedAccountAddress,
-      [btcAddress],
-      rgbppXudtLikeClient
-    ),
-
-    utxoSeals: [utxoSeal],
-    from: utxoBasedAccountAddress,
+  // TODO: buildBtcRgbppOutputs 和计算 utxo seals 放到 buildPsbt 中
+  const { psbt, indexedCkbPartialTx } = await rgbppBtcWallet.buildPsbt({
+    ckbPartialTx,
+    ckbClient,
+    rgbppXudtLikeClient,
+    btcChangeAddress: utxoBasedAccountAddress,
+    receiverBtcAddresses: [btcAddress],
     feeRate: 28,
   });
+  logger.logCkbTx("indexedCkbPartialTx", indexedCkbPartialTx);
 
+  // TODO 合并 send tx （包含签名）
   const signedBtcTx = await rgbppBtcWallet.signTx(psbt);
   const rawBtcTxHex = rgbppBtcWallet.rawTxHex(signedBtcTx);
   logger.add("rawBtcTxHex", rawBtcTxHex);
@@ -65,7 +45,7 @@ async function transferSpore({
   logger.add("btcTxId", btcTxId, true);
 
   const ckbPartialTxInjected = await rgbppXudtLikeClient.injectTxIdToRgbppCkbTx(
-    txWithRgbppWitnessPlaceholder,
+    indexedCkbPartialTx,
     btcTxId
   );
   const rgbppSignedCkbTx =
@@ -84,9 +64,9 @@ async function transferSpore({
 const logger = new RgbppTxLogger({ opType: "spore-transfer" });
 
 transferSpore({
-  btcAddress: "tb1qjkdqj8zk6gl7pwuw2d2jp9e6wgf26arjl8pcys",
+  btcAddress: "tb1qe8xc5ay5sdh0r58v0xfxrtss47kxveyzncs5ja",
   sporeTypeArgs:
-    "0x02e7ba8f4a846774c8715b78bf14244e33a92fd1c23538fd072d8f006bd2cc57",
+    "0x3b0a06b5b4cb5cf2f751af8748b8dd55ece6dc6d5523b22a29ba903f73ad3aa4",
 })
   .then(() => {
     logger.saveOnSuccess();

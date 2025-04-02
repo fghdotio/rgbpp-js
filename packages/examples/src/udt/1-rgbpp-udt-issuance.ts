@@ -42,7 +42,7 @@ async function issueUdt({
     ckbPartialTx.outputs[0].type!.args
   );
 
-  const { psbt: psbt2, indexedCkbPartialTx } = await rgbppBtcWallet.buildPsbt({
+  const { psbt, indexedCkbPartialTx } = await rgbppBtcWallet.buildPsbt({
     ckbPartialTx,
     ckbClient,
     rgbppXudtLikeClient,
@@ -52,7 +52,7 @@ async function issueUdt({
   });
   logger.logCkbTx("indexedCkbPartialTx", indexedCkbPartialTx);
 
-  const signedBtcTx = await rgbppBtcWallet.signTx(psbt2);
+  const signedBtcTx = await rgbppBtcWallet.signTx(psbt);
   const rawBtcTxHex = rgbppBtcWallet.rawTxHex(signedBtcTx);
   logger.add("rawBtcTxHex", rawBtcTxHex);
 

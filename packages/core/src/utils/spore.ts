@@ -127,7 +127,7 @@ export const insertSporeCreationWitness = async (
   outputClusterIndex: number,
   outputSporeIndices: number[],
   client: ccc.Client,
-): Promise<ccc.Transaction> => {
+): Promise<void> => {
   const clusterInput = tx.inputs[inputClusterIndex];
   await clusterInput.completeExtraInfos(client);
   const clusterId = clusterInput.cellOutput!.type!.args;
@@ -146,8 +146,6 @@ export const insertSporeCreationWitness = async (
   tx.witnesses.push(cobuild);
 
   await prepareFeeWitness(tx, client);
-
-  return tx;
 };
 
 export const insertSporeTransferWitness = async (
@@ -155,7 +153,7 @@ export const insertSporeTransferWitness = async (
   inputSporeIndex: number,
   outputSporeIndex: number,
   client: ccc.Client,
-): Promise<ccc.Transaction> => {
+): Promise<void> => {
   const sporeInput = tx.inputs[inputSporeIndex];
   await sporeInput.completeExtraInfos(client);
   const sporeTypeArgs = sporeInput.cellOutput!.type!.args;
@@ -167,8 +165,6 @@ export const insertSporeTransferWitness = async (
   tx.witnesses.push(cobuild);
 
   await prepareFeeWitness(tx, client);
-
-  return tx;
 };
 
 export async function prepareFeeWitness(

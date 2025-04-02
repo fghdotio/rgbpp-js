@@ -2,11 +2,6 @@ import { ccc, spore } from "@ckb-ccc/shell";
 
 import { RawSporeData } from "@spore-sdk/core";
 
-import {
-  buildBtcRgbppOutputs,
-  parseUtxoSealFromScriptArgs,
-} from "@rgbpp-js/core";
-
 import { ckbClient, ckbSigner, initializeRgbppEnv } from "../common/env.js";
 
 import { RgbppTxLogger } from "../common/logger.js";
@@ -26,52 +21,33 @@ async function createSpore({
     ckbRgbppUnlockSinger,
   } = initializeRgbppEnv();
 
-  const { cell: rgbppClusterCell } = await spore.assertCluster(
-    ckbClient,
-    receiverInfo.rawSporeData.clusterId!
-  );
-  const utxoSeal = parseUtxoSealFromScriptArgs(
-    rgbppClusterCell.cellOutput.lock.args
-  );
-
   const { tx: transferClusterTx } = await spore.transferSporeCluster({
     signer: ckbSigner,
     id: receiverInfo.rawSporeData.clusterId!,
-    to: rgbppXudtLikeClient.buildPseudoRgbppLockScript(0), // new cluster output
+    to: rgbppXudtLikeClient.buildPseudoRgbppLockScript(), // new cluster output
   });
 
   // ? API for creating multiple spores
   const { tx: ckbPartialTx, id } = await spore.createSpore({
     signer: ckbSigner,
     data: receiverInfo.rawSporeData,
-    to: rgbppXudtLikeClient.buildPseudoRgbppLockScript(0 + 1), // offset by 1 as it's for new cluster output
+    to: rgbppXudtLikeClient.buildPseudoRgbppLockScript(),
     // cannot use cluster mode here as cluster's lock needs to be updated
     clusterMode: "skip",
     tx: transferClusterTx,
   });
 
-  const txWithRgbppWitnessPlaceholder =
-    await rgbppXudtLikeClient.insertRgbppWitnessPlaceholder(ckbPartialTx);
-
   logger.add("spore id", id, true);
-  logger.logCkbTx(
-    "txWithRgbppWitnessPlaceholder",
-    txWithRgbppWitnessPlaceholder,
-    false
-  );
 
-  const psbt = await rgbppBtcWallet.buildPsbt({
-    rgbppOutputs: buildBtcRgbppOutputs(
-      txWithRgbppWitnessPlaceholder,
-      utxoBasedAccountAddress,
-      [utxoBasedAccountAddress],
-      rgbppXudtLikeClient
-    ),
-
-    utxoSeals: [utxoSeal],
-    from: utxoBasedAccountAddress,
+  const { psbt, indexedCkbPartialTx } = await rgbppBtcWallet.buildPsbt({
+    ckbPartialTx,
+    ckbClient,
+    rgbppXudtLikeClient,
+    btcChangeAddress: utxoBasedAccountAddress,
+    receiverBtcAddresses: [utxoBasedAccountAddress],
     feeRate: 28,
   });
+  logger.logCkbTx("indexedCkbPartialTx", indexedCkbPartialTx);
 
   const signedBtcTx = await rgbppBtcWallet.signTx(psbt);
   const rawBtcTxHex = rgbppBtcWallet.rawTxHex(signedBtcTx);
@@ -81,7 +57,7 @@ async function createSpore({
   logger.add("btcTxId", btcTxId, true);
 
   const ckbPartialTxInjected = await rgbppXudtLikeClient.injectTxIdToRgbppCkbTx(
-    txWithRgbppWitnessPlaceholder,
+    indexedCkbPartialTx,
     btcTxId
   );
   const rgbppSignedCkbTx =
@@ -101,12 +77,12 @@ const logger = new RgbppTxLogger({ opType: "spore-creation" });
 
 createSpore({
   receiverInfo: {
-    btcAddress: "tb1qjkdqj8zk6gl7pwuw2d2jp9e6wgf26arjl8pcys",
+    btcAddress: "tb1qe8xc5ay5sdh0r58v0xfxrtss47kxveyzncs5ja",
     rawSporeData: {
       contentType: "text/plain",
       content: ccc.bytesFrom("First Spore Live", "utf8"),
       clusterId:
-        "0x9f57129a53e80349320f72395e1b72e64498518097956b1393c2a7b5ff4bd9ea",
+        "0xe76f48ca8775b26c48a72759dbb6bc1709252f993185276955c41b47e4bd7fcf",
     },
   },
 })
@@ -130,4 +106,8 @@ ckbTxId: 0x034e22c55d2be9cff68c130a7dde47301cb35d27c035ffb194e258c18ab0b8d9
 
 btcTxId: 25569146a3478fe16726ef3a8c5382a611830c9b90b8736c88cea1a9f8631d02
 ckbTxId: 0xeb2bd9e149982f70ad3898f1922cb61ec1838d662f7a294dceeee8a0ef89629d
+
+
+btcTxId: f0145fa3e511e00ea7aa16dcf67b3693b453ec5791db12efde04138e082834ae
+ckbTxId: 0x79acde60a0ccad9522587877579cf204c7190e765dec44481322609dd5872419
 */
