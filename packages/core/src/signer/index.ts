@@ -14,11 +14,10 @@ import { transactionToHex } from "@rgbpp-js/bitcoin";
 
 import { SimpleBtcClient } from "../interfaces/btc.js";
 import { SpvProofProvider } from "../interfaces/spv.js";
-import { CommittedLength } from "../types/rgbpp/rgbpp.js";
 import { PredefinedScriptName } from "../types/script.js";
 import { SpvProof } from "../types/spv.js";
 import { prependHexPrefix } from "../utils/encoder.js";
-import { buildRgbppUnlock, decodeCommittedLength } from "../utils/rgbpp.js";
+import { buildRgbppUnlock } from "../utils/rgbpp.js";
 import { getTxIdFromScriptArgs, isUsingOneOfScripts } from "../utils/script.js";
 import {
   insertClusterCreationWitness,
@@ -283,38 +282,39 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
     spvClient: SpvProof,
   ): Promise<ccc.Transaction> {
     const tx = partialTx.clone();
+
     console.log(
       `==== input length: ${tx.inputs.length}, witness length: ${tx.witnesses.length} ====`,
     );
 
-    let committedLength: CommittedLength | undefined;
-    const rgbppWitnessIndices = tx.witnesses
-      .map((witness, index) => ({ witness, index }))
-      .filter(({ witness }) => {
-        const { committedLength: cl, hasRgbppWitnessPrefix } =
-          decodeCommittedLength(witness);
-        if (hasRgbppWitnessPrefix) {
-          committedLength = cl;
-        }
+    // let committedLength: CommittedLength | undefined;
+    // const rgbppWitnessIndices = tx.witnesses
+    //   .map((witness, index) => ({ witness, index }))
+    //   .filter(({ witness }) => {
+    //     const { committedLength: cl, hasRgbppWitnessPrefix } =
+    //       decodeCommittedLength(witness);
+    //     if (hasRgbppWitnessPrefix) {
+    //       committedLength = cl;
+    //     }
 
-        return hasRgbppWitnessPrefix;
-      })
-      .map(({ index }) => index);
+    //     return hasRgbppWitnessPrefix;
+    //   })
+    //   .map(({ index }) => index);
 
-    if (!committedLength) {
-      throw new Error("Committed length not found");
-    }
+    // if (!committedLength) {
+    //   throw new Error("Committed length not found");
+    // }
 
-    console.log("rgbppWitnessIndices:", rgbppWitnessIndices);
-    console.log(
-      `committed input length: ${committedLength.inputLength[0]}, output length: ${committedLength.outputLength[0]}`,
-    );
+    // console.log("rgbppWitnessIndices:", rgbppWitnessIndices);
+    // console.log(
+    //   `committed input length: ${committedLength.inputLength[0]}, output length: ${committedLength.outputLength[0]}`,
+    // );
 
     const rgbppUnlock = buildRgbppUnlock(
       btcLikeTxBytes,
       spvClient.proof,
-      committedLength.inputLength[0],
-      committedLength.outputLength[0],
+      tx.inputs.length,
+      tx.outputs.length,
     );
 
     const rgbppWitness = prependHexPrefix(
@@ -325,8 +325,8 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
       }),
     );
 
-    rgbppWitnessIndices.forEach((index) => {
-      tx.witnesses[index] = rgbppWitness;
+    tx.inputs.forEach((_, index) => {
+      tx.setWitnessAt(index, rgbppWitness);
     });
 
     await this.handleSporeWitness(tx);

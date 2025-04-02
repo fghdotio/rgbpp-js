@@ -42,7 +42,7 @@ async function ckbUdtToBtc({
   logger.add("ckbTxId", txHash, true);
 }
 
-const logger = new RgbppTxLogger({ opType: "udt-ckb-to-btc" });
+const logger = new RgbppTxLogger({ opType: "udt-transfer-ckb-to-btc" });
 
 ckbUdtToBtc({
   // utxoSeal: {

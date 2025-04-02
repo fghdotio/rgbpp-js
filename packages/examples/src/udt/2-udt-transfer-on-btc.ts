@@ -24,7 +24,7 @@ async function transferUdt({
     rgbppXudtLikeClient,
     utxoBasedAccountAddress,
     ckbRgbppUnlockSinger,
-  } = initializeRgbppEnv([udtScriptInfo]);
+  } = initializeRgbppEnv();
 
   const udt = new ccc.udt.Udt(
     udtScriptInfo.cellDep.outPoint,
@@ -33,8 +33,8 @@ async function transferUdt({
 
   let { res: tx } = await udt.transfer(
     ckbSigner as unknown as ccc.Signer,
-    receivers.map((receiver, index) => ({
-      to: rgbppXudtLikeClient.buildPseudoRgbppLockScript(index),
+    receivers.map((receiver) => ({
+      to: rgbppXudtLikeClient.buildPseudoRgbppLockScript(),
       amount: ccc.fixedPointFrom(receiver.amount),
     }))
   );
@@ -45,33 +45,20 @@ async function transferUdt({
   txWithInputs = await udt.completeChangeToLock(
     tx,
     ckbRgbppUnlockSinger,
-    rgbppXudtLikeClient.buildPseudoRgbppLockScript(receivers.length)
+    rgbppXudtLikeClient.buildPseudoRgbppLockScript()
   );
 
-  const utxoSeals = await Promise.all(
-    txWithInputs.inputs.map(async (input) => {
-      await input.completeExtraInfos(ckbClient);
-      return parseUtxoSealFromScriptArgs(input.cellOutput!.lock.args);
-    })
-  );
-  console.log(utxoSeals);
-
-  const txWithRgbppWitnessPlaceholder =
-    await rgbppXudtLikeClient.insertRgbppWitnessPlaceholder(txWithInputs);
-  const psbt = await rgbppBtcWallet.buildPsbt({
-    rgbppOutputs: buildBtcRgbppOutputs(
-      txWithRgbppWitnessPlaceholder,
-      utxoBasedAccountAddress,
-      receivers.map((receiver) => receiver.address),
-      rgbppXudtLikeClient
-    ),
-
-    utxoSeals,
-    from: utxoBasedAccountAddress,
+  const { psbt: psbt2, indexedCkbPartialTx } = await rgbppBtcWallet.buildPsbt({
+    ckbPartialTx: txWithInputs,
+    ckbClient,
+    rgbppXudtLikeClient,
+    btcChangeAddress: utxoBasedAccountAddress,
+    receiverBtcAddresses: receivers.map((receiver) => receiver.address),
     feeRate: 28,
   });
+  logger.logCkbTx("indexedCkbPartialTx", indexedCkbPartialTx);
 
-  const signedBtcTx = await rgbppBtcWallet.signTx(psbt);
+  const signedBtcTx = await rgbppBtcWallet.signTx(psbt2);
   const rawBtcTxHex = rgbppBtcWallet.rawTxHex(signedBtcTx);
   logger.add("rawBtcTxHex", rawBtcTxHex);
 
@@ -79,7 +66,7 @@ async function transferUdt({
   logger.add("btcTxId", btcTxId, true);
 
   const ckbPartialTxInjected = await rgbppXudtLikeClient.injectTxIdToRgbppCkbTx(
-    txWithRgbppWitnessPlaceholder,
+    indexedCkbPartialTx,
     btcTxId
   );
   logger.logCkbTx("ckbPartialTxInjected", ckbPartialTxInjected);
@@ -95,7 +82,7 @@ async function transferUdt({
   logger.add("ckbTxId", txHash, true);
 }
 
-const logger = new RgbppTxLogger({ opType: "ccc-udt-xudt-btc-transfer" });
+const logger = new RgbppTxLogger({ opType: "udt-transfer-on-btc" });
 
 transferUdt({
   udtScriptInfo: {
@@ -103,7 +90,7 @@ transferUdt({
     script: await ccc.Script.fromKnownScript(
       ckbClient,
       ccc.KnownScript.XUdt,
-      "0xe6f08df54ee517251ca38e6e76ba111320b2d3134d110d2ede1509d6d05d288c"
+      "0xfd6bd8a84894f8cb92d0d16ba5ef989cfbe090979de7935d2f2bcecfbef84129"
     ),
     cellDep: (await ckbClient.getKnownScript(ccc.KnownScript.XUdt)).cellDeps[0]
       .cellDep,
@@ -119,19 +106,19 @@ transferUdt({
 
   receivers: [
     {
-      address: "tb1qjkdqj8zk6gl7pwuw2d2jp9e6wgf26arjl8pcys",
+      address: "tb1qe8xc5ay5sdh0r58v0xfxrtss47kxveyzncs5ja",
       amount: ccc.fixedPointFrom(1),
     },
     {
-      address: "tb1qjkdqj8zk6gl7pwuw2d2jp9e6wgf26arjl8pcys",
+      address: "tb1qe8xc5ay5sdh0r58v0xfxrtss47kxveyzncs5ja",
       amount: ccc.fixedPointFrom(2),
     },
     {
-      address: "tb1qjkdqj8zk6gl7pwuw2d2jp9e6wgf26arjl8pcys",
+      address: "tb1qe8xc5ay5sdh0r58v0xfxrtss47kxveyzncs5ja",
       amount: ccc.fixedPointFrom(3),
     },
     {
-      address: "tb1qjkdqj8zk6gl7pwuw2d2jp9e6wgf26arjl8pcys",
+      address: "tb1qe8xc5ay5sdh0r58v0xfxrtss47kxveyzncs5ja",
       amount: ccc.fixedPointFrom(4),
     },
     {

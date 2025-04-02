@@ -1,10 +1,14 @@
-import { UtxoSeal } from "@rgbpp-js/core";
+import { ccc } from "@ckb-ccc/shell";
 
-import { TxOutput } from "./tx.js";
+import { RgbppXudtLikeClient } from "@rgbpp-js/core";
+
 export interface RgbppBtcTxParams {
-  rgbppOutputs: TxOutput[];
+  ckbPartialTx: ccc.Transaction;
+  ckbClient: ccc.Client;
+  rgbppXudtLikeClient: RgbppXudtLikeClient;
+  receiverBtcAddresses: string[];
 
-  utxoSeals: UtxoSeal[];
-  from: string;
+  btcChangeAddress: string;
+
   feeRate?: number;
 }

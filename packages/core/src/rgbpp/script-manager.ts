@@ -11,6 +11,7 @@ import {
   buildBtcTimeLockArgs,
   buildRgbppLockArgs,
   buildUniqueTypeArgs,
+  pseudoRgbppLockArgs,
 } from "../utils/rgbpp.js";
 
 export class ScriptManager {
@@ -47,6 +48,13 @@ export class ScriptManager {
       script: this.scripts[name],
       cellDep: this.cellDeps[name],
     };
+  }
+
+  buildPseudoRgbppLockScript(): ccc.Script {
+    return ccc.Script.from({
+      ...this.scripts[PredefinedScriptName.RgbppLock],
+      args: pseudoRgbppLockArgs(),
+    });
   }
 
   buildRgbppLockScript(utxoSeal: UtxoSeal): ccc.Script {

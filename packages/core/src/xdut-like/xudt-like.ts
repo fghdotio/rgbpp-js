@@ -3,7 +3,6 @@ import { ccc } from "@ckb-ccc/shell";
 import {
   TX_ID_PLACEHOLDER,
   UNIQUE_TYPE_OUTPUT_INDEX,
-  XUDT_LIKE_ISSUANCE_OUTPUT_INDEX,
 } from "../constants/index.js";
 
 import { deadLock } from "../configs/scripts/index.js";
@@ -15,10 +14,11 @@ import {
   encodeCommittedLength,
   encodeRgbppXudtLikeToken,
   isUsingOneOfScripts,
+  pseudoRgbppLockArgs,
   u128ToLe,
+  updateScriptArgsWithTxId,
 } from "../utils/index.js";
-
-import { updateScriptArgsWithTxId } from "../utils/script.js";
+import { buildRgbppLockArgs } from "../utils/rgbpp.js";
 
 // TODO: rgbppLiveCells, btcTimeLockCells de-duplication
 export class RgbppXudtLikeClient {
@@ -54,12 +54,8 @@ export class RgbppXudtLikeClient {
     return this.scriptManager.buildRgbppLockScript(utxoSeal);
   }
 
-  // receiverIndex: index in ckb tx output
-  buildPseudoRgbppLockScript(receiverIndex: number) {
-    return this.scriptManager.buildRgbppLockScript({
-      txId: TX_ID_PLACEHOLDER,
-      index: receiverIndex + 1, // 0 is for OP_RETURN in btc tx
-    });
+  buildPseudoRgbppLockScript() {
+    return this.scriptManager.buildPseudoRgbppLockScript();
   }
 
   async buildBtcTimeLockScript(
@@ -77,26 +73,46 @@ export class RgbppXudtLikeClient {
     );
   }
 
+  // * It's assumed that all the tx.outputs are rgbpp/btc time lock scripts.
   injectTxIdToRgbppCkbTx = (
     tx: ccc.Transaction,
     txId: string,
   ): ccc.Transaction => {
-    const outputs = tx.outputs.map((output) => {
+    const outputs = tx.outputs.map((output, index) => {
       if (
-        isUsingOneOfScripts(output.lock, [
+        !isUsingOneOfScripts(output.lock, [
           this.rgbppLockScriptTemplate(),
           this.btcTimeLockScriptTemplate(),
         ])
       ) {
-        return ccc.CellOutput.from({
-          ...output,
-          lock: {
-            ...output.lock,
-            args: updateScriptArgsWithTxId(output.lock.args, txId),
-          },
-        });
+        throw new Error(
+          `Invalid output lock, expected one of rgbpp/btc time lock scripts, but got ${output.lock.codeHash}`,
+        );
       }
-      return output;
+
+      console.log("output.lock.args", output.lock.args);
+      console.log("pseudoRgbppLockArgs()", pseudoRgbppLockArgs());
+      console.log(
+        "buildRgbppLockArgs({ txId, index: index + 1 })",
+        buildRgbppLockArgs({ txId, index: index + 1 }),
+      );
+      console.log(
+        "isUsingOneOfScripts(output.lock, [this.rgbppLockScriptTemplate()])",
+        isUsingOneOfScripts(output.lock, [this.rgbppLockScriptTemplate()]),
+      );
+      console.log(
+        output.lock.args.replace(
+          pseudoRgbppLockArgs(),
+          buildRgbppLockArgs({ txId, index: index + 1 }),
+        ),
+      );
+      return ccc.CellOutput.from({
+        ...output,
+        lock: {
+          ...output.lock,
+          args: updateScriptArgsWithTxId(output.lock.args, txId),
+        },
+      });
     });
 
     return ccc.Transaction.from({
@@ -124,10 +140,7 @@ export class RgbppXudtLikeClient {
 
     tx.addOutput(
       {
-        lock: this.scriptManager.buildRgbppLockScript({
-          txId: TX_ID_PLACEHOLDER,
-          index: XUDT_LIKE_ISSUANCE_OUTPUT_INDEX,
-        }),
+        lock: this.scriptManager.buildPseudoRgbppLockScript(),
         type: ccc.Script.from({
           ...params.udtScriptInfo.script,
           args: params.rgbppLiveCells[0].cellOutput.lock.hash(), // unique ID of xUDT-like token
@@ -156,7 +169,7 @@ export class RgbppXudtLikeClient {
         .cellDep,
     );
 
-    return this.insertRgbppWitnessPlaceholder(tx);
+    return tx;
   }
 
   async insertRgbppWitnessPlaceholder(

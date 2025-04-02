@@ -3,8 +3,13 @@ import { Psbt, Transaction } from "bitcoinjs-lib";
 import { ccc } from "@ckb-ccc/shell";
 
 import {
+  BTC_TX_PSEUDO_INDEX,
+  buildBtcRgbppOutputs,
   calculateCommitment,
+  isUsingOneOfScripts,
+  parseUtxoSealFromScriptArgs,
   RgbppApiSpvProof,
+  u32ToHex,
   UtxoSeal,
 } from "@rgbpp-js/core";
 
@@ -57,13 +62,64 @@ export class RgbppBtcWallet extends BtcAssetsApiBase {
     this.network = networkType;
   }
 
-  async buildPsbt(params: RgbppBtcTxParams): Promise<Psbt> {
-    const inputs = await this.buildInputs(params.utxoSeals);
+  async buildPsbt(
+    params: RgbppBtcTxParams,
+  ): Promise<{ psbt: Psbt; indexedCkbPartialTx: ccc.Transaction }> {
+    const {
+      ckbPartialTx,
+      ckbClient,
+      rgbppXudtLikeClient,
+      btcChangeAddress,
+      receiverBtcAddresses,
+      feeRate,
+    } = params;
+
+    const tx = ckbPartialTx.clone();
+
+    const utxoSeals = await Promise.all(
+      tx.inputs.map(async (input) => {
+        await input.completeExtraInfos(ckbClient);
+        return parseUtxoSealFromScriptArgs(input.cellOutput!.lock.args);
+      }),
+    );
+    console.log(utxoSeals);
+
+    const inputs = await this.buildInputs(utxoSeals);
+
+    // adjust index in rgbpp lock args of outputs
+    let rgbppIndex = 0;
+    const outputs = tx.outputs.map((output) => {
+      if (
+        isUsingOneOfScripts(output.lock, [
+          rgbppXudtLikeClient.rgbppLockScriptTemplate(),
+        ])
+      ) {
+        return ccc.CellOutput.from({
+          ...output,
+          lock: {
+            ...output.lock,
+            args: output.lock.args.replace(
+              u32ToHex(BTC_TX_PSEUDO_INDEX, true),
+              u32ToHex(++rgbppIndex, true),
+            ),
+          },
+        });
+      }
+      return output;
+    });
+    tx.outputs = outputs;
+
+    const rgbppOutputs = buildBtcRgbppOutputs(
+      tx,
+      btcChangeAddress,
+      receiverBtcAddresses,
+      rgbppXudtLikeClient,
+    );
 
     const { balancedInputs, balancedOutputs } = await this.balanceInputsOutputs(
       inputs,
-      params.rgbppOutputs,
-      params.feeRate,
+      rgbppOutputs,
+      feeRate,
     );
 
     const psbt = new Psbt({ network: toNetwork(this.network) });
@@ -73,7 +129,8 @@ export class RgbppBtcWallet extends BtcAssetsApiBase {
     balancedOutputs.forEach((output) => {
       psbt.addOutput(output);
     });
-    return psbt;
+
+    return { psbt, indexedCkbPartialTx: tx };
   }
 
   async signTx(psbt: Psbt): Promise<Transaction> {

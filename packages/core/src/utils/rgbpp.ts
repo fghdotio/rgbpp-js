@@ -14,10 +14,12 @@ import {
 import { convertToOutput, InitOutput, TxOutput } from "@rgbpp-js/bitcoin";
 
 import {
+  BTC_TX_PSEUDO_INDEX,
   DEFAULT_CONFIRMATIONS,
   RGBPP_CKB_WITNESS_LENGTH,
   RGBPP_CKB_WITNESS_PLACEHOLDER,
   RGBPP_MAX_CELL_NUM,
+  TX_ID_PLACEHOLDER,
 } from "../constants/index.js";
 import { Script } from "../schemas/generated/blockchain.js";
 
@@ -64,6 +66,15 @@ export const buildRgbppLockArgs = (utxoSeal: UtxoSeal): Hex => {
       reverseHexByteOrder(prependHexPrefix(utxoSeal.txId)),
     )}`,
   );
+};
+
+export function pseudoRgbppLockArgs(): Hex {
+  return buildRgbppLockArgs(pseudoUtxoSeal);
+}
+
+export const pseudoUtxoSeal: UtxoSeal = {
+  txId: TX_ID_PLACEHOLDER,
+  index: BTC_TX_PSEUDO_INDEX,
 };
 
 export const buildBtcTimeLockArgs = (

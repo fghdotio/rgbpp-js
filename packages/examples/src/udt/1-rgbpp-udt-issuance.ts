@@ -42,20 +42,17 @@ async function issueUdt({
     ckbPartialTx.outputs[0].type!.args
   );
 
-  const psbt = await rgbppBtcWallet.buildPsbt({
-    rgbppOutputs: buildBtcRgbppOutputs(
-      ckbPartialTx,
-      utxoBasedAccountAddress,
-      [utxoBasedAccountAddress],
-      rgbppXudtLikeClient
-    ),
-
-    utxoSeals: [utxoSeal],
-    from: utxoBasedAccountAddress,
+  const { psbt: psbt2, indexedCkbPartialTx } = await rgbppBtcWallet.buildPsbt({
+    ckbPartialTx,
+    ckbClient,
+    rgbppXudtLikeClient,
+    btcChangeAddress: utxoBasedAccountAddress,
+    receiverBtcAddresses: [utxoBasedAccountAddress],
     feeRate: 28,
   });
+  logger.logCkbTx("indexedCkbPartialTx", indexedCkbPartialTx);
 
-  const signedBtcTx = await rgbppBtcWallet.signTx(psbt);
+  const signedBtcTx = await rgbppBtcWallet.signTx(psbt2);
   const rawBtcTxHex = rgbppBtcWallet.rawTxHex(signedBtcTx);
   logger.add("rawBtcTxHex", rawBtcTxHex);
 
@@ -63,7 +60,7 @@ async function issueUdt({
   logger.add("btcTxId", btcTxId, true);
 
   const ckbPartialTxInjected = await rgbppXudtLikeClient.injectTxIdToRgbppCkbTx(
-    ckbPartialTx,
+    indexedCkbPartialTx,
     btcTxId
   );
   const rgbppSignedCkbTx =
@@ -98,8 +95,8 @@ issueUdt({
   // udtScriptInfo: testnetSudtInfo,
 
   utxoSeal: {
-    txId: "c4ec63b7cc2c3ce6f6a846518892736df45249c3b9829d107323f2e16a0707ce",
-    index: 7,
+    txId: "3ce8e8775594caba652e743d6c94235714091d8dcf6d1728299cd0fc68ee9ad0",
+    index: 2,
   },
 })
   .then(() => {
