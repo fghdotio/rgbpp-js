@@ -1,3 +1,4 @@
+// TX_ID_PLACEHOLDER must be all zeros (see https://github.com/fghdotio/rgbpp/blob/main/contracts/rgbpp-lock/src/main.rs#L228)
 export const TX_ID_PLACEHOLDER =
   "0000000000000000000000000000000000000000000000000000000000000000";
 
