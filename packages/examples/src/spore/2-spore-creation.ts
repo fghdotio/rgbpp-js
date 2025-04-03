@@ -85,7 +85,7 @@ createSpore({
       contentType: "text/plain",
       content: ccc.bytesFrom("First Spore Live", "utf8"),
       clusterId:
-        "0x09d035e0a576136ba24ed128cbd97aec61554c8390fbee35e74e3836deb0a34f",
+        "0xb62e12e6f0550b61e47f9bb2e6de3cedc6a17abd5691d390cd234c06041a4558",
     },
   },
 })

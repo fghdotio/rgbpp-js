@@ -3,12 +3,17 @@ import { Psbt, Transaction } from "bitcoinjs-lib";
 import { ccc } from "@ckb-ccc/shell";
 
 import {
+  BLANK_TX_ID,
   BTC_TX_PSEUDO_INDEX,
+  btcTxIdInReverseByteOrder,
   buildBtcRgbppOutputs,
   calculateCommitment,
-  isUsingOneOfScripts,
+  isSameScriptTemplate,
   parseUtxoSealFromScriptArgs,
+  pseudoRgbppLockArgs,
+  pseudoRgbppLockArgsForCommitment,
   RgbppApiSpvProof,
+  TX_ID_PLACEHOLDER,
   u32ToHex,
   UtxoSeal,
 } from "@rgbpp-js/core";
@@ -74,10 +79,11 @@ export class RgbppBtcWallet extends BtcAssetsApiBase {
       feeRate,
     } = params;
 
-    const tx = ckbPartialTx.clone();
+    const commitmentTx = ckbPartialTx.clone();
+    const indexedTx = ckbPartialTx.clone();
 
     const utxoSeals = await Promise.all(
-      tx.inputs.map(async (input) => {
+      ckbPartialTx.inputs.map(async (input) => {
         await input.completeExtraInfos(ckbClient);
         return parseUtxoSealFromScriptArgs(input.cellOutput!.lock.args);
       }),
@@ -88,29 +94,69 @@ export class RgbppBtcWallet extends BtcAssetsApiBase {
 
     // adjust index in rgbpp lock args of outputs
     let rgbppIndex = 0;
-    const outputs = tx.outputs.map((output) => {
+    const commitmentOutputs: ccc.CellOutput[] = [];
+    const indexedOutputs: ccc.CellOutput[] = [];
+    for (const output of ckbPartialTx.outputs) {
       if (
-        isUsingOneOfScripts(output.lock, [
+        isSameScriptTemplate(
+          output.lock,
           rgbppXudtLikeClient.rgbppLockScriptTemplate(),
-        ])
+        )
       ) {
-        return ccc.CellOutput.from({
-          ...output,
-          lock: {
-            ...output.lock,
-            args: output.lock.args.replace(
-              u32ToHex(BTC_TX_PSEUDO_INDEX, true),
-              u32ToHex(++rgbppIndex, true),
-            ),
-          },
-        });
+        indexedOutputs.push(
+          ccc.CellOutput.from({
+            ...output,
+            lock: {
+              ...output.lock,
+              args: output.lock.args.replace(
+                u32ToHex(BTC_TX_PSEUDO_INDEX, true),
+                u32ToHex(rgbppIndex + 1, true),
+              ),
+            },
+          }),
+        );
+        commitmentOutputs.push(
+          ccc.CellOutput.from({
+            ...output,
+            lock: {
+              ...output.lock,
+              args: output.lock.args.replace(
+                pseudoRgbppLockArgs(),
+                pseudoRgbppLockArgsForCommitment(rgbppIndex + 1),
+              ),
+            },
+          }),
+        );
+        rgbppIndex++;
+      } else if (
+        isSameScriptTemplate(
+          output.lock,
+          rgbppXudtLikeClient.btcTimeLockScriptTemplate(),
+        )
+      ) {
+        indexedOutputs.push(output);
+        commitmentOutputs.push(
+          ccc.CellOutput.from({
+            ...output,
+            lock: {
+              ...output.lock,
+              args: output.lock.args.replace(
+                btcTxIdInReverseByteOrder(TX_ID_PLACEHOLDER),
+                btcTxIdInReverseByteOrder(BLANK_TX_ID),
+              ),
+            },
+          }),
+        );
+      } else {
+        indexedOutputs.push(output);
+        commitmentOutputs.push(output);
       }
-      return output;
-    });
-    tx.outputs = outputs;
+    }
+    commitmentTx.outputs = commitmentOutputs;
+    indexedTx.outputs = indexedOutputs;
 
     const rgbppOutputs = buildBtcRgbppOutputs(
-      tx,
+      commitmentTx,
       btcChangeAddress,
       receiverBtcAddresses,
       rgbppXudtLikeClient,
@@ -130,7 +176,7 @@ export class RgbppBtcWallet extends BtcAssetsApiBase {
       psbt.addOutput(output);
     });
 
-    return { psbt, indexedCkbPartialTx: tx };
+    return { psbt, indexedCkbPartialTx: indexedTx };
   }
 
   async signTx(psbt: Psbt): Promise<Transaction> {

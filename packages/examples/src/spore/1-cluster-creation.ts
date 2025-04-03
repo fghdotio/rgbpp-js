@@ -79,7 +79,7 @@ async function createSporeCluster(utxoSeal?: UtxoSeal) {
 const logger = new RgbppTxLogger({ opType: "cluster-creation" });
 
 createSporeCluster({
-  txId: "a911024d59987457335908e80e9bdd0f7807de76c79a6033e9a0592ff4075f1a",
+  txId: "19206b17e037492244e573655de52b5c025c1e40259c2f176ef976704d7b5043",
   index: 2,
 })
   .then(() => {

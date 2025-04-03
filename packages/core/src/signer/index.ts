@@ -92,14 +92,19 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
   async collectCellDeps(tx: Transaction): Promise<ccc.CellDep[]> {
     const scriptNames = new Set<PredefinedScriptName>(
       [
-        ...tx.inputs.flatMap((input) =>
-          input.cellOutput
-            ? [
-                this.getScriptName(input.cellOutput.lock),
-                this.getScriptName(input.cellOutput.type),
-              ]
-            : [],
-        ),
+        ...(
+          await Promise.all(
+            tx.inputs.map(async (input) => {
+              await input.completeExtraInfos(this.client);
+              return input.cellOutput
+                ? [
+                    this.getScriptName(input.cellOutput.lock),
+                    this.getScriptName(input.cellOutput.type),
+                  ]
+                : [];
+            }),
+          )
+        ).flat(),
         ...tx.outputs.map((output) => this.getScriptName(output.type)),
       ].filter((name): name is PredefinedScriptName => !!name),
     );
@@ -403,12 +408,17 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
       pseudoCobuild = currentCobuild as ccc.Hex;
     }
 
-    let reversedPseudoCobuild = [...pseudoCobuild].reverse().join("");
-    reversedPseudoCobuild = reversedPseudoCobuild.replace(
-      TX_ID_PLACEHOLDER,
-      [...btcTxIdInReverseByteOrder(btcTxId)].reverse().join(""),
-    );
-    cobuild = [...reversedPseudoCobuild].reverse().join("") as ccc.Hex;
+    // let reversedPseudoCobuild = [...pseudoCobuild].reverse().join("");
+    // reversedPseudoCobuild = reversedPseudoCobuild.replace(
+    //   TX_ID_PLACEHOLDER,
+    //   [...btcTxIdInReverseByteOrder(btcTxId)].reverse().join(""),
+    // );
+    // cobuild = [...reversedPseudoCobuild].reverse().join("") as ccc.Hex;
+
+    cobuild = pseudoCobuild.replace(
+      btcTxIdInReverseByteOrder(TX_ID_PLACEHOLDER),
+      btcTxIdInReverseByteOrder(btcTxId),
+    ) as ccc.Hex;
 
     console.log("replaced cobuild", cobuild);
     tx.witnesses.push(cobuild);

@@ -91,7 +91,7 @@ btcUdtToCkb({
     script: await ccc.Script.fromKnownScript(
       ckbClient,
       ccc.KnownScript.XUdt,
-      "0xfd6bd8a84894f8cb92d0d16ba5ef989cfbe090979de7935d2f2bcecfbef84129"
+      "0x29e04d8c0c246cc1b0027d7aa8a31f56f740134a56d056bb5efdbb00d3c78a44"
     ),
     cellDep: (await ckbClient.getKnownScript(ccc.KnownScript.XUdt)).cellDeps[0]
       .cellDep,
