@@ -5,6 +5,7 @@ import { RawSporeData } from "@spore-sdk/core";
 import { ckbClient, ckbSigner, initializeRgbppEnv } from "../common/env.js";
 
 import { RgbppTxLogger } from "../common/logger.js";
+import { inspect } from "util";
 
 async function createSpore({
   receiverInfo,
@@ -38,6 +39,8 @@ async function createSpore({
   });
 
   logger.add("spore id", id, true);
+
+  console.log(inspect(ckbPartialTx.witnesses, { depth: null, colors: true }));
 
   const { psbt, indexedCkbPartialTx } = await rgbppBtcWallet.buildPsbt({
     ckbPartialTx,
@@ -82,7 +85,7 @@ createSpore({
       contentType: "text/plain",
       content: ccc.bytesFrom("First Spore Live", "utf8"),
       clusterId:
-        "0xe76f48ca8775b26c48a72759dbb6bc1709252f993185276955c41b47e4bd7fcf",
+        "0x09d035e0a576136ba24ed128cbd97aec61554c8390fbee35e74e3836deb0a34f",
     },
   },
 })

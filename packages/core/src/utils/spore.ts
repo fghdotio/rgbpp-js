@@ -116,9 +116,8 @@ export const insertClusterCreationWitness = async (
     tx.outputs[index],
     tx.outputsData[index],
   ) as ccc.Hex;
-  tx.witnesses.push(cobuild);
 
-  await prepareFeeWitness(tx, client);
+  console.log("ok cobuild", cobuild);
 };
 
 export const insertSporeCreationWitness = async (
@@ -162,9 +161,10 @@ export const insertSporeTransferWitness = async (
     [(await ccc.spore.assertSpore(client, sporeTypeArgs)).cell],
     [tx.outputs[outputSporeIndex]],
   ) as ccc.Hex;
-  tx.witnesses.push(cobuild);
+  // tx.witnesses.push(cobuild);
 
-  await prepareFeeWitness(tx, client);
+  console.log("ok cobuild", cobuild);
+  // await prepareFeeWitness(tx, client);
 };
 
 export async function prepareFeeWitness(

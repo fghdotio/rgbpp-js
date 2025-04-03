@@ -12,16 +12,24 @@ import {
 
 import { transactionToHex } from "@rgbpp-js/bitcoin";
 
+import { TX_ID_PLACEHOLDER } from "../constants/index.js";
 import { SimpleBtcClient } from "../interfaces/btc.js";
 import { SpvProofProvider } from "../interfaces/spv.js";
 import { PredefinedScriptName } from "../types/script.js";
 import { SpvProof } from "../types/spv.js";
-import { prependHexPrefix } from "../utils/encoder.js";
-import { buildRgbppUnlock } from "../utils/rgbpp.js";
-import { getTxIdFromScriptArgs, isUsingOneOfScripts } from "../utils/script.js";
+import { prependHexPrefix, trimHexPrefix } from "../utils/encoder.js";
+import {
+  btcTxIdInReverseByteOrder,
+  buildRgbppUnlock,
+  pseudoRgbppLockArgs,
+} from "../utils/rgbpp.js";
+import {
+  getTxIdFromScriptArgs,
+  isSameScriptTemplate,
+  isUsingOneOfScripts,
+} from "../utils/script.js";
 import {
   insertClusterCreationWitness,
-  insertSporeCreationWitness,
   insertSporeTransferWitness,
 } from "../utils/spore.js";
 import { pollForSpvProof } from "../utils/spv.js";
@@ -283,10 +291,6 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
   ): Promise<ccc.Transaction> {
     const tx = partialTx.clone();
 
-    console.log(
-      `==== input length: ${tx.inputs.length}, witness length: ${tx.witnesses.length} ====`,
-    );
-
     // let committedLength: CommittedLength | undefined;
     // const rgbppWitnessIndices = tx.witnesses
     //   .map((witness, index) => ({ witness, index }))
@@ -335,6 +339,80 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
   }
 
   async handleSporeWitness(tx: ccc.Transaction): Promise<void> {
+    console.log(
+      `==== input length: ${tx.inputs.length}, witness length: ${tx.witnesses.length} ====`,
+    );
+
+    if (tx.witnesses.length == tx.inputs.length) {
+      console.log("Not spore related transaction");
+      return;
+    }
+
+    let pseudoCobuild: ccc.Hex | undefined;
+    pseudoCobuild = tx.witnesses[tx.witnesses.length - 1];
+    tx.witnesses = tx.witnesses.slice(0, tx.inputs.length);
+
+    console.log("pseudoCobuild:", pseudoCobuild);
+
+    let btcTxId: string | undefined;
+    let rgbppLockArgs: ccc.Hex[] = [];
+    for (const output of tx.outputs) {
+      if (
+        isSameScriptTemplate(
+          output.lock,
+          this.rgbppScriptInfos[PredefinedScriptName.RgbppLock].script,
+        )
+      ) {
+        btcTxId = getTxIdFromScriptArgs(output.lock.args);
+        rgbppLockArgs.push(output.lock.args);
+      } else if (
+        isSameScriptTemplate(
+          output.lock,
+          this.rgbppScriptInfos[PredefinedScriptName.BtcTimeLock].script,
+        )
+      ) {
+        btcTxId = getTxIdFromScriptArgs(output.lock.args);
+      }
+    }
+
+    if (!btcTxId) {
+      throw new Error("Invalid transaction");
+    }
+
+    let cobuild: ccc.Hex;
+    if (rgbppLockArgs.length > 0) {
+      console.log("has rgbpp lock arg");
+      console.log("pseudoRgbppLockArgs()", pseudoRgbppLockArgs());
+
+      let currentCobuild = pseudoCobuild;
+      const pseudoArg = trimHexPrefix(pseudoRgbppLockArgs());
+      let lastIndex = 0;
+
+      for (const lockArg of rgbppLockArgs) {
+        const index = currentCobuild.indexOf(pseudoArg, lastIndex);
+        if (index === -1) {
+          break;
+        }
+
+        currentCobuild =
+          currentCobuild.substring(0, index) +
+          trimHexPrefix(lockArg) +
+          currentCobuild.substring(index + pseudoArg.length);
+        lastIndex = index + trimHexPrefix(lockArg).length;
+      }
+      pseudoCobuild = currentCobuild as ccc.Hex;
+    }
+
+    let reversedPseudoCobuild = [...pseudoCobuild].reverse().join("");
+    reversedPseudoCobuild = reversedPseudoCobuild.replace(
+      TX_ID_PLACEHOLDER,
+      [...btcTxIdInReverseByteOrder(btcTxId)].reverse().join(""),
+    );
+    cobuild = [...reversedPseudoCobuild].reverse().join("") as ccc.Hex;
+
+    console.log("replaced cobuild", cobuild);
+    tx.witnesses.push(cobuild);
+
     const clusterScriptInfos = Object.values(
       ccc.spore.getClusterScriptInfos(this.client),
     );
@@ -394,16 +472,6 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
 
     if (
       clusterIndicesInInputs.length === 0 &&
-      clusterIndicesInOutputs.length === 0 &&
-      sporeIndicesInInputs.length === 0 &&
-      sporeIndicesInOutputs.length === 0
-    ) {
-      console.log("Not spore related transaction");
-      return;
-    }
-
-    if (
-      clusterIndicesInInputs.length === 0 &&
       clusterIndicesInOutputs.length === 1 &&
       sporeIndicesInInputs.length === 0 &&
       sporeIndicesInOutputs.length === 0
@@ -417,22 +485,22 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
       return;
     }
 
-    if (
-      clusterIndicesInInputs.length === 1 &&
-      clusterIndicesInOutputs.length === 1 &&
-      sporeIndicesInInputs.length === 0 &&
-      sporeIndicesInOutputs.length > 0
-    ) {
-      console.log("spore creation");
-      await insertSporeCreationWitness(
-        tx,
-        clusterIndicesInInputs[0],
-        clusterIndicesInOutputs[0],
-        sporeIndicesInOutputs,
-        this.client,
-      );
-      return;
-    }
+    // if (
+    //   clusterIndicesInInputs.length === 1 &&
+    //   clusterIndicesInOutputs.length === 1 &&
+    //   sporeIndicesInInputs.length === 0 &&
+    //   sporeIndicesInOutputs.length > 0
+    // ) {
+    //   console.log("spore creation");
+    //   await insertSporeCreationWitness(
+    //     tx,
+    //     clusterIndicesInInputs[0],
+    //     clusterIndicesInOutputs[0],
+    //     sporeIndicesInOutputs,
+    //     this.client,
+    //   );
+    //   return;
+    // }
 
     // ? multiple spore transfer in one transaction
     if (
@@ -451,7 +519,7 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
       return;
     }
 
-    throw new Error("Unsupported transaction");
+    // throw new Error("Unsupported transaction");
   }
 
   async connect(): Promise<void> {}

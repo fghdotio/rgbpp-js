@@ -62,11 +62,15 @@ export const encodeRgbppXudtLikeToken = (token: RgbppXudtLikeToken): string => {
  */
 export const buildRgbppLockArgs = (utxoSeal: UtxoSeal): Hex => {
   return prependHexPrefix(
-    `${u32ToHex(utxoSeal.index, true)}${trimHexPrefix(
-      reverseHexByteOrder(prependHexPrefix(utxoSeal.txId)),
+    `${u32ToHex(utxoSeal.index, true)}${btcTxIdInReverseByteOrder(
+      utxoSeal.txId,
     )}`,
   );
 };
+
+export function btcTxIdInReverseByteOrder(btcTxId: string): string {
+  return trimHexPrefix(reverseHexByteOrder(prependHexPrefix(btcTxId)));
+}
 
 export function pseudoRgbppLockArgs(): Hex {
   return buildRgbppLockArgs(pseudoUtxoSeal);
