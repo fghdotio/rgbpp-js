@@ -21,11 +21,9 @@ async function transferSpore({
   const { tx: ckbPartialTx } = await spore.transferSpore({
     signer: ckbSigner,
     id: sporeTypeArgs,
-    // TODO: buildPseudoRgbppLockScript 不用 index 参数和 txid placeholder，在 build psbt 中推断
     to: rgbppXudtLikeClient.buildPseudoRgbppLockScript(),
   });
 
-  // TODO: buildBtcRgbppOutputs 和计算 utxo seals 放到 buildPsbt 中
   const { psbt, indexedCkbPartialTx } = await rgbppBtcWallet.buildPsbt({
     ckbPartialTx,
     ckbClient,
@@ -36,12 +34,7 @@ async function transferSpore({
   });
   logger.logCkbTx("indexedCkbPartialTx", indexedCkbPartialTx);
 
-  // TODO 合并 send tx （包含签名）
-  const signedBtcTx = await rgbppBtcWallet.signTx(psbt);
-  const rawBtcTxHex = rgbppBtcWallet.rawTxHex(signedBtcTx);
-  logger.add("rawBtcTxHex", rawBtcTxHex);
-
-  const btcTxId = await rgbppBtcWallet.sendTx(signedBtcTx);
+  const btcTxId = await rgbppBtcWallet.signAndSendTx(psbt);
   logger.add("btcTxId", btcTxId, true);
 
   const ckbPartialTxInjected = await rgbppXudtLikeClient.injectTxIdToRgbppCkbTx(

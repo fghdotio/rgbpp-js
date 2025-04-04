@@ -234,6 +234,11 @@ export class RgbppBtcWallet extends BtcAssetsApiBase {
     return transactionToHex(tx, false);
   }
 
+  async signAndSendTx(psbt: Psbt): Promise<string> {
+    const tx = await this.signTx(psbt);
+    return this.sendTx(tx);
+  }
+
   async balanceInputsOutputs(
     inputs: TxInputData[],
     outputs: TxOutput[],

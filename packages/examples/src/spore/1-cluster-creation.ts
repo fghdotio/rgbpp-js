@@ -38,9 +38,8 @@ async function createSporeCluster(utxoSeal?: UtxoSeal) {
     to: rgbppXudtLikeClient.buildPseudoRgbppLockScript(),
     tx,
   });
-  console.log(inspect(ckbPartialTx.witnesses, { depth: null, colors: true }));
 
-  logger.add("clusterId", id, true);
+  logger.add("cluster id", id, true);
 
   const { psbt, indexedCkbPartialTx } = await rgbppBtcWallet.buildPsbt({
     ckbPartialTx,
@@ -52,11 +51,7 @@ async function createSporeCluster(utxoSeal?: UtxoSeal) {
   });
   logger.logCkbTx("indexedCkbPartialTx", indexedCkbPartialTx);
 
-  const signedBtcTx = await rgbppBtcWallet.signTx(psbt);
-  const rawBtcTxHex = rgbppBtcWallet.rawTxHex(signedBtcTx);
-  logger.add("rawBtcTxHex", rawBtcTxHex);
-
-  const btcTxId = await rgbppBtcWallet.sendTx(signedBtcTx);
+  const btcTxId = await rgbppBtcWallet.signAndSendTx(psbt);
   logger.add("btcTxId", btcTxId, true);
 
   const ckbPartialTxInjected = await rgbppXudtLikeClient.injectTxIdToRgbppCkbTx(

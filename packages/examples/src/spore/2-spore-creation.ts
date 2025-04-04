@@ -52,11 +52,7 @@ async function createSpore({
   });
   logger.logCkbTx("indexedCkbPartialTx", indexedCkbPartialTx);
 
-  const signedBtcTx = await rgbppBtcWallet.signTx(psbt);
-  const rawBtcTxHex = rgbppBtcWallet.rawTxHex(signedBtcTx);
-  logger.add("rawBtcTxHex", rawBtcTxHex);
-
-  const btcTxId = await rgbppBtcWallet.sendTx(signedBtcTx);
+  const btcTxId = await rgbppBtcWallet.signAndSendTx(psbt);
   logger.add("btcTxId", btcTxId, true);
 
   const ckbPartialTxInjected = await rgbppXudtLikeClient.injectTxIdToRgbppCkbTx(
