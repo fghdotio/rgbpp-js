@@ -1,6 +1,6 @@
 import { ccc } from "@ckb-ccc/shell";
 
-import { UtxoSeal, buildBtcRgbppOutputs, ScriptInfo } from "@rgbpp-js/core";
+import { UtxoSeal, ScriptInfo } from "@rgbpp-js/core";
 
 import { ckbClient, ckbSigner, initializeRgbppEnv } from "../common/env.js";
 import { prepareRgbppCells } from "../common/utils.js";
@@ -16,7 +16,7 @@ async function issueUdt({
 }) {
   const {
     rgbppBtcWallet,
-    rgbppXudtLikeClient,
+    rgbppUdtClient,
     utxoBasedAccountAddress,
     ckbRgbppUnlockSinger,
   } = initializeRgbppEnv();
@@ -25,18 +25,14 @@ async function issueUdt({
     utxoSeal = await rgbppBtcWallet.prepareUtxoSeal(10);
   }
 
-  const rgbppIssuanceCells = await prepareRgbppCells(
-    utxoSeal,
-    rgbppXudtLikeClient
-  );
+  const rgbppIssuanceCells = await prepareRgbppCells(utxoSeal, rgbppUdtClient);
 
-  const ckbPartialTx = await rgbppXudtLikeClient.issuanceCkbPartialTx({
+  const ckbPartialTx = await rgbppUdtClient.issuanceCkbPartialTx({
     token: udtToken,
     amount: issuanceAmount,
     rgbppLiveCells: rgbppIssuanceCells,
     udtScriptInfo,
   });
-  logger.logCkbTx("ckbPartialTx", ckbPartialTx);
   console.log(
     "Unique ID of issued udt token",
     ckbPartialTx.outputs[0].type!.args
@@ -45,7 +41,7 @@ async function issueUdt({
   const { psbt, indexedCkbPartialTx } = await rgbppBtcWallet.buildPsbt({
     ckbPartialTx,
     ckbClient,
-    rgbppXudtLikeClient,
+    rgbppUdtClient,
     btcChangeAddress: utxoBasedAccountAddress,
     receiverBtcAddresses: [utxoBasedAccountAddress],
     feeRate: 28,
@@ -55,7 +51,7 @@ async function issueUdt({
   const btcTxId = await rgbppBtcWallet.signAndSendTx(psbt);
   logger.add("btcTxId", btcTxId, true);
 
-  const ckbPartialTxInjected = await rgbppXudtLikeClient.injectTxIdToRgbppCkbTx(
+  const ckbPartialTxInjected = await rgbppUdtClient.injectTxIdToRgbppCkbTx(
     indexedCkbPartialTx,
     btcTxId
   );
@@ -66,9 +62,7 @@ async function issueUdt({
   // https://github.com/utxostack/RGBPlusPlus-design/blob/main/docs/lockscript-design-prd-en.md#requirements-and-limitations-on-isomorphic-binding
   // https://github.com/fghdotio/rgbpp/blob/main/contracts/rgbpp-lock/src/main.rs#L197-L200
   await rgbppSignedCkbTx.completeFeeBy(ckbSigner);
-  logger.logCkbTx("ckbPartialTxWithFee", rgbppSignedCkbTx);
   const ckbFinalTx = await ckbSigner.signTransaction(rgbppSignedCkbTx);
-  logger.logCkbTx("ckbFinalTx", ckbFinalTx);
   const txHash = await ckbSigner.client.sendTransaction(ckbFinalTx);
   await ckbRgbppUnlockSinger.client.waitTransaction(txHash);
   logger.add("ckbTxId", txHash, true);
@@ -91,8 +85,8 @@ issueUdt({
   // udtScriptInfo: testnetSudtInfo,
 
   utxoSeal: {
-    txId: "d1b2db4953cccac2e1dd05b3539940625a5ea43da03b5465ac1b366599195b0f",
-    index: 2,
+    txId: "4a507c96e99f5459d2c6ca6bd217ee4e9d0d74d15f5a23e77d3c1d01d16f68c9",
+    index: 1,
   },
 })
   .then(() => {

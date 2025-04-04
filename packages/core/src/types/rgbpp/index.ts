@@ -1,2 +1,2 @@
 export * from "./rgbpp.js";
-export * from "./xudt-like.js";
+export * from "./udt.js";

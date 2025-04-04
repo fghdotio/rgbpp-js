@@ -73,7 +73,7 @@ export class RgbppBtcWallet extends BtcAssetsApiBase {
     const {
       ckbPartialTx,
       ckbClient,
-      rgbppXudtLikeClient,
+      rgbppUdtClient,
       btcChangeAddress,
       receiverBtcAddresses,
       feeRate,
@@ -88,7 +88,6 @@ export class RgbppBtcWallet extends BtcAssetsApiBase {
         return parseUtxoSealFromScriptArgs(input.cellOutput!.lock.args);
       }),
     );
-    console.log(utxoSeals);
 
     const inputs = await this.buildInputs(utxoSeals);
 
@@ -100,7 +99,7 @@ export class RgbppBtcWallet extends BtcAssetsApiBase {
       if (
         isSameScriptTemplate(
           output.lock,
-          rgbppXudtLikeClient.rgbppLockScriptTemplate(),
+          rgbppUdtClient.rgbppLockScriptTemplate(),
         )
       ) {
         indexedOutputs.push(
@@ -131,7 +130,7 @@ export class RgbppBtcWallet extends BtcAssetsApiBase {
       } else if (
         isSameScriptTemplate(
           output.lock,
-          rgbppXudtLikeClient.btcTimeLockScriptTemplate(),
+          rgbppUdtClient.btcTimeLockScriptTemplate(),
         )
       ) {
         indexedOutputs.push(output);
@@ -159,7 +158,7 @@ export class RgbppBtcWallet extends BtcAssetsApiBase {
       commitmentTx,
       btcChangeAddress,
       receiverBtcAddresses,
-      rgbppXudtLikeClient,
+      rgbppUdtClient,
     );
 
     const { balancedInputs, balancedOutputs } = await this.balanceInputsOutputs(
@@ -344,11 +343,6 @@ export class RgbppBtcWallet extends BtcAssetsApiBase {
         },
       );
       extraInputs.forEach((input) => psbt.addInput(input));
-      // console.log(
-      //   "totalInputValue",
-      //   totalInputValue +
-      //     extraInputs.reduce((acc, input) => acc + input.witnessUtxo.value, 0),
-      // );
     }
 
     const tx = await this.signTx(psbt);
@@ -363,7 +357,6 @@ export class RgbppBtcWallet extends BtcAssetsApiBase {
     if (!feeRate) {
       try {
         feeRate = (await this.getRecommendedFee()).fastestFee;
-        console.log(`Using recommended fee rate: ${feeRate}`);
       } catch (error) {
         feeRate = DEFAULT_FEE_RATE;
         console.warn(

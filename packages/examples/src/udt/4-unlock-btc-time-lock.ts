@@ -13,11 +13,11 @@ import { collectBtcTimeLockCells } from "../common/utils.js";
 import { ckbClient, ckbSigner, initializeRgbppEnv } from "../common/env.js";
 
 async function unlockBtcTimeLock(btcTimeLockArgs: string) {
-  const { rgbppBtcWallet, rgbppXudtLikeClient } = initializeRgbppEnv();
+  const { rgbppBtcWallet, rgbppUdtClient } = initializeRgbppEnv();
 
   const btcTimeLockCells = await collectBtcTimeLockCells(
     btcTimeLockArgs,
-    rgbppXudtLikeClient
+    rgbppUdtClient
   );
 
   const tx = ccc.Transaction.default();
@@ -35,7 +35,7 @@ async function unlockBtcTimeLock(btcTimeLockArgs: string) {
         lock: parseBtcTimeLockArgs(cell.cellOutput.lock.args).lock,
         type: cell.cellOutput.type,
         // * https://github.com/utxostack/rgbpp/blob/main/contracts/btc-time-lock/src/main.rs#L97
-        // ? Too many details, capacity, cell deps. Encapsulate it in `rgbppXudtLikeClient`?
+        // ? Too many details, capacity, cell deps. Encapsulate it in `rgbppUdtClient`?
         capacity: cell.cellOutput.capacity,
       },
       cell.outputData
@@ -44,7 +44,7 @@ async function unlockBtcTimeLock(btcTimeLockArgs: string) {
 
   const lockArgs: Set<string> = new Set();
   const btcTimeLockCellDep =
-    rgbppXudtLikeClient.getRgbppScriptInfos()[PredefinedScriptName.BtcTimeLock]
+    rgbppUdtClient.getRgbppScriptInfos()[PredefinedScriptName.BtcTimeLock]
       .cellDep;
   tx.cellDeps.push(
     testnetSudtCellDep,
@@ -85,8 +85,6 @@ async function unlockBtcTimeLock(btcTimeLockArgs: string) {
 
     tx.witnesses.push(buildBtcTimeUnlockWitness(spvProof.proof));
   }
-
-  logger.logCkbTx("ckbTxToSign", tx, true);
 
   await tx.completeFeeBy(ckbSigner);
   const signedTx = await ckbSigner.signTransaction(tx);

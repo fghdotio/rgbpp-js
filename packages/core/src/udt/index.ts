@@ -8,20 +8,17 @@ import {
 import { deadLock } from "../configs/scripts/index.js";
 import { ScriptManager } from "../rgbpp/script-manager.js";
 import { NetworkConfig, UtxoSeal } from "../types/index.js";
-import { RgbppUdtIssuance } from "../types/rgbpp/xudt-like.js";
+import { RgbppUdtIssuance } from "../types/rgbpp/udt.js";
 import { PredefinedScriptName } from "../types/script.js";
 import {
-  encodeCommittedLength,
-  encodeRgbppXudtLikeToken,
+  encodeRgbppUdtToken,
   isUsingOneOfScripts,
-  pseudoRgbppLockArgs,
   u128ToLe,
   updateScriptArgsWithTxId,
 } from "../utils/index.js";
-import { buildRgbppLockArgs } from "../utils/rgbpp.js";
 
 // TODO: rgbppLiveCells, btcTimeLockCells de-duplication
-export class RgbppXudtLikeClient {
+export class RgbppUdtClient {
   private scriptManager: ScriptManager;
 
   constructor(
@@ -90,22 +87,6 @@ export class RgbppXudtLikeClient {
         );
       }
 
-      console.log("output.lock.args", output.lock.args);
-      console.log("pseudoRgbppLockArgs()", pseudoRgbppLockArgs());
-      console.log(
-        "buildRgbppLockArgs({ txId, index: index + 1 })",
-        buildRgbppLockArgs({ txId, index: index + 1 }),
-      );
-      console.log(
-        "isUsingOneOfScripts(output.lock, [this.rgbppLockScriptTemplate()])",
-        isUsingOneOfScripts(output.lock, [this.rgbppLockScriptTemplate()]),
-      );
-      console.log(
-        output.lock.args.replace(
-          pseudoRgbppLockArgs(),
-          buildRgbppLockArgs({ txId, index: index + 1 }),
-        ),
-      );
       return ccc.CellOutput.from({
         ...output,
         lock: {
@@ -143,7 +124,7 @@ export class RgbppXudtLikeClient {
         lock: this.scriptManager.buildPseudoRgbppLockScript(),
         type: ccc.Script.from({
           ...params.udtScriptInfo.script,
-          args: params.rgbppLiveCells[0].cellOutput.lock.hash(), // unique ID of xUDT-like token
+          args: params.rgbppLiveCells[0].cellOutput.lock.hash(), // unique ID of udt token
         }),
       },
       u128ToLe(params.amount * BigInt(10 ** params.token.decimal)),
@@ -160,7 +141,7 @@ export class RgbppXudtLikeClient {
           UNIQUE_TYPE_OUTPUT_INDEX,
         ),
       },
-      encodeRgbppXudtLikeToken(params.token),
+      encodeRgbppUdtToken(params.token),
     );
 
     tx.addCellDeps(
@@ -168,34 +149,6 @@ export class RgbppXudtLikeClient {
       this.scriptManager.getScriptInfoByName(PredefinedScriptName.UniqueType)
         .cellDep,
     );
-
-    return tx;
-  }
-
-  async insertRgbppWitnessPlaceholder(
-    tx: ccc.Transaction,
-  ): Promise<ccc.Transaction> {
-    const committedLength = encodeCommittedLength({
-      inputLength: new Uint8Array([tx.inputs.length]),
-      outputLength: new Uint8Array([tx.outputs.length]),
-    });
-
-    let witnesses: ccc.Hex[] = [];
-
-    const lockArgsSet: Set<string> = new Set();
-    for (let cellInput of tx.inputs) {
-      cellInput = ccc.CellInput.from(cellInput);
-      await cellInput.completeExtraInfos(this.ckbClient);
-      if (lockArgsSet.has(cellInput.cellOutput!.lock.args)) {
-        witnesses.push("0x");
-      } else {
-        lockArgsSet.add(cellInput.cellOutput!.lock.args);
-        witnesses.push(committedLength);
-      }
-    }
-
-    // the potential partial cobuild witness in spore tx is discarded, otherwise `prepareSighashAllWitness` will fail
-    tx.witnesses = [...witnesses];
 
     return tx;
   }

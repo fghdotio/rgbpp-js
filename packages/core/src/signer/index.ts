@@ -28,10 +28,6 @@ import {
   isSameScriptTemplate,
   isUsingOneOfScripts,
 } from "../utils/script.js";
-import {
-  insertClusterCreationWitness,
-  insertSporeTransferWitness,
-} from "../utils/spore.js";
 import { pollForSpvProof } from "../utils/spv.js";
 
 export class CkbRgbppUnlockSinger extends ccc.Signer {
@@ -296,29 +292,6 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
   ): Promise<ccc.Transaction> {
     const tx = partialTx.clone();
 
-    // let committedLength: CommittedLength | undefined;
-    // const rgbppWitnessIndices = tx.witnesses
-    //   .map((witness, index) => ({ witness, index }))
-    //   .filter(({ witness }) => {
-    //     const { committedLength: cl, hasRgbppWitnessPrefix } =
-    //       decodeCommittedLength(witness);
-    //     if (hasRgbppWitnessPrefix) {
-    //       committedLength = cl;
-    //     }
-
-    //     return hasRgbppWitnessPrefix;
-    //   })
-    //   .map(({ index }) => index);
-
-    // if (!committedLength) {
-    //   throw new Error("Committed length not found");
-    // }
-
-    // console.log("rgbppWitnessIndices:", rgbppWitnessIndices);
-    // console.log(
-    //   `committed input length: ${committedLength.inputLength[0]}, output length: ${committedLength.outputLength[0]}`,
-    // );
-
     const rgbppUnlock = buildRgbppUnlock(
       btcLikeTxBytes,
       spvClient.proof,
@@ -344,20 +317,13 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
   }
 
   async handleSporeWitness(tx: ccc.Transaction): Promise<void> {
-    console.log(
-      `==== input length: ${tx.inputs.length}, witness length: ${tx.witnesses.length} ====`,
-    );
-
     if (tx.witnesses.length == tx.inputs.length) {
-      console.log("Not spore related transaction");
       return;
     }
 
     let pseudoCobuild: ccc.Hex | undefined;
     pseudoCobuild = tx.witnesses[tx.witnesses.length - 1];
     tx.witnesses = tx.witnesses.slice(0, tx.inputs.length);
-
-    console.log("pseudoCobuild:", pseudoCobuild);
 
     let btcTxId: string | undefined;
     let rgbppLockArgs: ccc.Hex[] = [];
@@ -386,9 +352,6 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
 
     let cobuild: ccc.Hex;
     if (rgbppLockArgs.length > 0) {
-      console.log("has rgbpp lock arg");
-      console.log("pseudoRgbppLockArgs()", pseudoRgbppLockArgs());
-
       let currentCobuild = pseudoCobuild;
       const pseudoArg = trimHexPrefix(pseudoRgbppLockArgs());
       let lastIndex = 0;
@@ -408,128 +371,12 @@ export class CkbRgbppUnlockSinger extends ccc.Signer {
       pseudoCobuild = currentCobuild as ccc.Hex;
     }
 
-    // let reversedPseudoCobuild = [...pseudoCobuild].reverse().join("");
-    // reversedPseudoCobuild = reversedPseudoCobuild.replace(
-    //   TX_ID_PLACEHOLDER,
-    //   [...btcTxIdInReverseByteOrder(btcTxId)].reverse().join(""),
-    // );
-    // cobuild = [...reversedPseudoCobuild].reverse().join("") as ccc.Hex;
-
     cobuild = pseudoCobuild.replace(
       btcTxIdInReverseByteOrder(TX_ID_PLACEHOLDER),
       btcTxIdInReverseByteOrder(btcTxId),
     ) as ccc.Hex;
 
-    console.log("replaced cobuild", cobuild);
     tx.witnesses.push(cobuild);
-
-    const clusterScriptInfos = Object.values(
-      ccc.spore.getClusterScriptInfos(this.client),
-    );
-    const sporeScriptInfos = Object.values(
-      ccc.spore.getSporeScriptInfos(this.client),
-    );
-
-    const clusterIndicesInInputs: number[] = [];
-    const sporeIndicesInInputs: number[] = [];
-    const clusterIndicesInOutputs: number[] = [];
-    const sporeIndicesInOutputs: number[] = [];
-
-    await Promise.all(
-      tx.inputs.map(async (input, index) => {
-        await input.completeExtraInfos(this.client);
-        if (input.cellOutput?.type) {
-          sporeScriptInfos.forEach((si) => {
-            if (si && si.codeHash === input.cellOutput?.type?.codeHash) {
-              sporeIndicesInInputs.push(index);
-            }
-          });
-
-          clusterScriptInfos.forEach((si) => {
-            if (si && si.codeHash === input.cellOutput?.type?.codeHash) {
-              clusterIndicesInInputs.push(index);
-            }
-          });
-        }
-      }),
-    );
-
-    tx.outputs.forEach((output, index) => {
-      clusterScriptInfos.forEach((si) => {
-        if (si && si.codeHash === output.type?.codeHash) {
-          clusterIndicesInOutputs.push(index);
-        }
-      });
-
-      sporeScriptInfos.forEach((si) => {
-        if (si && si.codeHash === output.type?.codeHash) {
-          sporeIndicesInOutputs.push(index);
-        }
-      });
-    });
-
-    // print all the indices length
-    console.log(
-      "clusterIndicesInInputs",
-      clusterIndicesInInputs.length,
-      "clusterIndicesInOutputs",
-      clusterIndicesInOutputs.length,
-      "sporeIndicesInInputs",
-      sporeIndicesInInputs.length,
-      "sporeIndicesInOutputs",
-      sporeIndicesInOutputs.length,
-    );
-
-    if (
-      clusterIndicesInInputs.length === 0 &&
-      clusterIndicesInOutputs.length === 1 &&
-      sporeIndicesInInputs.length === 0 &&
-      sporeIndicesInOutputs.length === 0
-    ) {
-      console.log("cluster creation");
-      await insertClusterCreationWitness(
-        tx,
-        clusterIndicesInOutputs[0],
-        this.client,
-      );
-      return;
-    }
-
-    // if (
-    //   clusterIndicesInInputs.length === 1 &&
-    //   clusterIndicesInOutputs.length === 1 &&
-    //   sporeIndicesInInputs.length === 0 &&
-    //   sporeIndicesInOutputs.length > 0
-    // ) {
-    //   console.log("spore creation");
-    //   await insertSporeCreationWitness(
-    //     tx,
-    //     clusterIndicesInInputs[0],
-    //     clusterIndicesInOutputs[0],
-    //     sporeIndicesInOutputs,
-    //     this.client,
-    //   );
-    //   return;
-    // }
-
-    // ? multiple spore transfer in one transaction
-    if (
-      clusterIndicesInInputs.length === 0 &&
-      clusterIndicesInOutputs.length === 0 &&
-      sporeIndicesInInputs.length === 1 &&
-      sporeIndicesInOutputs.length === 1
-    ) {
-      console.log("spore transfer");
-      await insertSporeTransferWitness(
-        tx,
-        sporeIndicesInInputs[0],
-        sporeIndicesInOutputs[0],
-        this.client,
-      );
-      return;
-    }
-
-    // throw new Error("Unsupported transaction");
   }
 
   async connect(): Promise<void> {}

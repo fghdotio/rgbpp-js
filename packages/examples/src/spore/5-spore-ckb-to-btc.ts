@@ -13,7 +13,7 @@ async function ckbSporeToBtc({
   utxoSeal?: UtxoSeal;
   sporeTypeArgs: string;
 }) {
-  const { rgbppBtcWallet, rgbppXudtLikeClient } = initializeRgbppEnv();
+  const { rgbppBtcWallet, rgbppUdtClient } = initializeRgbppEnv();
 
   if (!utxoSeal) {
     utxoSeal = await rgbppBtcWallet.prepareUtxoSeal(28);
@@ -22,7 +22,7 @@ async function ckbSporeToBtc({
   const { tx } = await spore.transferSpore({
     signer: ckbSigner,
     id: sporeTypeArgs,
-    to: rgbppXudtLikeClient.buildRgbppLockScript(utxoSeal),
+    to: rgbppUdtClient.buildRgbppLockScript(utxoSeal),
   });
 
   await tx.completeFeeBy(ckbSigner);

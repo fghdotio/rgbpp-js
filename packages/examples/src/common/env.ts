@@ -6,7 +6,7 @@ import { fileURLToPath } from "url";
 import { dirname } from "path";
 
 import {
-  RgbppXudtLikeClient,
+  RgbppUdtClient,
   CkbRgbppUnlockSinger,
   buildNetworkConfig,
   PredefinedNetwork,
@@ -45,7 +45,7 @@ export function initializeRgbppEnv(scriptInfos?: ScriptInfo[]): {
   networkConfig: NetworkConfig;
   utxoBasedAccount: BtcAccount;
   utxoBasedAccountAddress: string;
-  rgbppXudtLikeClient: RgbppXudtLikeClient;
+  rgbppUdtClient: RgbppUdtClient;
   rgbppBtcWallet: RgbppBtcWallet;
   ckbRgbppUnlockSinger: CkbRgbppUnlockSinger;
 } {
@@ -69,7 +69,7 @@ export function initializeRgbppEnv(scriptInfos?: ScriptInfo[]): {
     networkConfig.name
   );
 
-  const rgbppXudtLikeClient = new RgbppXudtLikeClient(networkConfig, ckbClient);
+  const rgbppUdtClient = new RgbppUdtClient(networkConfig, ckbClient);
 
   const rgbppBtcWallet = new RgbppBtcWallet(
     utxoBasedChainPrivateKey,
@@ -86,14 +86,14 @@ export function initializeRgbppEnv(scriptInfos?: ScriptInfo[]): {
     networkConfig,
     utxoBasedAccount,
     utxoBasedAccountAddress: utxoBasedAccount.from,
-    rgbppXudtLikeClient,
+    rgbppUdtClient,
     rgbppBtcWallet,
     ckbRgbppUnlockSinger: new CkbRgbppUnlockSinger(
       ckbClient,
       utxoBasedAccount.from,
       rgbppBtcWallet,
       rgbppBtcWallet,
-      rgbppXudtLikeClient.getRgbppScriptInfos()
+      rgbppUdtClient.getRgbppScriptInfos()
     ),
   };
 }

@@ -1,11 +1,11 @@
 import { ccc } from "@ckb-ccc/shell";
 
-import { RgbppXudtLikeClient } from "@rgbpp-js/core";
+import { RgbppUdtClient } from "@rgbpp-js/core";
 
 export interface RgbppBtcTxParams {
   ckbPartialTx: ccc.Transaction;
   ckbClient: ccc.Client;
-  rgbppXudtLikeClient: RgbppXudtLikeClient;
+  rgbppUdtClient: RgbppUdtClient;
   receiverBtcAddresses: string[];
 
   btcChangeAddress: string;

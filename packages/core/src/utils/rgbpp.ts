@@ -17,8 +17,6 @@ import {
   BLANK_TX_ID,
   BTC_TX_PSEUDO_INDEX,
   DEFAULT_CONFIRMATIONS,
-  RGBPP_CKB_WITNESS_LENGTH,
-  RGBPP_CKB_WITNESS_PLACEHOLDER,
   RGBPP_MAX_CELL_NUM,
   TX_ID_PLACEHOLDER,
 } from "../constants/index.js";
@@ -29,13 +27,9 @@ import {
   RGBPPUnlock,
   Uint16,
 } from "../schemas/generated/rgbpp.js";
-import {
-  CommittedLength,
-  RgbppXudtLikeToken,
-  UtxoSeal,
-} from "../types/rgbpp/rgbpp.js";
+import { RgbppUdtToken, UtxoSeal } from "../types/rgbpp/rgbpp.js";
+import { RgbppUdtClient } from "../udt/index.js";
 import { isSameScriptTemplate, isUsingOneOfScripts } from "../utils/script.js";
-import { RgbppXudtLikeClient } from "../xdut-like/xudt-like.js";
 import {
   prependHexPrefix,
   reverseHexByteOrder,
@@ -47,7 +41,7 @@ import {
   utf8ToHex,
 } from "./encoder.js";
 
-export const encodeRgbppXudtLikeToken = (token: RgbppXudtLikeToken): string => {
+export const encodeRgbppUdtToken = (token: RgbppUdtToken): string => {
   const decimal = u8ToHex(token.decimal);
   const name = trimHexPrefix(utf8ToHex(token.name));
   const nameSize = trimHexPrefix(u8ToHex(name.length / 2));
@@ -206,14 +200,12 @@ export const buildBtcRgbppOutputs = (
   ckbPartialTx: ccc.Transaction,
   btcChangeAddress: string,
   receiverBtcAddresses: string[],
-  rgbppXudtLikeClient: RgbppXudtLikeClient,
+  rgbppUdtClient: RgbppUdtClient,
 ): TxOutput[] => {
   const commitment = calculateCommitment(ckbPartialTx);
-  console.log("commitment", commitment);
 
-  const rgbppLockScriptTemplate = rgbppXudtLikeClient.rgbppLockScriptTemplate();
-  const btcTimeLockScriptTemplate =
-    rgbppXudtLikeClient.btcTimeLockScriptTemplate();
+  const rgbppLockScriptTemplate = rgbppUdtClient.rgbppLockScriptTemplate();
+  const btcTimeLockScriptTemplate = rgbppUdtClient.btcTimeLockScriptTemplate();
 
   const outputs: InitOutput[] = [];
   let lastCkbTypedOutputIndex = -1;
@@ -260,51 +252,3 @@ export const buildBtcRgbppOutputs = (
 
   return outputs.map((output) => convertToOutput(output));
 };
-
-export function encodeCommittedLength(cl: CommittedLength): ccc.Hex {
-  const encoder = new TextEncoder();
-  const uint8Array = new Uint8Array(RGBPP_CKB_WITNESS_LENGTH);
-  uint8Array.set(encoder.encode(RGBPP_CKB_WITNESS_PLACEHOLDER));
-  uint8Array.set(cl.inputLength, RGBPP_CKB_WITNESS_PLACEHOLDER.length);
-  uint8Array.set(
-    cl.outputLength,
-    RGBPP_CKB_WITNESS_PLACEHOLDER.length + cl.inputLength.length,
-  );
-
-  return ccc.hexFrom(uint8Array);
-}
-
-export function decodeCommittedLength(witness: ccc.Hex): {
-  committedLength: CommittedLength;
-  hasRgbppWitnessPrefix: boolean;
-} {
-  const decoder = new TextDecoder();
-  const witnessBytes = ccc.bytesFrom(witness);
-  const witnessPrefix = decoder.decode(
-    witnessBytes.slice(0, RGBPP_CKB_WITNESS_PLACEHOLDER.length),
-  );
-
-  if (witnessPrefix !== RGBPP_CKB_WITNESS_PLACEHOLDER) {
-    return {
-      committedLength: {
-        inputLength: new Uint8Array([0]),
-        outputLength: new Uint8Array([0]),
-      },
-      hasRgbppWitnessPrefix: false,
-    };
-  }
-
-  return {
-    committedLength: {
-      inputLength: witnessBytes.slice(
-        RGBPP_CKB_WITNESS_PLACEHOLDER.length,
-        RGBPP_CKB_WITNESS_PLACEHOLDER.length + 1,
-      ),
-      outputLength: witnessBytes.slice(
-        RGBPP_CKB_WITNESS_PLACEHOLDER.length + 1,
-        RGBPP_CKB_WITNESS_PLACEHOLDER.length + 2,
-      ),
-    },
-    hasRgbppWitnessPrefix: true,
-  };
-}

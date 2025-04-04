@@ -17,7 +17,7 @@ async function createSpore({
 }) {
   const {
     rgbppBtcWallet,
-    rgbppXudtLikeClient,
+    rgbppUdtClient,
     utxoBasedAccountAddress,
     ckbRgbppUnlockSinger,
   } = initializeRgbppEnv();
@@ -25,14 +25,14 @@ async function createSpore({
   const { tx: transferClusterTx } = await spore.transferSporeCluster({
     signer: ckbSigner,
     id: receiverInfo.rawSporeData.clusterId!,
-    to: rgbppXudtLikeClient.buildPseudoRgbppLockScript(), // new cluster output
+    to: rgbppUdtClient.buildPseudoRgbppLockScript(), // new cluster output
   });
 
   // ? API for creating multiple spores
   const { tx: ckbPartialTx, id } = await spore.createSpore({
     signer: ckbSigner,
     data: receiverInfo.rawSporeData,
-    to: rgbppXudtLikeClient.buildPseudoRgbppLockScript(),
+    to: rgbppUdtClient.buildPseudoRgbppLockScript(),
     // cannot use cluster mode here as cluster's lock needs to be updated
     clusterMode: "skip",
     tx: transferClusterTx,
@@ -45,7 +45,7 @@ async function createSpore({
   const { psbt, indexedCkbPartialTx } = await rgbppBtcWallet.buildPsbt({
     ckbPartialTx,
     ckbClient,
-    rgbppXudtLikeClient,
+    rgbppUdtClient,
     btcChangeAddress: utxoBasedAccountAddress,
     receiverBtcAddresses: [utxoBasedAccountAddress],
     feeRate: 28,
@@ -55,7 +55,7 @@ async function createSpore({
   const btcTxId = await rgbppBtcWallet.signAndSendTx(psbt);
   logger.add("btcTxId", btcTxId, true);
 
-  const ckbPartialTxInjected = await rgbppXudtLikeClient.injectTxIdToRgbppCkbTx(
+  const ckbPartialTxInjected = await rgbppUdtClient.injectTxIdToRgbppCkbTx(
     indexedCkbPartialTx,
     btcTxId
   );
@@ -63,10 +63,8 @@ async function createSpore({
     await ckbRgbppUnlockSinger.signTransaction(ckbPartialTxInjected);
 
   await rgbppSignedCkbTx.completeFeeBy(ckbSigner);
-  logger.logCkbTx("ckbFinalTxToSign", rgbppSignedCkbTx);
 
   const ckbFinalTx = await ckbSigner.signTransaction(rgbppSignedCkbTx);
-  logger.logCkbTx("ckbFinalTx", ckbFinalTx);
   const txHash = await ckbSigner.client.sendTransaction(ckbFinalTx);
   await ckbRgbppUnlockSinger.client.waitTransaction(txHash);
   logger.add("ckbTxId", txHash, true);

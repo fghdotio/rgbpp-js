@@ -16,7 +16,7 @@ async function ckbUdtToBtc({
 
   amount: bigint;
 }) {
-  const { rgbppBtcWallet, rgbppXudtLikeClient } = initializeRgbppEnv();
+  const { rgbppBtcWallet, rgbppUdtClient } = initializeRgbppEnv();
 
   if (!utxoSeal) {
     utxoSeal = await rgbppBtcWallet.prepareUtxoSeal(28);
@@ -29,7 +29,7 @@ async function ckbUdtToBtc({
 
   let { res: tx } = await udt.transfer(ckbSigner as unknown as ccc.Signer, [
     {
-      to: rgbppXudtLikeClient.buildRgbppLockScript(utxoSeal),
+      to: rgbppUdtClient.buildRgbppLockScript(utxoSeal),
       amount: ccc.fixedPointFrom(amount),
     },
   ]);

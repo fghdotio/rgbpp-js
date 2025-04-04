@@ -13,7 +13,7 @@ async function btcSporeToCkb({
 }) {
   const {
     rgbppBtcWallet,
-    rgbppXudtLikeClient,
+    rgbppUdtClient,
     utxoBasedAccountAddress,
     ckbRgbppUnlockSinger,
   } = initializeRgbppEnv();
@@ -21,13 +21,13 @@ async function btcSporeToCkb({
   const { tx: ckbPartialTx } = await spore.transferSpore({
     signer: ckbSigner,
     id: sporeTypeArgs,
-    to: await rgbppXudtLikeClient.buildBtcTimeLockScript(ckbAddress),
+    to: await rgbppUdtClient.buildBtcTimeLockScript(ckbAddress),
   });
 
   const { psbt, indexedCkbPartialTx } = await rgbppBtcWallet.buildPsbt({
     ckbPartialTx,
     ckbClient,
-    rgbppXudtLikeClient,
+    rgbppUdtClient,
     btcChangeAddress: utxoBasedAccountAddress,
     receiverBtcAddresses: [],
     feeRate: 28,
@@ -37,7 +37,7 @@ async function btcSporeToCkb({
   const btcTxId = await rgbppBtcWallet.signAndSendTx(psbt);
   logger.add("btcTxId", btcTxId, true);
 
-  const ckbPartialTxInjected = await rgbppXudtLikeClient.injectTxIdToRgbppCkbTx(
+  const ckbPartialTxInjected = await rgbppUdtClient.injectTxIdToRgbppCkbTx(
     indexedCkbPartialTx,
     btcTxId
   );
@@ -45,10 +45,7 @@ async function btcSporeToCkb({
     await ckbRgbppUnlockSinger.signTransaction(ckbPartialTxInjected);
 
   await rgbppSignedCkbTx.completeFeeBy(ckbSigner);
-  logger.logCkbTx("ckbPartialTxWithFee", rgbppSignedCkbTx);
-
   const ckbFinalTx = await ckbSigner.signTransaction(rgbppSignedCkbTx);
-  logger.logCkbTx("ckbFinalTx", ckbFinalTx);
   const txHash = await ckbSigner.client.sendTransaction(ckbFinalTx);
   await ckbRgbppUnlockSinger.client.waitTransaction(txHash);
   logger.add("ckbTxId", txHash, true);

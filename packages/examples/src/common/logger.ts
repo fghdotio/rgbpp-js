@@ -81,7 +81,7 @@ export class RgbppTxLogger {
   }
 
   static defaultDir(): string {
-    return dirname(fileURLToPath(import.meta.url)) + "/tmp";
+    return dirname(dirname(fileURLToPath(import.meta.url))) + "/tmp";
   }
 
   currentTime(): string {

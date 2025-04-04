@@ -1,7 +1,6 @@
 import { ccc } from "@ckb-ccc/shell";
 
-// xUDT compatible token
-export interface RgbppXudtLikeToken {
+export interface RgbppUdtToken {
   decimal: number;
   name: string;
   symbol: string;
@@ -16,9 +15,4 @@ export interface ScriptInfo {
   name: string;
   script: ccc.Script;
   cellDep: ccc.CellDep;
-}
-
-export interface CommittedLength {
-  inputLength: Uint8Array;
-  outputLength: Uint8Array;
 }

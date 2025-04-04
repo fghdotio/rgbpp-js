@@ -1,10 +1,6 @@
 import { ccc } from "@ckb-ccc/shell";
 
-import {
-  buildBtcRgbppOutputs,
-  parseUtxoSealFromScriptArgs,
-  ScriptInfo,
-} from "@rgbpp-js/core";
+import { ScriptInfo } from "@rgbpp-js/core";
 
 import { ckbSigner, ckbClient, initializeRgbppEnv } from "../common/env.js";
 
@@ -20,7 +16,7 @@ async function btcUdtToCkb({
 }) {
   const {
     rgbppBtcWallet,
-    rgbppXudtLikeClient,
+    rgbppUdtClient,
     utxoBasedAccountAddress,
     ckbRgbppUnlockSinger,
   } = initializeRgbppEnv();
@@ -34,7 +30,7 @@ async function btcUdtToCkb({
     ckbSigner as unknown as ccc.Signer,
     await Promise.all(
       receivers.map(async (receiver) => ({
-        to: await rgbppXudtLikeClient.buildBtcTimeLockScript(receiver.address),
+        to: await rgbppUdtClient.buildBtcTimeLockScript(receiver.address),
         amount: ccc.fixedPointFrom(receiver.amount),
       }))
     )
@@ -44,15 +40,13 @@ async function btcUdtToCkb({
     tx,
     ckbRgbppUnlockSinger,
     // merge multiple inputs to a single change output
-    rgbppXudtLikeClient.buildPseudoRgbppLockScript()
+    rgbppUdtClient.buildPseudoRgbppLockScript()
   );
-
-  logger.logCkbTx("txWithInputs", txWithInputs);
 
   const { psbt, indexedCkbPartialTx } = await rgbppBtcWallet.buildPsbt({
     ckbPartialTx: txWithInputs,
     ckbClient,
-    rgbppXudtLikeClient,
+    rgbppUdtClient,
     btcChangeAddress: utxoBasedAccountAddress,
     receiverBtcAddresses: [],
     feeRate: 28,
@@ -62,18 +56,15 @@ async function btcUdtToCkb({
   const btcTxId = await rgbppBtcWallet.signAndSendTx(psbt);
   logger.add("btcTxId", btcTxId, true);
 
-  const ckbPartialTxInjected = await rgbppXudtLikeClient.injectTxIdToRgbppCkbTx(
+  const ckbPartialTxInjected = await rgbppUdtClient.injectTxIdToRgbppCkbTx(
     indexedCkbPartialTx,
     btcTxId
   );
-  logger.logCkbTx("ckbPartialTxInjected", ckbPartialTxInjected);
 
   const rgbppSignedCkbTx =
     await ckbRgbppUnlockSinger.signTransaction(ckbPartialTxInjected);
   await rgbppSignedCkbTx.completeFeeBy(ckbSigner);
-  logger.logCkbTx("ckbPartialTxWithFee", rgbppSignedCkbTx);
   const ckbFinalTx = await ckbSigner.signTransaction(rgbppSignedCkbTx);
-  logger.logCkbTx("ckbFinalTx", ckbFinalTx);
   const txHash = await ckbSigner.client.sendTransaction(ckbFinalTx);
   await ckbRgbppUnlockSinger.client.waitTransaction(txHash);
   logger.add("ckbTxId", txHash, true);
