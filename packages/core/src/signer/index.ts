@@ -10,7 +10,7 @@ import {
   TransactionLike,
 } from "@ckb-ccc/shell";
 
-import { transactionToHex } from "@rgbpp-js/bitcoin";
+import { transactionToHex } from "../bitcoin/index.js";
 
 import { TX_ID_PLACEHOLDER } from "../constants/index.js";
 import { SimpleBtcClient } from "../interfaces/btc.js";

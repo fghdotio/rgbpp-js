@@ -1,23 +1,24 @@
 import { ccc } from "@ckb-ccc/shell";
 
 import {
+  buildBtcTimeUnlockWitness,
   parseBtcTimeLockArgs,
   pollForSpvProof,
-  buildBtcTimeUnlockWitness,
-  PredefinedScriptName,
-} from "@rgbpp-js/core";
+} from "../../utils/index.js";
 
-import { RgbppTxLogger } from "../common/logger.js";
+import { PredefinedScriptName } from "../../types/script.js";
+
 import { testnetSudtCellDep } from "../common/assets.js";
-import { collectBtcTimeLockCells } from "../common/utils.js";
 import { ckbClient, ckbSigner, initializeRgbppEnv } from "../common/env.js";
+import { RgbppTxLogger } from "../common/logger.js";
+import { collectBtcTimeLockCells } from "../common/utils.js";
 
 async function unlockBtcTimeLock(btcTimeLockArgs: string) {
   const { rgbppBtcWallet, rgbppUdtClient } = initializeRgbppEnv();
 
   const btcTimeLockCells = await collectBtcTimeLockCells(
     btcTimeLockArgs,
-    rgbppUdtClient
+    rgbppUdtClient,
   );
 
   const tx = ccc.Transaction.default();
@@ -38,7 +39,7 @@ async function unlockBtcTimeLock(btcTimeLockArgs: string) {
         // ? Too many details, capacity, cell deps. Encapsulate it in `rgbppUdtClient`?
         capacity: cell.cellOutput.capacity,
       },
-      cell.outputData
+      cell.outputData,
     );
   });
 
@@ -55,7 +56,7 @@ async function unlockBtcTimeLock(btcTimeLockArgs: string) {
         index: 1,
       },
       depType: btcTimeLockCellDep.depType,
-    })
+    }),
   );
 
   for await (const btcTimeLockCell of btcTimeLockCells) {
@@ -65,12 +66,12 @@ async function unlockBtcTimeLock(btcTimeLockArgs: string) {
     }
     lockArgs.add(btcTimeLockCell.cellOutput.lock.args);
     const { btcTxId, confirmations } = parseBtcTimeLockArgs(
-      btcTimeLockCell.cellOutput.lock.args
+      btcTimeLockCell.cellOutput.lock.args,
     );
     const spvProof = await pollForSpvProof(
       rgbppBtcWallet,
       btcTxId,
-      confirmations
+      confirmations,
     );
     if (!spvProof) {
       throw new Error("Failed to get spv proof");
@@ -80,7 +81,7 @@ async function unlockBtcTimeLock(btcTimeLockArgs: string) {
       ccc.CellDep.from({
         outPoint: spvProof.spvClientOutpoint,
         depType: "code",
-      })
+      }),
     );
 
     tx.witnesses.push(buildBtcTimeUnlockWitness(spvProof.proof));
@@ -97,7 +98,7 @@ async function unlockBtcTimeLock(btcTimeLockArgs: string) {
 const logger = new RgbppTxLogger({ opType: "unlock-btc-time-lock" });
 
 unlockBtcTimeLock(
-  "0x7d00000010000000590000005d000000490000001000000030000000310000009bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8011400000021e782eeb1c9893b341ed71c2dfe6fa496a6435c060000007d56f9d4e256552292905c792a3769e1ff5e85e2e57fe7a458753b90dfda7ef6"
+  "0x7d00000010000000590000005d000000490000001000000030000000310000009bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8011400000021e782eeb1c9893b341ed71c2dfe6fa496a6435c060000007d56f9d4e256552292905c792a3769e1ff5e85e2e57fe7a458753b90dfda7ef6",
 )
   .then(() => {
     logger.saveOnSuccess();
@@ -110,9 +111,5 @@ unlockBtcTimeLock(
   });
 
 /* 
-pnpm tsx packages/examples/src/udt/4-unlock-btc-time-lock.ts
-
-https://testnet.explorer.nervos.org/transaction/0xa68872500e321e13599df970e7b08d2eb92fdc01f2344610b350636d18c571cb
-
-unlock using rgbpp-sdk: https://testnet.explorer.nervos.org/transaction/0xe4b85c84550bcfb8f4ead3940c18b51b4683acfb876644e254e1d249053e18f6
+pnpm tsx packages/core/src/examples/udt/4-unlock-btc-time-lock.ts
 */

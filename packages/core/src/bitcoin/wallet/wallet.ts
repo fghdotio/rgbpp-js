@@ -3,8 +3,6 @@ import { Psbt, Transaction } from "bitcoinjs-lib";
 import { ccc } from "@ckb-ccc/shell";
 
 import {
-  BLANK_TX_ID,
-  BTC_TX_PSEUDO_INDEX,
   btcTxIdInReverseByteOrder,
   buildBtcRgbppOutputs,
   calculateCommitment,
@@ -12,11 +10,16 @@ import {
   parseUtxoSealFromScriptArgs,
   pseudoRgbppLockArgs,
   pseudoRgbppLockArgsForCommitment,
-  RgbppApiSpvProof,
-  TX_ID_PLACEHOLDER,
   u32ToHex,
-  UtxoSeal,
-} from "@rgbpp-js/core";
+} from "../../utils/index.js";
+
+import {
+  BLANK_TX_ID,
+  BTC_TX_PSEUDO_INDEX,
+  TX_ID_PLACEHOLDER,
+} from "../../constants/index.js";
+
+import { UtxoSeal } from "../../types/rgbpp/rgbpp.js";
 
 import {
   BtcAccount,
@@ -45,6 +48,8 @@ import {
   toNetwork,
   utxoToInputData,
 } from "../utils/utils.js";
+
+import { RgbppApiSpvProof } from "../../types/spv.js";
 
 const DEFAULT_FEE_RATE = 1;
 // TODO: use dust limit from network config

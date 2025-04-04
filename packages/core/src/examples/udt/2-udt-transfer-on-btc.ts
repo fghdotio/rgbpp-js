@@ -1,10 +1,9 @@
 import { ccc } from "@ckb-ccc/shell";
 
-import { RgbppBtcReceiver, ScriptInfo } from "@rgbpp-js/core";
+import { RgbppBtcReceiver, ScriptInfo } from "../../types/rgbpp/index.js";
 
-import { ckbSigner, ckbClient, initializeRgbppEnv } from "../common/env.js";
+import { ckbClient, ckbSigner, initializeRgbppEnv } from "../common/env.js";
 
-import { testnetSudtInfo } from "../common/assets.js";
 import { RgbppTxLogger } from "../common/logger.js";
 
 async function transferUdt({
@@ -23,7 +22,7 @@ async function transferUdt({
 
   const udt = new ccc.udt.Udt(
     udtScriptInfo.cellDep.outPoint,
-    udtScriptInfo.script
+    udtScriptInfo.script,
   );
 
   let { res: tx } = await udt.transfer(
@@ -31,7 +30,7 @@ async function transferUdt({
     receivers.map((receiver) => ({
       to: rgbppUdtClient.buildPseudoRgbppLockScript(),
       amount: ccc.fixedPointFrom(receiver.amount),
-    }))
+    })),
   );
 
   let txWithInputs: ccc.Transaction;
@@ -40,7 +39,7 @@ async function transferUdt({
   txWithInputs = await udt.completeChangeToLock(
     tx,
     ckbRgbppUnlockSinger,
-    rgbppUdtClient.buildPseudoRgbppLockScript()
+    rgbppUdtClient.buildPseudoRgbppLockScript(),
   );
 
   const { psbt, indexedCkbPartialTx } = await rgbppBtcWallet.buildPsbt({
@@ -58,7 +57,7 @@ async function transferUdt({
 
   const ckbPartialTxInjected = await rgbppUdtClient.injectTxIdToRgbppCkbTx(
     indexedCkbPartialTx,
-    btcTxId
+    btcTxId,
   );
 
   const rgbppSignedCkbTx =
@@ -78,7 +77,7 @@ transferUdt({
     script: await ccc.Script.fromKnownScript(
       ckbClient,
       ccc.KnownScript.XUdt,
-      "0x29e04d8c0c246cc1b0027d7aa8a31f56f740134a56d056bb5efdbb00d3c78a44"
+      "0x29e04d8c0c246cc1b0027d7aa8a31f56f740134a56d056bb5efdbb00d3c78a44",
     ),
     cellDep: (await ckbClient.getKnownScript(ccc.KnownScript.XUdt)).cellDeps[0]
       .cellDep,
@@ -126,15 +125,5 @@ transferUdt({
   });
 
 /* 
-pnpm tsx packages/examples/src/udt/2-udt-transfer-on-btc.ts
-
-
-xUDT:
-btcTxId: 65ef87fa75c3122e718d50112defffb92010808759947a48f1b11ecb48c76c02
-ckbTxId: 0x2d9b4866fb8a1ce10a66ef37fc741b6f77fba580513ca45ae30bbddd68d51fe5
-
-
-sUDT:
-btcTxId: 7f6c43de47becbafe4954e3b1cc917f41aa6919a8ef040a188b481ec74972acc
-ckbTxId: 0x817dfd20228df3294e511336908dd6ed2252f8cb2ea27a22b5e27d029a8e5129
+pnpm tsx packages/core/src/examples/udt/2-udt-transfer-on-btc.ts
 */

@@ -75,6 +75,9 @@ importers:
 
   packages/core:
     dependencies:
+      '@bitcoinerlab/secp256k1':
+        specifier: 1.1.1
+        version: 1.1.1
       '@ckb-ccc/shell':
         specifier: ^1.1.8
         version: 1.1.8(typescript@5.7.3)
@@ -96,9 +99,15 @@ importers:
       '@spore-sdk/core':
         specifier: ^0.2.0-beta.6
         version: 0.2.1(@ckb-lumos/lumos@0.21.1)(lodash@4.17.21)
+      bip32:
+        specifier: 4.0.0
+        version: 4.0.0
       bitcoinjs-lib:
         specifier: 6.1.6
         version: 6.1.6
+      ecpair:
+        specifier: 2.1.0
+        version: 2.1.0
       js-sha256:
         specifier: ^0.11.0
         version: 0.11.0
@@ -106,6 +115,12 @@ importers:
         specifier: ^4.17.21
         version: 4.17.21
     devDependencies:
+      '@exact-realty/multipart-parser':
+        specifier: ^1.0.13
+        version: 1.0.14
+      '@nervosnetwork/ckb-sdk-core':
+        specifier: 0.109.5
+        version: 0.109.5
       '@types/jest':
         specifier: ^29.5.14
         version: 29.5.14
@@ -115,6 +130,9 @@ importers:
       '@types/node':
         specifier: ^22.10.6
         version: 22.10.6
+      dotenv:
+        specifier: ^16.4.7
+        version: 16.4.7
       eslint:
         specifier: ^9.18.0
         version: 9.18.0

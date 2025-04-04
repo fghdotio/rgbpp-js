@@ -4,11 +4,11 @@ import { ckbClient, ckbSigner, initializeRgbppEnv } from "../common/env.js";
 
 import { RgbppTxLogger } from "../common/logger.js";
 
-async function transferSpore({
-  btcAddress,
+async function btcSporeToCkb({
+  ckbAddress,
   sporeTypeArgs,
 }: {
-  btcAddress: string;
+  ckbAddress: string;
   sporeTypeArgs: string;
 }) {
   const {
@@ -21,7 +21,7 @@ async function transferSpore({
   const { tx: ckbPartialTx } = await spore.transferSpore({
     signer: ckbSigner,
     id: sporeTypeArgs,
-    to: rgbppUdtClient.buildPseudoRgbppLockScript(),
+    to: await rgbppUdtClient.buildBtcTimeLockScript(ckbAddress),
   });
 
   const { psbt, indexedCkbPartialTx } = await rgbppBtcWallet.buildPsbt({
@@ -29,7 +29,7 @@ async function transferSpore({
     ckbClient,
     rgbppUdtClient,
     btcChangeAddress: utxoBasedAccountAddress,
-    receiverBtcAddresses: [btcAddress],
+    receiverBtcAddresses: [],
     feeRate: 28,
   });
   logger.logCkbTx("indexedCkbPartialTx", indexedCkbPartialTx);
@@ -39,7 +39,7 @@ async function transferSpore({
 
   const ckbPartialTxInjected = await rgbppUdtClient.injectTxIdToRgbppCkbTx(
     indexedCkbPartialTx,
-    btcTxId
+    btcTxId,
   );
   const rgbppSignedCkbTx =
     await ckbRgbppUnlockSinger.signTransaction(ckbPartialTxInjected);
@@ -51,12 +51,13 @@ async function transferSpore({
   logger.add("ckbTxId", txHash, true);
 }
 
-const logger = new RgbppTxLogger({ opType: "spore-transfer" });
+const logger = new RgbppTxLogger({ opType: "spore-btc-to-ckb" });
 
-transferSpore({
-  btcAddress: "tb1qe8xc5ay5sdh0r58v0xfxrtss47kxveyzncs5ja",
+btcSporeToCkb({
+  ckbAddress:
+    "ckt1qzda0cr08m85hc8jlnfp3zer7xulejywt49kt2rr0vthywaa50xwsqfpu7pwavwf3yang8khrsklumayj6nyxhqpmh7fq",
   sporeTypeArgs:
-    "0xa46af1dda123cbd503edbcc42dc67fdf6fed533379b73da4a3dc6665a5572f1c",
+    "0x8ce8307ac273c6e5548bd1a5dbf6596aab5dd5e75259a092b5461d3dba1c34bf",
 })
   .then(() => {
     logger.saveOnSuccess();
@@ -69,9 +70,5 @@ transferSpore({
   });
 
 /* 
-pnpm tsx packages/examples/src/spore/3-spore-btc-transfer.ts
-
-
-https://mempool.space/testnet/tx/459d62a172ef5d311354c1f544599396cb4291c36e5bacbe6a08b301d3015f72
-https://testnet.explorer.nervos.org/transaction/0x659fb26595019caa3e1cd001a803707c29dfe4601ed0b5571f34e7cbc856aca0
+pnpm tsx packages/core/src/examples/spore/4-spore-btc-to-ckb.ts
 */

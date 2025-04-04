@@ -1,6 +1,6 @@
 import { ccc } from "@ckb-ccc/shell";
 
-import { UtxoSeal, ScriptInfo } from "@rgbpp-js/core";
+import { ScriptInfo, UtxoSeal } from "../../types/rgbpp/index.js";
 
 import { ckbClient, ckbSigner, initializeRgbppEnv } from "../common/env.js";
 
@@ -24,7 +24,7 @@ async function ckbUdtToBtc({
 
   const udt = new ccc.udt.Udt(
     udtScriptInfo.cellDep.outPoint,
-    udtScriptInfo.script
+    udtScriptInfo.script,
   );
 
   let { res: tx } = await udt.transfer(ckbSigner as unknown as ccc.Signer, [
@@ -55,7 +55,7 @@ ckbUdtToBtc({
     script: await ccc.Script.fromKnownScript(
       ckbClient,
       ccc.KnownScript.XUdt,
-      "0x868c505051f06bb41646bd1b442dbed8035d91abd9ac7acc4bda3bab267e6ac7"
+      "0x868c505051f06bb41646bd1b442dbed8035d91abd9ac7acc4bda3bab267e6ac7",
     ),
     cellDep: (await ckbClient.getKnownScript(ccc.KnownScript.XUdt)).cellDeps[0]
       .cellDep,
@@ -82,5 +82,5 @@ ckbUdtToBtc({
   });
 
 /* 
-pnpm tsx packages/examples/src/udt/5-udt-ckb-to-btc.ts
+pnpm tsx packages/core/src/examples/udt/5-udt-ckb-to-btc.ts
 */

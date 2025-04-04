@@ -6,7 +6,7 @@
     "format": "pnpm -r run format",
     "test": "jest",
     "build:prepare": "pnpm -r --filter !. install",
-    "build": "pnpm -r --filter !./packages/examples run build"
+    "build": "pnpm -r run build"
   },
   "keywords": [],
   "author": "",

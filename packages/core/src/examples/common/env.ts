@@ -2,24 +2,21 @@ import { ccc } from "@ckb-ccc/shell";
 
 import dotenv from "dotenv";
 
-import { fileURLToPath } from "url";
 import { dirname } from "path";
+import { fileURLToPath } from "url";
 
 import {
-  RgbppUdtClient,
-  CkbRgbppUnlockSinger,
-  buildNetworkConfig,
-  PredefinedNetwork,
-  isMainnet,
-  ScriptInfo,
-  NetworkConfig,
-} from "@rgbpp-js/core";
-import {
-  createBtcAccount,
-  RgbppBtcWallet,
   AddressType,
   BtcAccount,
-} from "@rgbpp-js/bitcoin";
+  createBtcAccount,
+  RgbppBtcWallet,
+} from "../../bitcoin/index.js";
+import { ScriptInfo } from "../../types/rgbpp/index.js";
+
+import { CkbRgbppUnlockSinger } from "../../signer/index.js";
+import { NetworkConfig, PredefinedNetwork } from "../../types/network.js";
+import { RgbppUdtClient } from "../../udt/index.js";
+import { buildNetworkConfig, isMainnet } from "../../utils/index.js";
 
 dotenv.config({ path: dirname(fileURLToPath(import.meta.url)) + "/../.env" });
 
@@ -55,18 +52,18 @@ export function initializeRgbppEnv(scriptInfos?: ScriptInfo[]): {
       acc.cellDeps[name] = cellDep;
       return acc;
     },
-    { scripts: {}, cellDeps: {} }
+    { scripts: {}, cellDeps: {} },
   );
 
   const networkConfig = buildNetworkConfig(
     utxoBasedChainName as PredefinedNetwork,
-    scripts
+    scripts,
   );
 
   const utxoBasedAccount = createBtcAccount(
     utxoBasedChainPrivateKey,
     addressType,
-    networkConfig.name
+    networkConfig.name,
   );
 
   const rgbppUdtClient = new RgbppUdtClient(networkConfig, ckbClient);
@@ -79,7 +76,7 @@ export function initializeRgbppEnv(scriptInfos?: ScriptInfo[]): {
       url: btcAssetsApiUrl,
       token: btcAssetsApiToken,
       origin: btcAssetsApiOrigin,
-    }
+    },
   );
 
   return {
@@ -93,7 +90,7 @@ export function initializeRgbppEnv(scriptInfos?: ScriptInfo[]): {
       utxoBasedAccount.from,
       rgbppBtcWallet,
       rgbppBtcWallet,
-      rgbppUdtClient.getRgbppScriptInfos()
+      rgbppUdtClient.getRgbppScriptInfos(),
     ),
   };
 }

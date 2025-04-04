@@ -1,5 +1,6 @@
 import { ccc } from "@ckb-ccc/shell";
-import { ScriptInfo } from "@rgbpp-js/core";
+
+import { ScriptInfo } from "../../types/rgbpp/index.js";
 
 export const udtToken = {
   name: "Just UDT",

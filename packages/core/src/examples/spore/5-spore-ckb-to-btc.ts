@@ -1,6 +1,6 @@
 import { spore } from "@ckb-ccc/shell";
 
-import { UtxoSeal } from "@rgbpp-js/core";
+import { UtxoSeal } from "../../types/rgbpp/index.js";
 
 import { ckbSigner, initializeRgbppEnv } from "../common/env.js";
 
@@ -49,5 +49,5 @@ ckbSporeToBtc({
   });
 
 /* 
-pnpm tsx packages/examples/src/spore/5-spore-ckb-to-btc.ts
+pnpm tsx packages/core/src/examples/spore/5-spore-ckb-to-btc.ts
 */

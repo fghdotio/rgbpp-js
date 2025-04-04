@@ -5,7 +5,7 @@ import { ECPairFactory } from "ecpair";
 bitcoin.initEccLib(ecc);
 const ECPair = ECPairFactory(ecc);
 
-import { trimHexPrefix } from "@rgbpp-js/core";
+import { trimHexPrefix } from "../../utils/index.js";
 import { AddressType } from "../types/tx.js";
 import { toNetwork, toXOnly } from "../utils/utils.js";
 

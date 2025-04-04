@@ -1,7 +1,9 @@
 import * as bitcoin from "bitcoinjs-lib";
 import lodash from "lodash";
 
-import { PredefinedNetwork, trimHexPrefix } from "@rgbpp-js/core";
+import { trimHexPrefix } from "../../utils/index.js";
+
+import { PredefinedNetwork } from "../../types/network.js";
 
 import {
   AddressType,

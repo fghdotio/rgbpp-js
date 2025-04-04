@@ -25,7 +25,16 @@
     "prettier-plugin-organize-imports": "^4.1.0",
     "rimraf": "^6.0.1",
     "ts-jest": "^29.2.5",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "@ckb-ccc/shell": "^1.1.8",
+    "@ckb-lumos/base": "^0.22.2",
+    "@ckb-lumos/codec": "^0.22.2",
+    "@nervosnetwork/ckb-sdk-core": "0.109.5",
+    "@nervosnetwork/ckb-sdk-utils": "0.109.5",
+    "@nervosnetwork/ckb-types": "0.109.5",
+    "@spore-sdk/core": "^0.2.0-beta.6",
+    "dotenv": "^16.4.7",
+    "@exact-realty/multipart-parser": "^1.0.13"
   },
   "dependencies": {
     "@ckb-ccc/shell": "^1.1.8",
@@ -37,6 +46,9 @@
     "@spore-sdk/core": "^0.2.0-beta.6",
     "bitcoinjs-lib": "6.1.6",
     "js-sha256": "^0.11.0",
-    "lodash": "^4.17.21"
+    "lodash": "^4.17.21",
+    "@bitcoinerlab/secp256k1": "1.1.1",
+    "bip32": "4.0.0",
+    "ecpair": "2.1.0"
   }
 }

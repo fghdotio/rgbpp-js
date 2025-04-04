@@ -11,7 +11,7 @@ import {
   serializeOutput,
 } from "@nervosnetwork/ckb-sdk-utils";
 
-import { convertToOutput, InitOutput, TxOutput } from "@rgbpp-js/bitcoin";
+import { convertToOutput, InitOutput, TxOutput } from "../bitcoin/index.js";
 
 import {
   BLANK_TX_ID,

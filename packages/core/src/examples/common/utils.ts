@@ -1,12 +1,13 @@
 import { ccc } from "@ckb-ccc/shell";
 
-import { RgbppUdtClient, UtxoSeal } from "@rgbpp-js/core";
+import { UtxoSeal } from "../../types/rgbpp/index.js";
+import { RgbppUdtClient } from "../../udt/index.js";
 
 import { ckbClient, ckbSigner } from "./env.js";
 
 export async function prepareRgbppCells(
   utxoSeal: UtxoSeal,
-  rgbppUdtClient: RgbppUdtClient
+  rgbppUdtClient: RgbppUdtClient,
 ): Promise<ccc.Cell[]> {
   const rgbppLockScript = rgbppUdtClient.buildRgbppLockScript(utxoSeal);
 
@@ -51,7 +52,7 @@ export async function prepareRgbppCells(
 export async function collectRgbppCells(
   utxoSeals: UtxoSeal[],
   typeScript: ccc.Script,
-  rgbppUdtClient: RgbppUdtClient
+  rgbppUdtClient: RgbppUdtClient,
 ): Promise<ccc.Cell[]> {
   let rgbppLiveCells: ccc.Cell[] = [];
 
@@ -60,12 +61,12 @@ export async function collectRgbppCells(
       const rgbppLockScript = rgbppUdtClient.buildRgbppLockScript(utxoSeal);
       const rgbppCellsGen = await ckbClient.findCellsByLock(
         rgbppLockScript,
-        typeScript
+        typeScript,
       );
       for await (const cell of rgbppCellsGen) {
         rgbppLiveCells.push(cell);
       }
-    })
+    }),
   );
 
   if (rgbppLiveCells.length === 0) {
@@ -77,7 +78,7 @@ export async function collectRgbppCells(
 
 export async function collectBtcTimeLockCells(
   btcTimeLockArgs: string,
-  rgbppUdtClient: RgbppUdtClient
+  rgbppUdtClient: RgbppUdtClient,
 ): Promise<ccc.Cell[]> {
   const btcTimeLockCellsGen = await ckbClient.findCellsByLock({
     ...rgbppUdtClient.btcTimeLockScriptTemplate(),
@@ -92,7 +93,7 @@ export async function collectBtcTimeLockCells(
 
 export async function collectUdtCells(
   ckbAddress: string,
-  udtTypeScript: ccc.Script
+  udtTypeScript: ccc.Script,
 ): Promise<ccc.Cell[]> {
   const lock = (await ccc.Address.fromString(ckbAddress, ckbClient)).script;
 

@@ -1,6 +1,6 @@
 import { ccc } from "@ckb-ccc/shell";
 
-import { RgbppUdtClient } from "@rgbpp-js/core";
+import { RgbppUdtClient } from "../../udt/index.js";
 
 export interface RgbppBtcTxParams {
   ckbPartialTx: ccc.Transaction;
